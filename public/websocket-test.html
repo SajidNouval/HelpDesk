@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+    <script src="https://js.pusherapp.com/8.2/pusher.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.15.3/dist/echo.iife.js"></script>
+</head>
+<body>
+    <h1>WebSocket Test</h1>
+    <div id="status">Testing connection...</div>
+    <div id="messages"></div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const messagesDiv = document.getElementById('messages');
+
+        try {
+            window.Echo = new Echo({
+                broadcaster: 'reverb',
+                key: 'noam1symforrdvlfi9bk',
+                wsHost: 'localhost',
+                wsPort: 8080,
+                forceTLS: false,
+                enabledTransports: ['ws'],
+                debug: true,
+            });
+
+            // Test connection
+            const socket = window.Echo.connector?.socket;
+            if (socket) {
+                socket.addEventListener('open', () => {
+                    statusDiv.innerHTML = '✓ WebSocket connected successfully';
+                    statusDiv.style.color = 'green';
+                });
+
+                socket.addEventListener('error', (error) => {
+                    statusDiv.innerHTML = '✗ WebSocket connection error: ' + error.message;
+                    statusDiv.style.color = 'red';
+                });
+
+                socket.addEventListener('close', () => {
+                    statusDiv.innerHTML = '⚠ WebSocket connection closed';
+                    statusDiv.style.color = 'orange';
+                });
+            }
+
+            // Listen for test channel
+            window.Echo.channel('test-channel')
+                .listen('.test-event', (e) => {
+                    messagesDiv.innerHTML += '<p>Received: ' + JSON.stringify(e) + '</p>';
+                });
+
+        } catch (error) {
+            statusDiv.innerHTML = '✗ Error initializing Echo: ' + error.message;
+            statusDiv.style.color = 'red';
+        }
+    </script>
+</body>
+</html></content>
+<parameter name="filePath">c:\laragon\www\helpdeskta\public\websocket-test.html

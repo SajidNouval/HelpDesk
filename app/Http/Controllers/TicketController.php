@@ -1,0 +1,412 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use App\Models\Ticket;
+use App\Models\Category;
+use App\Models\StaffProfile;
+use App\Models\TicketLog;
+use Illuminate\Support\Facades\Cache;
+
+class TicketController extends Controller
+{
+    /**
+     * 📄 Form input tiket (guest) - Show help page dengan form
+     */
+    public function create()
+    {
+        $categories = Category::all();
+        // Generate simple captcha
+        $captcha = rand(1000, 9999);
+        session(['captcha' => $captcha]);
+        return view('guest.help', compact('categories', 'captcha'));
+    }
+
+    /**
+     * 💾 Store tiket + auto assign + log
+     */
+    public function store(Request $request)
+    {
+        // ✅ Validasi
+        $validationRules = [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+            'category_id' => 'required|exists:categories,id',
+        ];
+
+        // Only require captcha for non-JSON requests
+        if (!$request->expectsJson()) {
+            $validationRules['captcha'] = 'required|string';
+        }
+
+        $request->validate($validationRules);
+
+        // Anti-spam checks
+        $ip = $request->ip();
+        $email = $request->email;
+
+        // Check IP rate limit
+        if (Cache::has("ticket_ip_{$ip}")) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Terlalu banyak permintaan dari IP ini. Coba lagi dalam 1 menit.'], 429);
+            }
+            return redirect()->back()->withErrors(['error' => 'Terlalu banyak permintaan dari IP ini. Coba lagi dalam 1 menit.']);
+        }
+
+        // Check email rate limit
+        if (Cache::has("ticket_email_{$email}")) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Email ini sudah digunakan baru-baru ini. Coba lagi dalam 1 menit.'], 429);
+            }
+            return redirect()->back()->withErrors(['error' => 'Email ini sudah digunakan baru-baru ini. Coba lagi dalam 1 menit.']);
+        }
+
+        // Captcha check only for non-JSON requests
+        if (!$request->expectsJson() && $request->captcha != session('captcha')) {
+            return redirect()->back()->withErrors(['captcha' => 'Captcha salah.']);
+        }
+
+        // Set cache for 1 minute
+        Cache::put("ticket_ip_{$ip}", true, 60);
+        Cache::put("ticket_email_{$email}", true, 60);
+
+        // ✅ Buat tiket + auto assign staff dalam transaksi
+        $ticket = DB::transaction(function () use ($request) {
+            $ticket = Ticket::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'subject' => $request->subject,
+                'message' => $request->message,
+                'category_id' => $request->category_id,
+                'status' => 'open',
+            ]);
+
+            TicketLog::create([
+                'ticket_id' => $ticket->id,
+                'action' => 'created',
+                'description' => 'Tiket dibuat oleh user',
+            ]);
+
+            $staffProfile = $this->assignTicketToAvailableStaff($ticket);
+
+            if (!$staffProfile) {
+                $ticket->update(['status' => 'waiting']);
+                TicketLog::create([
+                    'ticket_id' => $ticket->id,
+                    'action' => 'waiting',
+                    'description' => 'Belum ada staff tersedia',
+                ]);
+            }
+
+            return $ticket;
+        });
+
+        // Store ticket ID in session for persistence
+        session()->push('my_tickets', $ticket->id);
+        session(['ticket_id' => $ticket->id]);
+        
+        // For guest users, store in separate session keys for chat widget
+        if (!Auth::check()) {
+            session(['guest_ticket_id' => $ticket->id]);
+            if ($request->email) {
+                session(['guest_email' => $request->email]);
+            }
+        }
+        
+        session()->save(); // Explicitly save session before response
+
+        // Return JSON if requested as API
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Tiket berhasil dibuat!',
+                'ticket_id' => $ticket->id,
+                'ticket' => $ticket
+            ], 201);
+        }
+
+        return redirect()->back()->with('success', 'Tiket berhasil dibuat!')->with('ticket_id', $ticket->id);
+    }
+
+    /**
+     * 📝 Store report dari artikel - dengan status waiting
+     * Auto-assign ke staff dengan waiting tickets paling sedikit
+     */
+    public function storeReport(Request $request)
+    {
+        // ✅ Validasi
+        $validationRules = [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+            'category_id' => 'required|exists:categories,id',
+        ];
+
+        $request->validate($validationRules);
+
+        // Anti-spam checks
+        $ip = $request->ip();
+        $email = $request->email;
+
+        // Check IP rate limit
+        if (Cache::has("report_ip_{$ip}")) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Terlalu banyak permintaan dari IP ini. Coba lagi dalam 1 menit.'], 429);
+            }
+            return redirect()->back()->withErrors(['error' => 'Terlalu banyak permintaan dari IP ini. Coba lagi dalam 1 menit.']);
+        }
+
+        // Check email rate limit
+        if (Cache::has("report_email_{$email}")) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Email ini sudah digunakan baru-baru ini. Coba lagi dalam 1 menit.'], 429);
+            }
+            return redirect()->back()->withErrors(['error' => 'Email ini sudah digunakan baru-baru ini. Coba lagi dalam 1 menit.']);
+        }
+
+        // Set cache for 1 minute
+        Cache::put("report_ip_{$ip}", true, 60);
+        Cache::put("report_email_{$email}", true, 60);
+
+        // ✅ Buat laporan sebagai tiket waiting yang ditangguhkan ke staf
+        $ticket = DB::transaction(function () use ($request) {
+            $ticket = Ticket::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'subject' => $request->subject,
+                'message' => $request->message,
+                'category_id' => $request->category_id,
+                'status' => 'waiting',
+            ]);
+
+            TicketLog::create([
+                'ticket_id' => $ticket->id,
+                'action' => 'created',
+                'description' => 'Laporan dibuat dari halaman artikel',
+            ]);
+
+            $assignedReportStaff = $this->assignReportToStaff($ticket);
+
+            if (!$assignedReportStaff) {
+                TicketLog::create([
+                    'ticket_id' => $ticket->id,
+                    'action' => 'waiting',
+                    'description' => 'Belum ada staff tersedia untuk menangani laporan ini',
+                ]);
+            }
+
+            return $ticket;
+        });
+
+        // Store ticket ID in session for persistence
+        session()->push('my_tickets', $ticket->id);
+        session(['ticket_id' => $ticket->id]);
+        
+        // For guest users, store in separate session keys for chat widget
+        if (!Auth::check()) {
+            session(['guest_ticket_id' => $ticket->id]);
+            if ($request->email) {
+                session(['guest_email' => $request->email]);
+            }
+        }
+        
+        session()->save();
+
+        // Return JSON if requested as API
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan berhasil dibuat!',
+                'ticket_id' => $ticket->id,
+                'ticket' => $ticket
+            ], 201);
+        }
+
+        return redirect()->back()->with('success', 'Laporan berhasil dibuat!')->with('ticket_id', $ticket->id);
+    }
+
+    /**
+     * 🎯 Assign tiket ke staff dengan load balancing yang lebih deterministik
+     */
+    private function assignTicketToAvailableStaff(Ticket $ticket): ?StaffProfile
+    {
+        return DB::transaction(function () use ($ticket) {
+            $staffProfiles = StaffProfile::where('category_id', $ticket->category_id)
+                ->where('is_busy', false)
+                ->with('user')
+                ->lockForUpdate()
+                ->get();
+
+            if ($staffProfiles->isEmpty()) {
+                return null;
+            }
+
+            $staffWithCounts = $staffProfiles->map(function ($profile) {
+                return [
+                    'profile' => $profile,
+                    'active_tickets' => $profile->user->tickets()
+                        ->whereIn('status', ['assigned', 'progress'])
+                        ->count(),
+                    'waiting_reports' => $profile->user->tickets()
+                        ->where('status', 'waiting')
+                        ->count(),
+                ];
+            });
+
+            $best = $staffWithCounts->sort(function ($a, $b) {
+                if ($a['active_tickets'] !== $b['active_tickets']) {
+                    return $a['active_tickets'] <=> $b['active_tickets'];
+                }
+                if ($a['waiting_reports'] !== $b['waiting_reports']) {
+                    return $a['waiting_reports'] <=> $b['waiting_reports'];
+                }
+                return $a['profile']->id <=> $b['profile']->id;
+            })->first();
+
+            if (!$best) {
+                return null;
+            }
+
+            $bestStaff = $best['profile'];
+
+            $ticket->update([
+                'staff_id' => $bestStaff->user_id,
+                'status' => 'assigned',
+                'assigned_at' => now(),
+            ]);
+
+            $bestStaff->update(['is_busy' => true]);
+
+            TicketLog::create([
+                'ticket_id' => $ticket->id,
+                'action' => 'assigned',
+                'description' => 'Tiket di-assign ke staff: ' . $bestStaff->user->name .
+                    ' (active: ' . $bestStaff->user->tickets()->whereIn('status', ['assigned', 'progress'])->count() .
+                    ', waiting: ' . $bestStaff->user->tickets()->where('status', 'waiting')->count() . ')',
+            ]);
+
+            return $bestStaff;
+        });
+    }
+
+    /**     * 🎯 Assign report ke staff sebagai tiket waiting tanpa live chat
+     */
+    private function assignReportToStaff(Ticket $ticket): ?StaffProfile
+    {
+        $staffProfiles = StaffProfile::where('category_id', $ticket->category_id)
+            ->with('user')
+            ->get();
+
+        if ($staffProfiles->isEmpty()) {
+            return null;
+        }
+
+        $staffWithWaitingCounts = $staffProfiles->map(function ($profile) {
+            return [
+                'profile' => $profile,
+                'waiting_count' => $profile->user->tickets()
+                    ->where('status', 'waiting')
+                    ->count(),
+            ];
+        });
+
+        $best = $staffWithWaitingCounts->sort(function ($a, $b) {
+            if ($a['waiting_count'] !== $b['waiting_count']) {
+                return $a['waiting_count'] <=> $b['waiting_count'];
+            }
+            return $a['profile']->id <=> $b['profile']->id;
+        })->first();
+
+        if (!$best) {
+            return null;
+        }
+
+        $bestStaff = $best['profile'];
+
+        $ticket->update([
+            'staff_id' => $bestStaff->user_id,
+            'assigned_at' => now(),
+            'status' => 'waiting',
+        ]);
+
+        TicketLog::create([
+            'ticket_id' => $ticket->id,
+            'action' => 'assigned',
+            'description' => 'Laporan ditugaskan ke staf: ' . $bestStaff->user->name .
+                ' (waiting load: ' . $best['waiting_count'] . ')',
+        ]);
+
+        return $bestStaff;
+    }
+
+    /**
+     * 📋 Admin lihat semua tiket
+     */
+    public function index()
+    {
+        $tickets = Ticket::with(['category', 'staff'])->latest()->paginate(20);
+
+        return view('tickets.index', compact('tickets'));
+    }
+
+    /**
+     * 🔍 Detail tiket + chat
+     */
+    public function show($id)
+    {
+        $ticket = Ticket::with(['category', 'staff', 'messages', 'logs'])->findOrFail($id);
+
+        return view('tickets.show', compact('ticket'));
+    }
+
+    /**
+     * 🔄 Update status tiket oleh staff
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $ticket = Ticket::findOrFail($id);
+
+        // Cek apakah staff yang update adalah pemilik tiket
+        if ($ticket->staff_id !== auth()->id()) {
+            abort(403, 'Anda tidak memiliki akses untuk mengubah tiket ini.');
+        }
+
+        $request->validate([
+            'status' => 'required|in:assigned,progress,closed',
+        ]);
+
+        $ticket->update([
+            'status' => $request->status,
+        ]);
+
+        // Kalau selesai → staff jadi tidak sibuk
+        if ($request->status === 'closed') {
+            $ticket->update([
+                'closed_at' => now()
+            ]);
+
+            $staffProfile = StaffProfile::where('user_id', $ticket->staff_id)->first();
+
+            if ($staffProfile) {
+                $staffProfile->update([
+                    'is_busy' => false
+                ]);
+            }
+        }
+
+        // Log
+        TicketLog::create([
+            'ticket_id' => $ticket->id,
+            'action' => $request->status,
+            'description' => 'Status diubah menjadi ' . $request->status,
+        ]);
+
+        return back()->with('success', 'Status berhasil diupdate');
+    }
+}
