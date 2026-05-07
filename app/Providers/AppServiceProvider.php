@@ -24,6 +24,5 @@ class AppServiceProvider extends ServiceProvider
         // Auto-learning: index artikel saat dibuat/diupdate/dihapus
         Article::observe(ArticleObserver::class);
 
-
     }
 }

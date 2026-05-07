@@ -83,7 +83,7 @@
 
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9">
-                
+
                 <!-- Success/Error Alert -->
                 @if (session('success'))
                     <div class="mb-4 p-4 bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-200 rounded-lg flex items-center gap-3">
@@ -100,12 +100,12 @@
                     <div class="p-6">
                         <div class="flex justify-between items-start mb-4">
                             <div>
-                                
+
                                 <h2 class="text-2xl font-bold text-gray-900">
                                     #{{ $activeTicket->id }} - {{ $activeTicket->subject }}
                                 </h2>
                             </div>
-                            
+
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 py-4 border-t border-gray-200">
@@ -209,7 +209,7 @@
                     <div class="space-y-4">
                         @foreach ($allTickets as $ticket)
                             @php $page = floor($loop->index / 10) + 1; @endphp
-                            <a data-tab-item="all" data-page="{{ $page }}" href="{{ route('staff.tickets.show', $ticket) }}" class="w-full block text-left bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition overflow-hidden border-l-4 
+                            <a data-tab-item="all" data-page="{{ $page }}" href="{{ route('staff.tickets.show', $ticket) }}" class="w-full block text-left bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition overflow-hidden border-l-4
                                     {{ $ticket->status === 'closed' ? 'border-green-500' : 'border-yellow-500' }} hover:scale-105 duration-200">
                                 <div class="p-4">
                                     <div class="flex justify-between items-start mb-3">
@@ -218,7 +218,7 @@
                                             <p class="text-sm text-gray-600 mt-1">{{ $ticket->category->name }}</p>
                                         </div>
                                         <div class="text-right">
-                                            <span class="inline-block text-xs px-3 py-1 rounded-full font-semibold 
+                                            <span class="inline-block text-xs px-3 py-1 rounded-full font-semibold
                                                 {{ $ticket->status === 'closed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
                                                 {{ $ticket->status === 'closed' ? 'Selesai' : ' ' . ucfirst($ticket->status) }}
                                             </span>
@@ -281,7 +281,7 @@
                                             Waktu kerja: {{ $ticket->closed_at->diffInHours($ticket->assigned_at) }} jam
                                         </span>
                                         <span class="text-gray-600">
-                                            Priority: 
+                                            Priority:
                                             @if ($ticket->priority === 'low')
                                                 Low
                                             @elseif ($ticket->priority === 'medium')
@@ -346,6 +346,7 @@
             @endif
 
         </div>
+        </div>
     </div>
 
     <script>
@@ -388,30 +389,30 @@
             showPage('all', 1);
             showPage('completed', 1);
             showPage('waiting', 1);
-        });
 
-        // Tab navigation
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const tabName = this.dataset.tab;
-                
-                // Hide all tabs
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.add('hidden');
+            // Tab navigation
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabName = this.dataset.tab;
+
+                    // Hide all tabs
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+
+                    // Remove active border from all buttons
+                    document.querySelectorAll('.tab-btn').forEach(b => {
+                        b.classList.remove('border-red-500', 'text-red-600');
+                        b.classList.add('border-transparent', 'text-gray-600');
+                    });
+
+                    // Show selected tab
+                    document.getElementById(tabName).classList.remove('hidden');
+
+                    // Add active border to clicked button
+                    this.classList.remove('border-transparent', 'text-gray-600');
+                    this.classList.add('border-red-500', 'text-red-600');
                 });
-                
-                // Remove active border from all buttons
-                document.querySelectorAll('.tab-btn').forEach(b => {
-                    b.classList.remove('border-red-500', 'text-red-600');
-                    b.classList.add('border-transparent', 'text-gray-600');
-                });
-                
-                // Show selected tab
-                document.getElementById(tabName).classList.remove('hidden');
-                
-                // Add active border to clicked button
-                this.classList.remove('border-transparent', 'text-gray-600');
-                this.classList.add('border-red-500', 'text-red-600');
             });
         });
     </script>

@@ -68,12 +68,6 @@
                         <h2 class="text-2xl font-bold text-gray-900">Edit Kategori</h2>
                         <p class="text-gray-600 mt-1">Perbarui informasi kategori {{ $category->name }}</p>
                     </div>
-                    <a href="{{ route('admin.categories.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-semibold">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
-                        Kembali
-                    </a>
                 </div>
 
                 @if($errors->any())
@@ -133,19 +127,7 @@
                             </div>
                         </form>
 
-                        <div class="mt-6 pt-6 border-t border-gray-200">
-                            <h3 class="text-sm font-medium text-gray-700 mb-4">Zona Berbahaya</h3>
-                            <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" onsubmit="return confirm('Hapus kategori ini? Tindakan ini tidak dapat dibatalkan.');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                    Hapus Kategori
-                                </button>
-                            </form>
-                        </div>
+                        
                     </div>
                 </div>
             </div>

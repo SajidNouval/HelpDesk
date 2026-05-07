@@ -140,9 +140,6 @@
                         <p class="text-gray-600 mb-4">
                             Mulai buat artikel bantuan pertama Anda untuk membantu pelanggan.
                         </p>
-                        <a href="{{ route('staff.articles.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition">
-                            Buat Artikel Baru
-                        </a>
                     </div>
                 @endif
 

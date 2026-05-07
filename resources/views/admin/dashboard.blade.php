@@ -9,7 +9,7 @@
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
-                <a href="{{ url('/') }}" class="text-red-500 hover:text-red-600 font-medium">Beranda</a>
+                <a href="{{ route('admin.dashboard') }}" class="text-red-500 hover:text-red-600 font-medium">Dashboard</a>
                 <span class="mx-2 text-gray-400">/</span>
                 <span class="text-gray-700">Dashboard</span>
             </div>

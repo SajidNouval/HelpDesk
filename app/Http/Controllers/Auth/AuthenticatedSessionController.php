@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Ticket;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,6 +52,16 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        if ($request->user() && $request->user()->role === 'staff') {
+            $hasActiveProgress = Ticket::where('staff_id', $request->user()->id)
+                ->where('status', 'progress')
+                ->exists();
+
+            if ($hasActiveProgress) {
+                return redirect()->back()->with('error', 'Masih melayani customer aktif. Harap selesaikan sesi live chat sebelum logout.');
+            }
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

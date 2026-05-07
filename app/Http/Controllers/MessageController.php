@@ -99,13 +99,10 @@ class MessageController extends Controller
             }
         }
 
-        if (!$isStaff && in_array($ticket->status, ['assigned', 'waiting', 'closed'])) {
-            return response()->json(['error' => 'Tiket sedang tidak terhubung atau sudah ditutup.'], 403);
-        }
-
-        // Untuk tiket waiting, tidak boleh akses chat sama sekali
-        if ($ticket->status === 'waiting') {
-            return response()->json(['error' => 'Tiket sedang dalam status waiting dan chat tidak diizinkan.'], 403);
+        // For guests, allow access to ticket messages for all active statuses.
+        // Only block when the ticket is fully closed.
+        if (!$isStaff && $ticket->status === 'closed') {
+            return response()->json(['error' => 'Tiket sudah ditutup.'], 403);
         }
 
         $messages = Message::with('sender')->where('ticket_id', $ticketId)

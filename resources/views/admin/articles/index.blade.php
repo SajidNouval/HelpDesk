@@ -63,26 +63,24 @@
                     <!-- Content -->
                     <div class="p-6">
                         @if (session('success'))
-                            <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                                <div class="flex items-center">
-                                    <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span class="text-green-800 font-medium">{{ session('success') }}</span>
-                                </div>
+                            <div class="mb-6 p-4 bg-green-100 border border-green-200 rounded-lg text-green-800 flex items-center gap-3">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="font-medium">{{ session('success') }}</span>
                             </div>
                         @endif
 
                         @if (session('error'))
-                            <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                                <div class="flex items-center">
-                                    <svg class="w-5 h-5 text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span class="text-red-800 font-medium">{{ session('error') }}</span>
-                                </div>
+                            <div class="mb-6 p-4 bg-red-100 border border-red-200 rounded-lg text-red-800 flex items-center gap-3">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                <span class="font-medium">{{ session('error') }}</span>
                             </div>
                         @endif
+
+                        <div id="ajaxNotification" class="fixed top-6 right-6 z-50 space-y-3"></div>
 
                         @if($articles->count() > 0)
                             <div class="overflow-x-auto">
@@ -100,88 +98,85 @@
                                     </thead>
                                     <tbody class="divide-y divide-gray-200">
                                         @foreach($articles as $article)
-                                            <tr class="hover:bg-gray-50 transition">
+                                            <tr data-article-id="{{ $article->id }}" class="hover:bg-gray-50 transition">
                                                 <td class="px-4 py-3">
                                                     <div class="flex items-center">
-                                                        <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
-                                                            <span class="text-orange-600 font-semibold text-sm">{{ substr($article->title, 0, 1) }}</span>
-                                                        </div>
                                                         <div>
                                                             <div class="text-gray-900 font-medium">{{ Str::limit($article->title, 40) }}</div>
-                                                            <div class="text-xs text-gray-500">{{ $article->category?->name ?? 'Tanpa kategori' }}</div>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td class="px-4 py-3">
                                                     <div class="flex items-center">
-                                                        <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-2">
-                                                            <span class="text-red-600 font-semibold text-xs">{{ substr($article->staff?->name ?? 'N', 0, 1) }}</span>
-                                                        </div>
                                                         <span class="text-gray-600">{{ $article->staff?->name ?? 'Tidak ada' }}</span>
                                                     </div>
                                                 </td>
                                                 <td class="px-4 py-3 text-center">
-                                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">{{ $article->views }}</span>
+                                                    <span class="article-views px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">{{ $article->views }}</span>
                                                 </td>
                                                 <td class="px-4 py-3 text-center">
                                                     <div class="flex flex-col gap-1">
-                                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">{{ $article->helpful_count }}</span>
-                                                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">{{ $article->not_helpful_count }}</span>
+                                                        <span class="article-helpful px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">{{ $article->helpful_count }}</span>
+                                                        <span class="article-not-helpful px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">{{ $article->not_helpful_count }}</span>
                                                     </div>
                                                 </td>
                                                 <td class="px-4 py-3 text-center">
                                                     @if($article->publish_status === 'pending')
-                                                        <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Menunggu</span>
+                                                        <span class="article-status px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Menunggu</span>
                                                     @elseif($article->publish_status === 'approved')
-                                                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Disetujui</span>
+                                                        <span class="article-status px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Disetujui</span>
                                                     @elseif($article->publish_status === 'rejected')
-                                                        <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">Ditolak</span>
+                                                        <span class="article-status px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">Ditolak</span>
                                                     @endif
                                                 </td>
                                                 <td class="px-4 py-3 text-center">
                                                     @if($article->is_hidden)
-                                                        <span class="px-2 py-1 bg-gray-200 text-gray-800 rounded text-xs font-semibold">Disembunyikan</span>
+                                                        <span class="article-visibility px-2 py-1 bg-gray-200 text-gray-800 rounded text-xs font-semibold">Disembunyikan</span>
                                                     @else
-                                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">Publik</span>
+                                                        <span class="article-visibility px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">Publik</span>
                                                     @endif
                                                 </td>
                                                 <td class="px-4 py-3 text-center">
                                                     <div class="flex flex-col gap-2">
-                                                        @if($article->publish_status === 'pending')
+                                                        <div class="article-action-pending {{ $article->publish_status !== 'pending' ? 'hidden' : '' }}">
                                                             <div class="flex items-center justify-center gap-2">
-                                                                <a href="{{ route('admin.articles.show', $article) }}" class="text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                                                                <a href="{{ route('admin.articles.show', $article) }}" class="inline-flex items-center text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
                                                                     Lihat
                                                                 </a>
-                                                                <form method="POST" action="{{ route('admin.articles.approve', $article) }}" style="display: inline;">
+                                                                <form method="POST" action="{{ route('admin.articles.approve', $article) }}" class="ajax-action-form inline" data-article-id="{{ $article->id }}">
                                                                     @csrf
-                                                                    <button type="submit" class="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition">
+                                                                    <button type="submit" class="inline-flex items-center text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition">
                                                                         Setujui
                                                                     </button>
                                                                 </form>
-                                                                <button type="button" onclick="openRejectModal({{ $article->id }})" class="text-xs px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition">
+                                                                <button type="button" onclick="openRejectModal({{ $article->id }})" class="inline-flex items-center text-xs px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition">
                                                                     Tolak
                                                                 </button>
                                                             </div>
-                                                        @elseif($article->publish_status === 'rejected')
+                                                        </div>
+
+                                                        <div class="article-action-rejected {{ $article->publish_status !== 'rejected' ? 'hidden' : '' }}">
                                                             <div class="flex items-center justify-center gap-2">
-                                                                <a href="{{ route('admin.articles.show', $article) }}" class="text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                                                                <a href="{{ route('admin.articles.show', $article) }}" class="inline-flex items-center text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
                                                                     Lihat
                                                                 </a>
-                                                                <form method="POST" action="{{ route('admin.articles.approve', $article) }}" style="display: inline;">
+                                                                <form method="POST" action="{{ route('admin.articles.approve', $article) }}" class="ajax-action-form inline" data-article-id="{{ $article->id }}">
                                                                     @csrf
-                                                                    <button type="submit" class="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition">
+                                                                    <button type="submit" class="inline-flex items-center text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition">
                                                                         Setujui
                                                                     </button>
                                                                 </form>
                                                             </div>
-                                                        @else
+                                                        </div>
+
+                                                        <div class="article-action-approved {{ $article->publish_status !== 'approved' ? 'hidden' : '' }}">
                                                             <div class="flex items-center justify-center gap-2">
-                                                                <a href="{{ route('admin.articles.show', $article) }}" class="text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                                                                <a href="{{ route('admin.articles.show', $article) }}" class="inline-flex items-center text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
                                                                     Lihat
                                                                 </a>
-                                                                <form method="POST" action="{{ route('admin.articles.toggle-hide', $article) }}" style="display: inline;">
+                                                                <form method="POST" action="{{ route('admin.articles.toggle-hide', $article) }}" class="ajax-action-form inline" data-article-id="{{ $article->id }}">
                                                                     @csrf
-                                                                    <button type="submit" class="text-xs px-2 py-1 rounded transition @if($article->is_hidden) bg-blue-600 text-white hover:bg-blue-700 @else bg-yellow-600 text-white hover:bg-yellow-700 @endif">
+                                                                    <button type="submit" class="toggle-visibility-button inline-flex items-center text-xs px-2 py-1 rounded transition {{ $article->is_hidden ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-yellow-600 text-white hover:bg-yellow-700' }}">
                                                                         @if($article->is_hidden)
                                                                             Tampilkan
                                                                         @else
@@ -190,21 +185,21 @@
                                                                     </button>
                                                                 </form>
 
-                                                                <form method="POST" action="{{ route('admin.articles.reset-views', $article) }}" style="display: inline;">
+                                                                <form method="POST" action="{{ route('admin.articles.reset-views', $article) }}" class="ajax-action-form inline" data-article-id="{{ $article->id }}">
                                                                     @csrf
-                                                                    <button type="submit" class="text-xs px-2 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition" title="Reset Views">
+                                                                    <button type="submit" class="inline-flex items-center text-xs px-2 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition" title="Reset Views">
                                                                         Reset View
                                                                     </button>
                                                                 </form>
 
-                                                                <form method="POST" action="{{ route('admin.articles.reset-feedback', $article) }}" style="display: inline;" onclick="return confirm('Hapus semua feedback artikel ini?');">
+                                                                <form method="POST" action="{{ route('admin.articles.reset-feedback', $article) }}" class="ajax-action-form inline" data-article-id="{{ $article->id }}" data-confirm="Hapus semua feedback artikel ini?">
                                                                     @csrf
-                                                                    <button type="submit" class="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition" title="Reset Feedback">
+                                                                    <button type="submit" class="inline-flex items-center text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition" title="Reset Feedback">
                                                                         Reset Feedback
                                                                     </button>
                                                                 </form>
                                                             </div>
-                                                        @endif
+                                                        </div>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -258,7 +253,167 @@
     </div>
 
     <script>
+        const notificationContainer = document.getElementById('ajaxNotification');
         let currentArticleId = null;
+
+        function getCsrfToken() {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        }
+
+        function showNotification(message, type = 'success') {
+            if (!notificationContainer) {
+                alert(message);
+                return;
+            }
+
+            const wrapper = document.createElement('div');
+            wrapper.className = `px-4 py-3 rounded-lg text-white shadow ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`;
+            wrapper.textContent = message;
+
+            notificationContainer.appendChild(wrapper);
+
+            setTimeout(() => {
+                wrapper.remove();
+            }, 4000);
+        }
+
+        function setStatusBadge(row, status) {
+            const statusEl = row.querySelector('.article-status');
+            if (!statusEl) return;
+
+            statusEl.className = 'article-status px-3 py-1 rounded-full text-xs font-semibold';
+
+            if (status === 'pending') {
+                statusEl.classList.add('bg-yellow-100', 'text-yellow-800');
+                statusEl.textContent = 'Menunggu';
+            } else if (status === 'approved') {
+                statusEl.classList.add('bg-green-100', 'text-green-800');
+                statusEl.textContent = 'Disetujui';
+            } else if (status === 'rejected') {
+                statusEl.classList.add('bg-red-100', 'text-red-800');
+                statusEl.textContent = 'Ditolak';
+            }
+        }
+
+        function setVisibilityBadge(row, isHidden) {
+            const visibilityEl = row.querySelector('.article-visibility');
+            if (!visibilityEl) return;
+
+            visibilityEl.className = 'article-visibility px-2 py-1 rounded text-xs font-semibold';
+            if (isHidden) {
+                visibilityEl.classList.add('bg-gray-200', 'text-gray-800');
+                visibilityEl.textContent = 'Disembunyikan';
+            } else {
+                visibilityEl.classList.add('bg-blue-100', 'text-blue-800');
+                visibilityEl.textContent = 'Publik';
+            }
+        }
+
+        function updateActionVisibility(row, publishStatus) {
+            const pendingBlock = row.querySelector('.article-action-pending');
+            const rejectedBlock = row.querySelector('.article-action-rejected');
+            const approvedBlock = row.querySelector('.article-action-approved');
+
+            if (pendingBlock) pendingBlock.classList.toggle('hidden', publishStatus !== 'pending');
+            if (rejectedBlock) rejectedBlock.classList.toggle('hidden', publishStatus !== 'rejected');
+            if (approvedBlock) approvedBlock.classList.toggle('hidden', publishStatus !== 'approved');
+        }
+
+        function updateToggleButton(row, isHidden) {
+            const toggleButton = row.querySelector('.toggle-visibility-button');
+            if (!toggleButton) return;
+
+            toggleButton.textContent = isHidden ? 'Tampilkan' : 'Sembunyikan';
+            toggleButton.className = 'toggle-visibility-button inline-flex items-center text-xs px-2 py-1 rounded transition';
+            if (isHidden) {
+                toggleButton.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
+            } else {
+                toggleButton.classList.add('bg-yellow-600', 'text-white', 'hover:bg-yellow-700');
+            }
+        }
+
+        function updateArticleRow(articleId, payload) {
+            const row = document.querySelector(`tr[data-article-id="${articleId}"]`);
+            if (!row) return;
+
+            if (payload.views !== undefined) {
+                const viewsEl = row.querySelector('.article-views');
+                if (viewsEl) viewsEl.textContent = payload.views;
+            }
+
+            if (payload.helpful_count !== undefined) {
+                const helpfulEl = row.querySelector('.article-helpful');
+                if (helpfulEl) helpfulEl.textContent = payload.helpful_count;
+            }
+
+            if (payload.not_helpful_count !== undefined) {
+                const notHelpfulEl = row.querySelector('.article-not-helpful');
+                if (notHelpfulEl) notHelpfulEl.textContent = payload.not_helpful_count;
+            }
+
+            if (payload.publish_status !== undefined) {
+                setStatusBadge(row, payload.publish_status);
+                updateActionVisibility(row, payload.publish_status);
+            }
+
+            if (payload.is_hidden !== undefined) {
+                setVisibilityBadge(row, payload.is_hidden);
+                updateToggleButton(row, payload.is_hidden);
+            }
+        }
+
+        async function sendAjaxForm(form) {
+            const confirmText = form.dataset.confirm;
+            if (confirmText && !confirm(confirmText)) {
+                return null;
+            }
+
+            const url = form.action;
+            const method = form.method.toUpperCase() || 'POST';
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                    },
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.message || 'Terjadi kesalahan jaringan.');
+                }
+
+                return await response.json();
+            } catch (error) {
+                showNotification(error.message || 'Gagal mengirim permintaan.', 'error');
+                return null;
+            }
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const articleId = form.dataset.articleId || currentArticleId;
+
+            sendAjaxForm(form).then(result => {
+                if (!result || !result.success) {
+                    return;
+                }
+
+                showNotification(result.message, 'success');
+                if (articleId && result.article) {
+                    updateArticleRow(articleId, result.article);
+                }
+
+                if (form.id === 'rejectForm') {
+                    closeRejectModal();
+                }
+            });
+        }
 
         function openRejectModal(articleId) {
             currentArticleId = articleId;
@@ -272,7 +427,12 @@
             document.getElementById('rejectForm').reset();
         }
 
-        // Close modal when clicking outside
+        document.querySelectorAll('.ajax-action-form').forEach((form) => {
+            form.addEventListener('submit', handleFormSubmit);
+        });
+
+        document.getElementById('rejectForm')?.addEventListener('submit', handleFormSubmit);
+
         document.getElementById('rejectModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeRejectModal();

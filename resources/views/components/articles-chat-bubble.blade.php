@@ -33,7 +33,9 @@
             <p class="text-xs text-gray-600 font-semibold mb-3">Buat Tiket untuk Bantuan Lebih Lanjut</p>
             <form id="articles-ticket-form" class="space-y-3">
                 <input type="hidden" name="message" id="form-message">
-                
+                <input type="hidden" id="ticketVerificationToken" name="verification_token">
+                <input type="hidden" id="ticketType" name="type" value="livechat">
+
                 <input type="text" name="title" placeholder="Judul masalah" class="w-full text-xs px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" required>
                 
                 <select name="category_id" class="w-full text-xs px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" required>
@@ -43,13 +45,21 @@
                     @endforeach
                 </select>
                 
-                <input type="email" name="email" placeholder="Email Anda (opsional)" class="w-full text-xs px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
+                <input type="email" name="email" placeholder="Email Anda (opsional)" id="ticketEmail" class="w-full text-xs px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
                 
                 <textarea name="message_detail" placeholder="Jelaskan masalah Anda secara detail" rows="3" class="w-full text-xs px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 resize-none" required></textarea>
+
+                <div id="ticketOtpStep" class="hidden space-y-3">
+                    <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-900">
+                        Kode OTP telah dikirim ke email Anda. Masukkan 6 digit kode untuk verifikasi sebelum tiket dibuat.
+                    </div>
+                    <input type="text" id="ticketOtpCode" maxlength="6" placeholder="123456" class="w-full text-xs px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" />
+                    <div id="ticketOtpMessage" class="text-sm text-red-600 hidden"></div>
+                </div>
                 
                 <div class="flex gap-2">
-                    <button type="submit" class="flex-1 bg-blue-600 text-white text-xs font-semibold py-2 rounded hover:bg-blue-700 transition">
-                        Buat Tiket
+                    <button type="submit" class="flex-1 bg-blue-600 text-white text-xs font-semibold py-2 rounded hover:bg-blue-700 transition" id="ticketSubmitBtn">
+                        Minta OTP
                     </button>
                     <button type="button" id="articles-ticket-cancel" class="flex-1 bg-gray-200 text-gray-700 text-xs font-semibold py-2 rounded hover:bg-gray-300 transition">
                         Batal
@@ -99,6 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let waitingStartTime = null; // Track when waiting started
     let waitingTimer = null; // Timer for 20-minute auto-cancel
     let isWaitingMode = false; // Track if currently in waiting mode
+    let ticketFormSubmitting = false; // Prevent duplicate ticket submissions
 
     // Retrieve guest email from localStorage if available
     function getGuestEmail() {
@@ -360,6 +371,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load staff chat messages
     async function loadStaffMessages() {
         if (!ticketId) return;
+        if (chatMode === 'waiting') {
+            await checkTicketStatus();
+            return;
+        }
         
         try {
             let url = `/api/tickets/${ticketId}/messages`;
@@ -578,6 +593,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showTicketForm(message) {
+        resetOtpStep();
         ticketOfferContainer.classList.add('hidden');
         ticketFormContainer.classList.remove('hidden');
         document.getElementById('form-message').value = message;
@@ -590,27 +606,188 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideTicketForm() {
         ticketOfferContainer.classList.add('hidden');
         ticketFormContainer.classList.add('hidden');
+        resetOtpStep();
         ticketForm.reset();
+    }
+
+    const ticketOtpStep = document.getElementById('ticketOtpStep');
+    const ticketOtpCode = document.getElementById('ticketOtpCode');
+    const ticketOtpMessage = document.getElementById('ticketOtpMessage');
+    const ticketSubmitBtn = document.getElementById('ticketSubmitBtn');
+    const ticketEmailInput = document.getElementById('ticketEmail');
+    const ticketVerificationToken = document.getElementById('ticketVerificationToken');
+
+    function resetOtpStep() {
+        ticketOtpStep.classList.add('hidden');
+        ticketOtpCode.value = '';
+        ticketOtpMessage.textContent = '';
+        ticketOtpMessage.classList.add('hidden');
+        ticketSubmitBtn.textContent = 'Minta OTP';
+        ticketSubmitBtn.disabled = false;
+        ticketVerificationToken.value = '';
+        ticketFormSubmitting = false;
+    }
+
+    function setTicketFormLoading(isLoading) {
+        ticketFormSubmitting = isLoading;
+        ticketSubmitBtn.disabled = isLoading;
+        if (isLoading) {
+            ticketSubmitBtn.textContent = 'Tunggu...';
+        } else if (!ticketOtpStep.classList.contains('hidden')) {
+            ticketSubmitBtn.textContent = 'Verifikasi OTP';
+        } else {
+            ticketSubmitBtn.textContent = 'Minta OTP';
+        }
+    }
+
+    function showOtpStep() {
+        ticketOtpStep.classList.remove('hidden');
+        ticketSubmitBtn.textContent = 'Verifikasi OTP';
+    }
+
+    async function requestOtp(formDataObj) {
+        const response = await fetch('/tickets/request-otp', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify(formDataObj)
+        });
+        return response;
+    }
+
+    async function verifyOtp(verificationToken, otpCode) {
+        const response = await fetch('/tickets/verify-otp', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ verification_token: verificationToken, otp_code: otpCode })
+        });
+        return response;
     }
 
     // Handle ticket form submission
     ticketForm.addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        const formData = {
-            name: 'Guest User',
-            title: this.querySelector('input[name="title"]').value,
-            subject: this.querySelector('input[name="title"]').value,
-            category_id: this.querySelector('select[name="category_id"]').value,
-            email: this.querySelector('input[name="email"]').value,
-            message: this.querySelector('textarea[name="message_detail"]').value,
-        };
-
-        // Store email for future reference
-        if (formData.email) {
-            setGuestEmail(formData.email);
+        if (ticketFormSubmitting) {
+            return;
         }
 
+        const email = ticketEmailInput.value.trim();
+        const title = this.querySelector('input[name="title"]').value;
+        const category_id = this.querySelector('select[name="category_id"]').value;
+        const messageDetail = this.querySelector('textarea[name="message_detail"]').value;
+        const otpCode = ticketOtpCode.value.trim();
+        const verificationToken = ticketVerificationToken.value;
+
+        if (!email) {
+            ticketOtpMessage.textContent = 'Email dibutuhkan untuk menerima kode OTP.';
+            ticketOtpMessage.classList.remove('hidden');
+            return;
+        }
+
+        if (!ticketOtpStep.classList.contains('hidden')) {
+            if (!otpCode || otpCode.length !== 6) {
+                ticketOtpMessage.textContent = 'Masukkan kode OTP 6 digit yang valid.';
+                ticketOtpMessage.classList.remove('hidden');
+                return;
+            }
+
+            setTicketFormLoading(true);
+            try {
+                const verifyResponse = await verifyOtp(verificationToken, otpCode);
+                const verifyData = await verifyResponse.json();
+
+                if (!verifyResponse.ok) {
+                    ticketOtpMessage.textContent = verifyData.message || 'Kode OTP tidak valid.';
+                    ticketOtpMessage.classList.remove('hidden');
+                    return;
+                }
+
+                ticketId = verifyData.ticket_id || ticketId;
+                if (ticketId) {
+                    localStorage.setItem('guest_ticket_id', ticketId);
+                }
+                setGuestEmail(email);
+
+                const successDiv = document.createElement('div');
+                successDiv.className = 'flex justify-start';
+                successDiv.innerHTML = `
+                    <div class="bg-green-100 text-green-900 rounded-lg p-3 max-w-xs">
+                        <p class="text-sm font-semibold">✓ Tiket berhasil dibuat!</p>
+                        <p class="text-xs mt-1">Silakan tunggu staff menghubungi Anda.</p>
+                    </div>
+                `;
+                messagesContainer.appendChild(successDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                setTimeout(() => {
+                    resetOtpStep();
+                    ticketForm.reset();
+                    ticketFormContainer.classList.add('hidden');
+                    switchToChatMode();
+                }, 1200);
+            } catch (error) {
+                console.error('Error verifying OTP:', error);
+                ticketOtpMessage.textContent = 'Terjadi kesalahan saat memverifikasi OTP.';
+                ticketOtpMessage.classList.remove('hidden');
+            } finally {
+                setTicketFormLoading(false);
+            }
+
+            return;
+        }
+
+        try {
+            setTicketFormLoading(true);
+            const otpFormData = {
+                name: 'Guest User',
+                email: email,
+                subject: title,
+                message: messageDetail,
+                category_id: category_id,
+                type: 'livechat'
+            };
+            const response = await requestOtp(otpFormData);
+            const data = await response.json();
+
+            if (response.ok) {
+                showOtpStep();
+                setGuestEmail(email);
+                // Store verification token from response
+                if (data.verification_token) {
+                    ticketVerificationToken.value = data.verification_token;
+                }
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'flex justify-start';
+                infoDiv.innerHTML = `
+                    <div class="bg-blue-100 text-blue-900 rounded-lg p-3 max-w-xs">
+                        <p class="text-sm font-semibold">Kode OTP dikirim.</p>
+                        <p class="text-xs mt-1">Periksa email Anda untuk verifikasi.</p>
+                    </div>
+                `;
+                messagesContainer.appendChild(infoDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } else {
+                ticketOtpMessage.textContent = data.message || 'Gagal mengirim kode OTP.';
+                ticketOtpMessage.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error requesting OTP:', error);
+            ticketOtpMessage.textContent = 'Terjadi kesalahan saat mengirim OTP.';
+            ticketOtpMessage.classList.remove('hidden');
+        } finally {
+            setTicketFormLoading(false);
+        }
+    });
+
+    async function createTicket(formData) {
         try {
             const response = await fetch('/tickets', {
                 method: 'POST',
@@ -622,33 +799,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(formData)
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                ticketId = data.ticket_id || data.id;
-                
-                if (ticketId) {
-                    localStorage.setItem('guest_ticket_id', ticketId);
-                    
-                    // Show success message
-                    const successDiv = document.createElement('div');
-                    successDiv.className = 'flex justify-start';
-                    successDiv.innerHTML = `
-                        <div class="bg-green-100 text-green-900 rounded-lg p-3 max-w-xs">
-                            <p class="text-sm font-semibold">✓ Tiket berhasil dibuat!</p>
-                            <p class="text-xs mt-1">Staff sedang menghubungi Anda...</p>
-                        </div>
-                    `;
-                    messagesContainer.appendChild(successDiv);
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Gagal membuat tiket.');
+            }
 
-                    // Switch to chat mode immediately since staff is assigned
-                    setTimeout(() => {
-                        ticketForm.reset();
-                        ticketFormContainer.classList.add('hidden');
-                        console.log('Switching to chat mode after ticket creation, ticketId:', ticketId);
-                        switchToChatMode();
-                    }, 2000); // Give user time to see success message
-                }
+            const data = await response.json();
+            ticketId = data.ticket_id || data.id;
+
+            if (ticketId) {
+                localStorage.setItem('guest_ticket_id', ticketId);
+                const successDiv = document.createElement('div');
+                successDiv.className = 'flex justify-start';
+                successDiv.innerHTML = `
+                    <div class="bg-green-100 text-green-900 rounded-lg p-3 max-w-xs">
+                        <p class="text-sm font-semibold">✓ Tiket berhasil dibuat!</p>
+                        <p class="text-xs mt-1">Staff sedang menghubungi Anda...</p>
+                    </div>
+                `;
+                messagesContainer.appendChild(successDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                setTimeout(() => {
+                    resetOtpStep();
+                    ticketForm.reset();
+                    ticketFormContainer.classList.add('hidden');
+                    switchToChatMode();
+                }, 2000);
             }
         } catch (error) {
             console.error('Error creating ticket:', error);
@@ -663,7 +840,7 @@ document.addEventListener('DOMContentLoaded', function() {
             messagesContainer.appendChild(errorMsg);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
-    });
+    }
 
     ticketOfferBtn.addEventListener('click', function() {
         showTicketForm(ticketOfferBtn.dataset.message || '');
@@ -718,8 +895,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function startPolling() {
         if (pollInterval) return;
         pollInterval = setInterval(async () => {
-            if (ticketId) {
+            if (!ticketId) return;
+
+            if (chatMode === 'staff') {
                 await loadStaffMessages();
+            } else if (chatMode === 'waiting') {
+                await checkTicketStatus();
             }
         }, 5000);
     }

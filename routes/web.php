@@ -116,6 +116,10 @@ Route::middleware('auth')->group(function () {
 });
 
 // Public routes - Guest Tickets
+Route::get('/help', [TicketController::class, 'create'])->name('guest.help');
+Route::post('/tickets/request-otp', [TicketController::class, 'requestOtp'])->name('tickets.request-otp');
+Route::post('/tickets/verify-otp', [TicketController::class, 'verifyOtp'])->name('tickets.verify-otp');
+Route::get('/tickets/track/{token}', [TicketController::class, 'track'])->name('tickets.track');
 Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
 Route::post('/reports', [TicketController::class, 'storeReport'])->name('reports.store');
 

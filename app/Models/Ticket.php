@@ -23,11 +23,14 @@ class Ticket extends Model
         'priority',
         'assigned_at',
         'closed_at',
+        'email_verified_at',
+        'tracking_token',
     ];
 
     protected $casts = [
         'assigned_at' => 'datetime',
         'closed_at' => 'datetime',
+        'email_verified_at' => 'datetime',
     ];
 
     // Relasi

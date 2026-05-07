@@ -5,11 +5,16 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Mail\TicketOtpMail;
+use App\Mail\TicketTrackingMail;
 use App\Models\Ticket;
 use App\Models\Category;
 use App\Models\StaffProfile;
 use App\Models\TicketLog;
+use App\Models\TicketOtp;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class TicketController extends Controller
 {
@@ -229,6 +234,176 @@ class TicketController extends Controller
         }
 
         return redirect()->back()->with('success', 'Laporan berhasil dibuat!')->with('ticket_id', $ticket->id);
+    }
+
+    public function requestOtp(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+            'category_id' => 'required|exists:categories,id',
+            'type' => 'required|in:livechat,report',
+        ]);
+
+        \Log::info('OTP Request received', ['email' => $validated['email'], 'type' => $validated['type']]);
+
+        $ip = $request->ip();
+        $email = $validated['email'];
+
+        if (Cache::has("ticket_otp_ip_{$ip}")) {
+            \Log::warning('IP rate limit hit', ['ip' => $ip]);
+            return response()->json(['success' => false, 'message' => 'Terlalu banyak permintaan dari IP ini. Coba lagi dalam 1 menit.'], 429);
+        }
+
+        if (Cache::has("ticket_otp_email_{$email}")) {
+            \Log::warning('Email rate limit hit', ['email' => $email]);
+            return response()->json(['success' => false, 'message' => 'Email ini sudah digunakan baru-baru ini. Coba lagi dalam 1 menit.'], 429);
+        }
+
+        Cache::put("ticket_otp_ip_{$ip}", true, 60);
+        Cache::put("ticket_otp_email_{$email}", true, 60);
+
+        $otpCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        $otp = TicketOtp::create([
+            'name' => $validated['name'],
+            'email' => $email,
+            'subject' => $validated['subject'],
+            'message' => $validated['message'],
+            'category_id' => $validated['category_id'],
+            'type' => $validated['type'],
+            'otp_code' => $otpCode,
+            'expires_at' => now()->addMinutes(15),
+            'token' => Str::random(60),
+        ]);
+
+        \Log::info('OTP Created', ['otp_id' => $otp->id, 'otp_code' => $otpCode, 'email' => $email]);
+
+        try {
+            Mail::to($email)->send(new TicketOtpMail($otpCode, $validated['type']));
+            \Log::info('OTP Email sent successfully', ['email' => $email, 'otp_code' => $otpCode]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send OTP email', ['email' => $email, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Gagal mengirim OTP. Silakan coba lagi.'], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kode OTP telah dikirim ke email Anda.',
+            'verification_token' => $otp->token,
+        ]);
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'verification_token' => 'required|string',
+            'otp_code' => 'required|string|size:6',
+        ]);
+
+        $result = null;
+        $ticket = DB::transaction(function () use ($request, &$result) {
+            $otp = TicketOtp::where('token', $request->verification_token)->lockForUpdate()->first();
+
+            if (!$otp) {
+                $result = ['success' => false, 'code' => 404, 'message' => 'Token verifikasi tidak valid.'];
+                return null;
+            }
+
+            if ($otp->expires_at->isPast()) {
+                $otp->delete();
+                $result = ['success' => false, 'code' => 422, 'message' => 'Kode OTP telah kedaluwarsa. Silakan minta ulang.'];
+                return null;
+            }
+
+            if ($otp->attempts >= 3) {
+                $otp->delete();
+                $result = ['success' => false, 'code' => 422, 'message' => 'Anda telah melebihi batas percobaan OTP. Silakan minta ulang.'];
+                return null;
+            }
+
+            if ($otp->otp_code !== $request->otp_code) {
+                $otp->increment('attempts');
+                $remaining = max(0, 3 - $otp->attempts);
+
+                if ($otp->attempts >= 3) {
+                    $otp->delete();
+                    $result = ['success' => false, 'code' => 422, 'message' => 'Anda sudah salah 3 kali. Silakan lakukan permintaan ulang.'];
+                    return null;
+                }
+
+                $result = ['success' => false, 'code' => 422, 'message' => "OTP salah. Kesempatan tersisa: {$remaining}."];
+                return null;
+            }
+
+            $ticket = Ticket::create([
+                'name' => $otp->name,
+                'email' => $otp->email,
+                'subject' => $otp->subject,
+                'message' => $otp->message,
+                'category_id' => $otp->category_id,
+                'status' => $otp->type === 'report' ? 'waiting' : 'open',
+                'priority' => 'low',
+                'tracking_token' => Str::random(60),
+                'email_verified_at' => now(),
+            ]);
+
+            TicketLog::create([
+                'ticket_id' => $ticket->id,
+                'action' => 'created',
+                'description' => 'Tiket dibuat setelah verifikasi OTP.',
+            ]);
+
+            if ($otp->type === 'livechat') {
+                $staffProfile = $this->assignTicketToAvailableStaff($ticket);
+
+                if (!$staffProfile) {
+                    $ticket->update(['status' => 'waiting']);
+                    TicketLog::create([
+                        'ticket_id' => $ticket->id,
+                        'action' => 'waiting',
+                        'description' => 'Belum ada staff tersedia setelah verifikasi OTP.',
+                    ]);
+                }
+            } else {
+                $assignedReportStaff = $this->assignReportToStaff($ticket);
+
+                if (!$assignedReportStaff) {
+                    TicketLog::create([
+                        'ticket_id' => $ticket->id,
+                        'action' => 'waiting',
+                        'description' => 'Belum ada staff tersedia untuk laporan setelah verifikasi OTP.',
+                    ]);
+                }
+            }
+
+            $otp->delete();
+            $result = ['success' => true, 'ticket' => $ticket];
+            return $ticket;
+        });
+
+        if (!$result || !$result['success']) {
+            return response()->json(['success' => false, 'message' => $result['message'] ?? 'Token verifikasi tidak valid.'], $result['code'] ?? 422);
+        }
+
+        $trackingUrl = route('tickets.track', ['token' => $ticket->tracking_token]);
+        Mail::to($ticket->email)->send(new TicketTrackingMail($ticket, $trackingUrl));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP berhasil diverifikasi. Tiket Anda telah dibuat.',
+            'ticket_id' => $ticket->id,
+            'tracking_url' => $trackingUrl,
+        ]);
+    }
+
+    public function track(string $token)
+    {
+        $ticket = Ticket::with(['category', 'messages', 'logs'])->where('tracking_token', $token)->firstOrFail();
+
+        return view('guest.tickets.track', compact('ticket'));
     }
 
     /**
