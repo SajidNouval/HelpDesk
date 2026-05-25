@@ -6,10 +6,16 @@ use App\Models\Article;
 use App\Models\Category;
 use App\Models\Chatbot;
 use App\Models\Ticket;
+use App\Models\User;
 use Tests\TestCase;
 
 class ChatbotTest extends TestCase
 {
+    protected ?Category $category = null;
+    protected ?User $staff = null;
+    protected ?Article $article = null;
+    protected ?Chatbot $chatbotRule = null;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -20,11 +26,13 @@ class ChatbotTest extends TestCase
             ['slug' => 'test-category', 'description' => 'Test']
         );
 
+        $this->staff = \App\Models\User::factory()->staff()->create();
+
         $this->article = Article::firstOrCreate(
             ['slug' => 'test-article'],
             [
                 'category_id' => $this->category->id,
-                'staff_id' => 1,
+                'staff_id' => $this->staff->id,
                 'title' => 'Test Article',
                 'content' => 'Test content',
                 'is_published' => true,

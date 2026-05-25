@@ -1,9 +1,9 @@
 <x-app-layout>
 
     <!-- Header Section -->
-    <div class="bg-gray-100 py-10 border-b">
+    <div class="bg-gray-100 py-8 border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4">
-            <h1 class="text-3xl font-semibold text-gray-700 tracking-wide">
+            <h1 class="text-2xl font-bold text-gray-900">
                 Kelola Artikel
             </h1>
 
@@ -17,7 +17,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 py-10">
+    <div class="max-w-7xl mx-auto px-4 py-8">
         <div class="grid grid-cols-12 gap-8">
 
             <!-- Sidebar Left -->
@@ -63,14 +63,11 @@
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9">
 
-                <!-- Success/Error Alert -->
+                <!-- Success Alert -->
                 @if (session('success'))
-                    <div class="mb-4 p-4 bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-200 rounded-lg flex items-center gap-3">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                    <x-alert type="success" class="mb-6">
                         {{ session('success') }}
-                    </div>
+                    </x-alert>
                 @endif
 
                 <!-- Header with Add Button -->
@@ -82,19 +79,19 @@
 
                 <!-- Articles List -->
                 @if($articles->count() > 0)
-                    <div class="space-y-4">
+                    <div class="space-y-3">
                         @foreach($articles as $article)
                             <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition overflow-hidden">
-                                <div class="p-6">
-                                    <div class="flex justify-between items-start mb-4">
+                                <div class="p-5">
+                                    <div class="flex justify-between items-start mb-3">
                                         <div class="flex-1">
-                                            <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                                            <h3 class="text-base font-semibold text-gray-900 mb-1">
                                                 <a href="{{ route('staff.articles.show', $article) }}" class="hover:text-blue-600 transition">
                                                     {{ $article->title }}
                                                 </a>
                                             </h3>
-                                            <p class="text-sm text-gray-600 mb-2">Pembuat: {{ $article->staff->name }} • {{ $article->category->name }}</p>
-                                            <div class="flex items-center gap-4 text-sm text-gray-500">
+                                            <p class="text-xs text-gray-600 mb-2">Pembuat: {{ $article->staff->name }} • {{ $article->category->name }}</p>
+                                            <div class="flex items-center gap-4 text-xs text-gray-500">
                                                 <span>Views: {{ $article->views }}</span>
                                                 <span>Bantu: {{ $article->helpful_count }}</span>
                                                 <span>Tidak Bantu: {{ $article->not_helpful_count }}</span>
@@ -102,24 +99,24 @@
                                         </div>
                                         <div class="flex items-center gap-2">
                                             @if($article->publish_status === 'pending')
-                                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                                    Menunggu Persetujuan
+                                                <span class="status-badge status-pending">
+                                                    Menunggu
                                                 </span>
                                             @elseif($article->publish_status === 'approved')
-                                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                                    Disetujui & Dipublikasi
+                                                <span class="status-badge status-approved">
+                                                    Disetujui
                                                 </span>
                                             @elseif($article->publish_status === 'rejected')
-                                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                <span class="status-badge status-rejected">
                                                     Ditolak
                                                 </span>
                                             @endif
                                         </div>
                                     </div>
 
-                                    <div class="flex gap-3">
-                                        <a href="{{ route('staff.articles.show', $article) }}" class="text-blue-600 hover:text-blue-800 font-medium transition">
-                                            Lihat Detail
+                                    <div class="flex gap-3 pt-3 border-t border-gray-200">
+                                        <a href="{{ route('staff.articles.show', $article) }}">
+                                            <x-secondary-button class="px-3 py-1.5 text-xs">Lihat Detail</x-secondary-button>
                                         </a>
                                     </div>
                                 </div>
@@ -132,15 +129,15 @@
                         {{ $articles->links() }}
                     </div>
                 @else
-                    <div class="text-center py-16 bg-white border border-gray-200 rounded-lg">
-                        <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Belum Ada Artikel</h3>
-                        <p class="text-gray-600 mb-4">
-                            Mulai buat artikel bantuan pertama Anda untuk membantu pelanggan.
-                        </p>
-                    </div>
+                    <x-empty-state 
+                        icon="document"
+                        title="Belum Ada Artikel"
+                        subtitle="Mulai buat artikel bantuan pertama Anda untuk membantu pelanggan."
+                        actionText="Buat Artikel Baru"
+                        actionUrl="{{ route('staff.articles.create') }}"
+                        actionIcon="plus"
+                        size="md"
+                    />
                 @endif
 
             </div>

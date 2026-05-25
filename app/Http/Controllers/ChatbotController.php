@@ -2,89 +2,154 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Article;
-use App\Models\Chatbot;
-use App\Models\Message;
 use App\Models\Ticket;
-use App\Services\ArticleSearchService;
+use App\Models\Message;
+use App\Models\Category;
+use App\Services\Chatbot\AdvancedRetrievalService;
+use App\Services\Chatbot\ConversationFlowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
- * ChatbotController — Pipeline:
- *
- *  1. Validasi & normalisasi input
- *  2. Chatbot rules dari database (keyword-based)
- *  3. Pencarian artikel via TF-IDF (auto-learned dari artikel yang dipublish)
- *  4. Fallback → tampilkan tombol hubungi staff
+ * ChatbotController - Advanced TF-IDF chatbot with retrieval refinement
+ * 
+ * Features:
+ * - Multi-intent splitting (queries with "dan", "atau", etc.)
+ * - Result diversification (avoid category/title domination)
+ * - Failure escalation (offer Live Chat/Buat Tiket after repeated failures)
+ * - Conversation memory (track context across interactions)
+ * - Clarification flow (guide users when queries are ambiguous)
+ * 
+ * Pipeline:
+ * 1. Validate request input
+ * 2. Check for greeting/smalltalk (rule-based, lightweight)
+ * 3. Check for clarification needs (ambiguous queries)
+ * 4. Check for multi-intent queries
+ * 5. Delegate to AdvancedRetrievalService for TF-IDF retrieval
+ * 6. Apply diversification and ranking
+ * 7. Return formatted JSON response with escalation options if needed
  */
 class ChatbotController extends Controller
 {
-    public function __construct(private ArticleSearchService $searchService) {}
+    private AdvancedRetrievalService $retrievalService;
+    private ConversationFlowService $conversationFlowService;
 
-    // =========================================================================
-    // MAIN CHATBOT ENDPOINT
-    // =========================================================================
+    public function __construct(
+        AdvancedRetrievalService $retrievalService,
+        ConversationFlowService $conversationFlowService
+    ) {
+        $this->retrievalService = $retrievalService;
+        $this->conversationFlowService = $conversationFlowService;
+    }
 
+    /**
+     * Main chatbot endpoint - advanced TF-IDF retrieval with refinement features
+     * 
+     * Features integrated:
+     * - Multi-intent splitting
+     * - Result diversification
+     * - Failure escalation
+     * - Conversation memory
+     * - Clarification flow
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function getResponse(Request $request): JsonResponse
     {
+        // Validate input
         $request->validate([
             'message' => 'required|string|max:1000',
         ]);
 
         $userMessage = trim($request->input('message'));
 
+        // Validate minimum length
         if (mb_strlen($userMessage) < 3) {
             return $this->errorResponse('Pertanyaan terlalu pendek. Silakan jelaskan masalah Anda lebih detail.');
         }
 
-        // --- Step 1: Chatbot rules dari DB ---
-        $normalized = trim(preg_replace('/\s+/', ' ', preg_replace('/[^a-z0-9\s]/', ' ', mb_strtolower($userMessage))));
-        $chatbot    = $this->findChatbotRule($normalized);
-        if ($chatbot) {
-            $articles = $chatbot->category_id
-                ? Article::where('category_id', $chatbot->category_id)
-                         ->where('is_published', true)
-                         ->orderByDesc('views')
-                         ->limit(5)
-                         ->get()
-                         ->makeHidden(['content'])
-                : collect();
-
-            return response()->json([
-                'success'  => true,
-                'response' => $chatbot->response,
-                'articles' => $articles,
-            ]);
-        }
-
-        // --- Step 2: TF-IDF article search (auto-learned) ---
-        $articles = $this->searchService->search($userMessage, 5);
-
-        if ($articles->isNotEmpty()) {
-            $top      = $articles->first();
-            $count    = $articles->count();
-            $response = $count > 1
-                ? "Saya menemukan {$count} artikel yang mungkin membantu. Artikel teratas: **{$top->title}**"
-                : "Saya menemukan artikel yang mungkin membantu: **{$top->title}**";
-
-            return response()->json([
-                'success'  => true,
-                'response' => $response,
-                'articles' => $articles->makeHidden(['content'])->values(),
-            ]);
-        }
-
-        // --- Step 3: Fallback ---
-        return response()->json([
-            'success'             => false,
-            'response'            => 'Maaf, saya belum menemukan solusi yang tepat untuk pertanyaan Anda. Silakan hubungi staff kami.',
-            'articles'            => [],
-            'show_contact_button' => true,
-            'contact_button_text' => 'Buat Tiket untuk Bantuan Lebih Lanjut',
+        // Log query for debugging
+        Log::debug('Chatbot query', [
+            'query' => $userMessage,
+            'is_greeting' => $this->retrievalService->isGreeting($userMessage),
         ]);
+
+        // 1. Handle greetings (lightweight rule-based)
+        if ($this->retrievalService->isGreeting($userMessage)) {
+            // Clear conversation memory on new greeting
+            $this->retrievalService->clearConversationMemory();
+            
+            return response()->json([
+                'success'  => true,
+                'response' => $this->retrievalService->getGreetingResponse(),
+                'articles' => [],
+                'categories' => $this->retrievalService->getCuratedCategories(),
+            ]);
+        }
+
+        // 2. Check for clarification needs (ambiguous queries)
+        if ($this->retrievalService->needsClarification($userMessage)) {
+            $clarification = $this->retrievalService->getClarificationResponse($userMessage);
+            
+            // Store in conversation memory
+            $this->retrievalService->storeConversationContext([
+                'type' => 'clarification_requested',
+                'query' => $userMessage,
+            ]);
+            
+            return response()->json($clarification);
+        }
+
+        // 3. Perform retrieval (handles multi-intent splitting internally)
+        $result = $this->retrievalService->retrieve($userMessage, 5);
+        
+        // Store conversation context
+        $this->retrievalService->storeConversationContext([
+            'type' => 'retrieval',
+            'query' => $userMessage,
+            'found_results' => !empty($result['results']),
+            'result_count' => count($result['results'] ?? []),
+        ]);
+
+        // 4. Format response (includes escalation check)
+        $response = $this->retrievalService->formatResponse($result);
+
+        // 5. Add diversification info to response
+        if (!empty($result['results'])) {
+            $categories = array_unique(array_column($result['results'], 'category_name'));
+            $response['diversity'] = [
+                'categories' => count($categories),
+                'is_diverse' => count($categories) > 1,
+            ];
+            
+            // Multi-intent info
+            if (!empty($result['is_multi_intent'])) {
+                $response['multi_intent'] = [
+                    'detected' => true,
+                    'intents' => $result['intents'] ?? [],
+                ];
+            }
+        }
+
+        // Log retrieval result for debugging
+        Log::debug('Chatbot retrieval result', [
+            'query' => $userMessage,
+            'found' => count($response['articles'] ?? []),
+            'confidence' => $response['confidence'] ?? 'none',
+            'escalated' => $response['should_escalate'] ?? false,
+        ]);
+
+        return response()->json($response);
     }
 
+    /**
+     * Legacy search endpoint - uses Advanced TF-IDF retrieval
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function chatbotSearch(Request $request): JsonResponse
     {
         $request->validate([
@@ -93,61 +158,117 @@ class ChatbotController extends Controller
 
         $keyword = $request->q;
 
-        $articles = Article::where('is_published', true)
-            ->where(function ($query) use ($keyword) {
-                $query->where('title', 'like', "%{$keyword}%")
-                      ->orWhere('excerpt', 'like', "%{$keyword}%")
-                      ->orWhere('keywords', 'like', "%{$keyword}%")
-                      ->orWhere('content', 'like', "%{$keyword}%");
-            })
-            ->with('category')
-            ->select('id', 'title', 'slug', 'excerpt', 'keywords', 'category_id')
-            ->limit(5)
-            ->get()
-            ->map(fn($article) => [
-                'title'    => $article->title,
-                'category' => $article->category->name ?? '-',
-                'excerpt'  => $article->excerpt,
-                'keywords' => $article->keywords,
-                'url'      => route('articles.show', $article->slug),
-            ]);
+        // Use advanced TF-IDF retrieval with multi-intent support
+        $result = $this->retrievalService->retrieve($keyword, 5);
+
+        $results = collect($result['results'])->map(fn($article) => [
+            'title'    => $article['title'],
+            'category' => $article['category_name'] ?? '-',
+            'excerpt'  => $article['excerpt'] ?? '',
+            'url'      => $article['url'],
+            'confidence' => $article['confidence'] ?? 'medium',
+        ]);
 
         return response()->json([
-            'query'   => $keyword,
-            'results' => $articles,
-            'total'   => $articles->count(),
+            'query'        => $keyword,
+            'results'      => $results,
+            'total'        => count($results),
+            'is_multi_intent' => $result['is_multi_intent'] ?? false,
+            'intents'      => $result['intents'] ?? [],
+        ]);
+    }
+    
+    /**
+     * Check if escalation is needed for a query
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function checkEscalation(Request $request): JsonResponse
+    {
+        $request->validate([
+            'message' => 'required|string|max:500',
+        ]);
+
+        $message = trim($request->input('message'));
+        
+        $shouldEscalate = $this->retrievalService->shouldEscalate($message);
+        $failureCount = $this->retrievalService->getFailureCount($message);
+        
+        return response()->json([
+            'success' => true,
+            'should_escalate' => $shouldEscalate,
+            'failure_count' => $failureCount,
+            'threshold' => 3,
+            'escalation_response' => $shouldEscalate ? $this->retrievalService->getEscalationResponse() : null,
+        ]);
+    }
+    
+    /**
+     * Get clarification for ambiguous query
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getClarification(Request $request): JsonResponse
+    {
+        $request->validate([
+            'message' => 'required|string|max:500',
+        ]);
+
+        $message = trim($request->input('message'));
+        
+        $needsClarification = $this->retrievalService->needsClarification($message);
+        
+        if ($needsClarification) {
+            return response()->json($this->retrievalService->getClarificationResponse($message));
+        }
+        
+        return response()->json([
+            'success' => true,
+            'needs_clarification' => false,
+        ]);
+    }
+    
+    /**
+     * Get conversation history
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getConversationHistory(Request $request): JsonResponse
+    {
+        $limit = $request->input('limit', 5);
+        $history = $this->retrievalService->getRecentConversationContext($limit);
+        
+        return response()->json([
+            'success' => true,
+            'history' => $history,
+        ]);
+    }
+    
+    /**
+     * Clear conversation history
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function clearConversation(Request $request): JsonResponse
+    {
+        $this->retrievalService->clearConversationMemory();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Conversation history cleared',
         ]);
     }
 
-    // =========================================================================
-    // CHATBOT RULES (database-driven, dikelola dari admin panel)
-    // =========================================================================
-
-    private function findChatbotRule(string $message): ?Chatbot
-    {
-        // Gunakan cache pendek agar tidak query berulang per request
-        $chatbots = cache()->remember('chatbot:rules', 120, function () {
-            return Chatbot::active()->orderByPriority()->get();
-        });
-
-        foreach ($chatbots as $chatbot) {
-            foreach ($chatbot->getKeywordsArray() as $keyword) {
-                if (str_contains($message, mb_strtolower(trim($keyword)))) {
-                    return $chatbot;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    // =========================================================================
-    // CONTACT FORM
-    // =========================================================================
-
+    /**
+     * Show contact form for ticket creation
+     */
     public function showContactForm(): JsonResponse
     {
-        $categories = \App\Models\Category::select('id', 'name')->orderBy('name')->get();
+        $categories = Category::select('id', 'name')->orderBy('name')->get();
 
         return response()->json([
             'success'    => true,
@@ -183,10 +304,9 @@ class ChatbotController extends Controller
         ]);
     }
 
-    // =========================================================================
-    // TICKET & MESSAGES
-    // =========================================================================
-
+    /**
+     * Create ticket and initial message
+     */
     public function createTicketAndMessage(Request $request): JsonResponse
     {
         $request->validate([
@@ -231,6 +351,9 @@ class ChatbotController extends Controller
         ]);
     }
 
+    /**
+     * Send message to existing ticket
+     */
     public function sendMessage(Request $request): JsonResponse
     {
         $request->validate([
@@ -256,6 +379,9 @@ class ChatbotController extends Controller
         return response()->json(['success' => true, 'message' => 'Pesan terkirim.']);
     }
 
+    /**
+     * Get messages for a ticket
+     */
     public function getTicketMessages(Request $request, Ticket $ticket): JsonResponse
     {
         $messages = $ticket->messages()
@@ -273,10 +399,208 @@ class ChatbotController extends Controller
         ]);
     }
 
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
+    /**
+     * Get dynamic topics for greeting
+     */
+    public function getTopics(): JsonResponse
+    {
+        // Use conversation flow service for topics
+        $data = $this->conversationFlowService->getGreetingData();
 
+        return response()->json([
+            'success' => true,
+            'topics' => $data['categories'],
+            'greeting' => $this->retrievalService->getGreetingResponse(),
+        ]);
+    }
+
+    /**
+     * Get subtopics for a category
+     */
+    public function getSubtopics(Request $request): JsonResponse
+    {
+        $request->validate([
+            'topic' => 'required|string|max:255',
+        ]);
+
+        // Map topic to category or use curated subtopics
+        $topic = strtolower($request->topic);
+        $subtopics = $this->retrievalService->getCuratedSubtopics($topic);
+        
+        if (empty($subtopics)) {
+            // Fallback to conversation flow service
+            $data = $this->conversationFlowService->getSearchSuggestions($topic, 4);
+            $subtopics = array_map(fn($s) => [
+                'id' => $s['id'],
+                'label' => $s['label'],
+                'slug' => $s['slug'] ?? null,
+            ], $data);
+        }
+
+        return response()->json([
+            'success' => true,
+            'subtopics' => $subtopics,
+        ]);
+    }
+
+    /**
+     * Get article suggestion
+     */
+    public function getArticleSuggestion(Request $request): JsonResponse
+    {
+        $request->validate([
+            'article_id' => 'required|integer|exists:articles,id',
+        ]);
+
+        $article = \App\Models\Article::where('is_published', true)
+            ->where('publish_status', 'approved')
+            ->with('category')
+            ->find($request->article_id);
+
+        if (!$article) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Artikel tidak ditemukan.',
+            ], 404);
+        }
+
+        // Use retrieval service to find related articles
+        $relatedResult = $this->retrievalService->retrieve($article->title . ' ' . $article->excerpt, 3);
+        $related = array_filter($relatedResult['results'] ?? [], fn($r) => $r['id'] != $article->id);
+
+        return response()->json([
+            'success' => true,
+            'response' => "Saya menemukan artikel yang mungkin membantu: **{$article->title}**",
+            'article' => [
+                'id' => $article->id,
+                'title' => $article->title,
+                'excerpt' => $article->excerpt,
+                'slug' => $article->slug,
+                'url' => route('articles.show', $article->slug),
+            ],
+            'related' => array_slice(array_values($related), 0, 2),
+        ]);
+    }
+
+    /**
+     * Rebuild chatbot cache (admin only)
+     * Note: This is a placeholder - actual cache rebuilding would require
+     * rebuilding the TF-IDF index which is handled by the ReindexChatbotArticles command
+     */
+    public function rebuildCache(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'message' => 'Gunakan command: php artisan chatbot:reindex untuk membangun ulang cache TF-IDF.',
+        ]);
+    }
+
+    /**
+     * Clear chatbot cache (admin only)
+     */
+    public function clearCache(): JsonResponse
+    {
+        // Clear session-based caches
+        session()->forget('chatbot_failure_memory');
+        session()->forget('chatbot_conversation_memory');
+        
+        // Clear application cache
+        \Illuminate\Support\Facades\Cache::flush();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cache chatbot berhasil dihapus.',
+        ]);
+    }
+
+    /**
+     * Get greeting with category chips
+     * GET /chatbot/greeting
+     */
+    public function getGreeting(): JsonResponse
+    {
+        Log::debug('Chatbot greeting requested');
+        
+        $data = $this->conversationFlowService->getGreetingData();
+
+        return response()->json([
+            'success' => true,
+            'greeting' => $data['greeting'],
+            'categories' => $data['categories'],
+        ]);
+    }
+
+    /**
+     * Get subtopics for a category
+     * POST /chatbot/category-subtopics
+     */
+    public function getCategorySubtopics(Request $request): JsonResponse
+    {
+        $request->validate([
+            'category_id' => 'required|string|exists:categories,id',
+        ]);
+
+        $categoryId = $request->input('category_id');
+        Log::debug('Chatbot category subtopics requested', ['category_id' => $categoryId]);
+
+        $data = $this->conversationFlowService->getCategorySubtopics($categoryId);
+
+        if (isset($data['error'])) {
+            return response()->json([
+                'success' => false,
+                'message' => $data['error'],
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'question' => $data['question'],
+            'subtopics' => $data['subtopics'],
+        ]);
+    }
+
+    /**
+     * Check if query is ambiguous
+     * POST /chatbot/check-ambiguity
+     */
+    public function checkAmbiguity(Request $request): JsonResponse
+    {
+        $request->validate([
+            'message' => 'required|string|max:500',
+        ]);
+
+        $message = trim($request->input('message'));
+        Log::debug('Chatbot ambiguity check', ['message' => $message]);
+
+        $result = $this->conversationFlowService->checkAmbiguity($message);
+
+        return response()->json([
+            'success' => true,
+            'is_ambiguous' => $result['is_ambiguous'] ?? false,
+            'clarification' => $result['clarification'] ?? null,
+        ]);
+    }
+
+    /**
+     * Get search suggestions
+     * GET /chatbot/search-suggestions
+     */
+    public function getSearchSuggestions(Request $request): JsonResponse
+    {
+        $query = trim($request->input('q', ''));
+        Log::debug('Chatbot search suggestions', ['query' => $query]);
+
+        $suggestions = $this->conversationFlowService->getSearchSuggestions($query, 5);
+
+        return response()->json([
+            'success' => true,
+            'suggestions' => $suggestions,
+        ]);
+    }
+
+    /**
+     * Error response helper
+     */
     private function errorResponse(string $message): JsonResponse
     {
         return response()->json([

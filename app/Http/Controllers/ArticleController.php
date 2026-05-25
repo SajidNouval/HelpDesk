@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\Category;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -86,6 +87,9 @@ class ArticleController extends Controller
 
         $slug = $this->generateUniqueSlug($request->title, $article->id);
 
+        // Jika artikel sudah approved sebelumnya, tetap approved tanpa perlu approval ulang
+        $alreadyApproved = $article->is_published && $article->publish_status === 'approved';
+
         $article->update([
             'category_id' => $request->category_id,
             'title' => $request->title,
@@ -93,12 +97,16 @@ class ArticleController extends Controller
             'content' => $request->content,
             'excerpt' => $this->generateExcerpt($request->excerpt, $request->content),
             'keywords' => $request->keywords,
-            'is_published' => false,
-            'publish_status' => 'pending',
+            'is_published' => $alreadyApproved ? true : false,
+            'publish_status' => $alreadyApproved ? 'approved' : 'pending',
             'rejection_note' => null,
         ]);
 
-        return redirect()->route('staff.articles.show', $article)->with('success', 'Artikel berhasil diperbarui dan menunggu persetujuan admin.');
+        $message = $alreadyApproved 
+            ? 'Artikel berhasil diperbarui dan langsung dipublikasikan.' 
+            : 'Artikel berhasil diperbarui dan menunggu persetujuan admin.';
+
+        return redirect()->route('staff.articles.show', $article)->with('success', $message);
     }
 
     public function destroy(Article $article)
@@ -150,8 +158,9 @@ class ArticleController extends Controller
             ->withQueryString();
 
         $categories = Category::all();
+        $liveServiceEnabled = Setting::bool('live_service_enabled', true);
 
-        return view('articles.index', compact('articles', 'categories', 'selectedCategoryId'));
+        return view('articles.index', compact('articles', 'categories', 'selectedCategoryId', 'liveServiceEnabled'));
     }
 
     public function publicShow($slug)
@@ -173,7 +182,7 @@ class ArticleController extends Controller
         return view('articles.show', compact('article', 'categories'));
     }
 
-    private function generateUniqueSlug(string $title, int $ignoreArticleId = null): string
+    private function generateUniqueSlug(string $title, ?string $ignoreArticleId = null): string
     {
         $slug = Str::slug($title);
         $originalSlug = $slug;

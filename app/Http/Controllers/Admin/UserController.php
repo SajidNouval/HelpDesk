@@ -31,14 +31,16 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'role' => ['required', Rule::in(['admin', 'staff'])],
             'categories' => ['nullable', 'array'],
             'categories.*' => ['exists:categories,id'],
         ]);
 
-        $validated['password'] = Hash::make('password');
-
-        $user = User::create($validated);
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role' => 'staff',
+            'password' => Hash::make('password'),
+        ]);
 
         // Save categories if provided
         if (!empty($validated['categories'])) {

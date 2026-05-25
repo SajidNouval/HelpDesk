@@ -89,47 +89,45 @@
 
                 <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
                     <div class="p-6">
-                        <form action="{{ route('admin.users.store') }}" method="POST" class="space-y-6">
+                        <form id="staff-form" action="{{ route('admin.users.store') }}" method="POST" class="space-y-6" data-confirm="Apakah Anda yakin ingin menambahkan staf baru?">
                             @csrf
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                                        Nama Lengkap <span class="text-red-500">*</span>
-                                    </label>
-                                    <input id="name" name="name" type="text" value="{{ old('name') }}" required
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                                           placeholder="Masukkan nama lengkap">
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Nama Lengkap <span class="text-red-500">*</span>
+                                        </label>
+                                        <input id="name" name="name" type="text" value="{{ old('name') }}" required
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                                               placeholder="Masukkan nama lengkap">
+                                    </div>
+
+                                    <div>
+                                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Email <span class="text-red-500">*</span>
+                                        </label>
+                                        <input id="email" name="email" type="email" value="{{ old('email') }}" required
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                                               placeholder="Masukkan alamat email">
+                                    </div>
                                 </div>
 
                                 <div>
-                                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                                        Email <span class="text-red-500">*</span>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Role
                                     </label>
-                                    <input id="email" name="email" type="email" value="{{ old('email') }}" required
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                                           placeholder="Masukkan alamat email">
+                                    <div class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-700 text-sm">
+                                        Staff
+                                    </div>
+                                    <p class="mt-1 text-sm text-gray-500">Role staf sudah dipilih otomatis. Admin tidak dapat dibuat dari halaman ini.</p>
                                 </div>
-                            </div>
 
-                            <div>
-                                <label for="role" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Role <span class="text-red-500">*</span>
-                                </label>
-                                <select id="role" name="role" required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
-                                    <option value="">Pilih role</option>
-                                    <option value="staff" {{ old('role') === 'staff' ? 'selected' : '' }}>Staff</option>
-                                    <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
-                                </select>
-                                <p class="mt-1 text-sm text-gray-500">Staff dapat membuat dan mengelola artikel. Admin memiliki akses penuh ke sistem.</p>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Kategori
-                                </label>
-                                <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Kategori
+                                    </label>
+                                    <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-300 rounded-xl p-3">
                                     @php
                                         $categories = \App\Models\Category::orderBy('name')->get();
                                     @endphp
@@ -164,15 +162,15 @@
 
                             <div class="flex justify-end pt-4 border-t border-gray-200">
                                 <div class="flex space-x-3">
-                                    <a href="{{ route('admin.users.index') }}" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
-                                        Batal
+                                    <a href="{{ route('admin.users.index') }}">
+                                        <x-secondary-button class="px-4 py-2">Batal</x-secondary-button>
                                     </a>
-                                    <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold">
+                                    <x-primary-button type="submit" class="px-6 py-2 flex items-center">
                                         <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                         </svg>
                                         Simpan Staf
-                                    </button>
+                                    </x-primary-button>
                                 </div>
                             </div>
                         </form>

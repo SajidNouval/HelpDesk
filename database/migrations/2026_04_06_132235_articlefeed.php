@@ -12,14 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('article_feedback', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id')->primary();
 
-            $table->foreignId('article_id')
+            $table->foreignUlid('article_id')
                 ->constrained()
                 ->cascadeOnDelete();
 
+            $table->string('ip_address', 45);
             $table->boolean('is_helpful'); 
 
+            $table->unique(['article_id', 'ip_address']);
             $table->timestamps();
         });
     }

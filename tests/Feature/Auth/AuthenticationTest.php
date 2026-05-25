@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\VerifyCsrfToken;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
 
@@ -9,8 +10,10 @@ test('login screen can be rendered', function () {
     $response->assertStatus(200);
 });
 
-test('users can authenticate using the login screen', function () {
-    $user = User::factory()->create();
+test('staff users can authenticate using the login screen', function () {
+    $this->withoutMiddleware([VerifyCsrfToken::class]);
+
+    $user = User::factory()->staff()->create();
 
     $response = $this->post('/login', [
         'email' => $user->email,
@@ -18,10 +21,26 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(RouteServiceProvider::HOME);
+    $response->assertRedirect(route('staff.dashboard'));
+});
+
+test('admin users can authenticate using the login screen', function () {
+    $this->withoutMiddleware([VerifyCsrfToken::class]);
+
+    $admin = User::factory()->admin()->create();
+
+    $response = $this->post('/login', [
+        'email' => $admin->email,
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('admin.dashboard'));
 });
 
 test('users can not authenticate with invalid password', function () {
+    $this->withoutMiddleware([VerifyCsrfToken::class]);
+
     $user = User::factory()->create();
 
     $this->post('/login', [
@@ -33,6 +52,8 @@ test('users can not authenticate with invalid password', function () {
 });
 
 test('users can logout', function () {
+    $this->withoutMiddleware([VerifyCsrfToken::class]);
+
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->post('/logout');

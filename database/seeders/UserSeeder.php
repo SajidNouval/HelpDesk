@@ -13,32 +13,38 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Admin Utama',
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
-        ]);
+        $users = [
+            [
+                'name' => 'Admin Utama',
+                'email' => 'admin@gmail.com',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+            ],
+            [
+                'name' => 'Staff Pelayanan',
+                'email' => 'staff@gmail.com',
+                'password' => Hash::make('password'),
+                'role' => 'staff',
+            ],
+            [
+                'name' => 'Staff Pelayanan 2',
+                'email' => 'umam@gmail.com',
+                'password' => Hash::make('password'),
+                'role' => 'staff',
+            ],
+            [
+                'name' => 'Staff Pelayanan 3',
+                'email' => 'jamal@gmail.com',
+                'password' => Hash::make('password'),
+                'role' => 'staff',
+            ],
+        ];
 
-        User::factory()->create([
-            'name' => 'Staff Pelayanan',
-            'email' => 'staff@gmail.com',
-            'password' => Hash::make('password'),
-            'role' => 'staff',
-        ]);
-
-        User::factory()->create([
-            'name' => 'Staff Pelayanan 2',
-            'email' => 'umam@gmail.com',
-            'password' => Hash::make('password'),
-            'role' => 'staff',
-        ]);
-
-        User::factory()->create([
-            'name' => 'Staff Pelayanan 3',
-            'email' => 'jamal@gmail.com',
-            'password' => Hash::make('password'),
-            'role' => 'staff',
-        ]);
+        foreach ($users as $userData) {
+            User::updateOrCreate(
+                ['email' => $userData['email']],
+                $userData
+            );
+        }
     }
 }

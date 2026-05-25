@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('staff_profiles', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id')->primary();
 
-            $table->foreignId('user_id')
+            $table->foreignUlid('user_id')
                 ->constrained()
                 ->cascadeOnDelete();
 
-            $table->foreignId('category_id')
+            $table->foreignUlid('category_id')
                 ->constrained()
                 ->cascadeOnDelete();
 

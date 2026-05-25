@@ -70,6 +70,27 @@
                     </p>
                 </div>
 
+                <div class="mb-6 p-6 bg-white border border-gray-200 rounded-3xl shadow-sm">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                            <p class="text-sm uppercase tracking-[0.2em] text-gray-500">Live Service</p>
+                            <h3 class="text-2xl font-semibold mt-2 text-gray-900">
+                                {{ $liveServiceEnabled ? 'Aktif' : 'Nonaktif' }}
+                            </h3>
+                            <p class="mt-2 text-sm text-gray-600">
+                                Live chat tiket hanya akan tersedia jika layanan ini aktif. Laporan/report tetap dapat dibuat kapan saja.
+                            </p>
+                        </div>
+                        <form action="{{ route('admin.live-service.toggle') }}" method="POST" class="flex items-center gap-3">
+                            @csrf
+                            <input type="hidden" name="status" value="{{ $liveServiceEnabled ? 'off' : 'on' }}">
+                            <x-primary-button type="submit" class="rounded-3xl px-5 py-3">
+                                {{ $liveServiceEnabled ? 'Matikan Live Service' : 'Nyalakan Live Service' }}
+                            </x-primary-button>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Pending Articles Review Section -->
                 <div class="space-y-6">
                     <div class="flex justify-between items-center mb-4">
@@ -90,9 +111,7 @@
                                             <div class="flex-1">
                                                 <div class="flex items-center gap-2 mb-2">
                                                     <h3 class="font-semibold text-gray-900">{{ $article->title }}</h3>
-                                                    <span class="px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full">
-                                                        Menunggu
-                                                    </span>
+                                                    <x-status-badge status="pending" />
                                                 </div>
 
                                                 <p class="text-sm text-gray-600 mb-2">Penulis: <span class="font-medium">{{ $article->staff?->name ?? 'Tidak ada' }}</span></p>
@@ -107,13 +126,13 @@
                                             <div class="flex items-center gap-2">
                                                 <form method="POST" action="{{ route('admin.articles.approve', $article) }}" style="display: inline;">
                                                     @csrf
-                                                    <button type="submit" class="inline-flex items-center px-3 py-2 bg-green-500 text-white rounded-lg text-xs font-semibold hover:bg-green-600 transition">
+                                                    <x-primary-button type="submit" class="inline-flex items-center px-3 py-2 text-xs font-semibold">
                                                         Setujui
-                                                    </button>
+                                                    </x-primary-button>
                                                 </form>
-                                                <button type="button" onclick="openRejectModal('{{ route('admin.articles.reject', $article) }}')" class="inline-flex items-center px-3 py-2 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition">
+                                                <x-danger-button type="button" data-open-modal="#rejectModal" data-modal-form-action="/admin/articles/{id}/reject" data-article-id="{{ $article->id }}" class="inline-flex items-center px-3 py-2 text-xs font-semibold">
                                                     Tolak
-                                                </button>
+                                                </x-danger-button>
                                             </div>
                                         </div>
                                     </div>
@@ -131,36 +150,36 @@
                 </div>
 
                 <!-- Per-Article Statistics -->
-                <div class="mt-8 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                <div class="mt-8 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Statistik Artikel</h3>
 
                         @if($articles->count() > 0)
                             <div class="overflow-x-auto">
                                 <table class="w-full text-sm">
-                                    <thead class="bg-gray-100">
+                                    <thead class="bg-gray-50">
                                         <tr>
-                                            <th class="px-4 py-3 text-left text-gray-600">Judul Artikel</th>
-                                            <th class="px-4 py-3 text-left text-gray-600">Penulis</th>
-                                            <th class="px-4 py-3 text-center text-gray-600">Views</th>
-                                            <th class="px-4 py-3 text-center text-green-600">Membantu</th>
-                                            <th class="px-4 py-3 text-center text-red-600">Tidak Membantu</th>
-                                            <th class="px-4 py-3 text-center text-gray-600">Total Feedback</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Judul Artikel</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Penulis</th>
+                                            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Views</th>
+                                            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Membantu</th>
+                                            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Tidak Membantu</th>
+                                            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Total Feedback</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-200">
+                                    <tbody class="divide-y divide-gray-100">
                                         @foreach($articles as $article)
                                             <tr class="hover:bg-gray-50 transition">
-                                                <td class="px-4 py-3 text-gray-900 font-medium">{{ $article->title }}</td>
-                                                <td class="px-4 py-3 text-gray-600">{{ $article->staff?->name ?? 'Tidak ada' }}</td>
-                                                <td class="px-4 py-3 text-center text-gray-900 font-semibold">{{ $article->views }}</td>
-                                                <td class="px-4 py-3 text-center">
+                                                <td class="px-6 py-4 text-gray-900 font-medium">{{ $article->title }}</td>
+                                                <td class="px-6 py-4 text-gray-600">{{ $article->staff?->name ?? 'Tidak ada' }}</td>
+                                                <td class="px-6 py-4 text-center text-gray-900 font-semibold">{{ $article->views }}</td>
+                                                <td class="px-6 py-4 text-center">
                                                     <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">{{ $article->helpful_count }}</span>
                                                 </td>
-                                                <td class="px-4 py-3 text-center">
+                                                <td class="px-6 py-4 text-center">
                                                     <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">{{ $article->not_helpful_count }}</span>
                                                 </td>
-                                                <td class="px-4 py-3 text-center text-gray-600 font-medium">{{ $article->helpful_count + $article->not_helpful_count }}</td>
+                                                <td class="px-6 py-4 text-center text-gray-600 font-medium">{{ $article->helpful_count + $article->not_helpful_count }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -184,45 +203,21 @@
         </div>
     </div>
 
-    <script>
-        // Rejection Modal
-        function openRejectModal(rejectUrl) {
-            const modal = document.getElementById('rejectModal');
-            const form = document.getElementById('rejectForm');
-            form.action = rejectUrl;
-            modal.classList.remove('hidden');
-        }
-
-        function closeRejectModal() {
-            const modal = document.getElementById('rejectModal');
-            modal.classList.add('hidden');
-            document.getElementById('rejectForm').reset();
-        }
-
-        document.getElementById('rejectModal')?.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeRejectModal();
-            }
-        });
-    </script>
-
     <!-- Rejection Modal -->
-    <div id="rejectModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Tolak Artikel</h3>
-            <form method="POST" id="rejectForm">
+    <div id="rejectModal" data-modal class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm p-4 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-xl w-full max-w-lg">
+            <div class="px-6 py-5 border-b border-gray-100">
+                <h3 class="text-xl font-semibold text-gray-900">Tolak Artikel</h3>
+            </div>
+            <form method="POST" id="rejectForm" data-ajax data-close-on-success class="p-6 space-y-4">
                 @csrf
-                <div class="mb-4">
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Penolakan</label>
-                    <textarea name="rejection_note" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" rows="4" placeholder="Jelaskan alasan penolakan..." required></textarea>
+                    <textarea name="rejection_note" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none" rows="4" placeholder="Jelaskan alasan penolakan..." required></textarea>
                 </div>
-                <div class="flex justify-end gap-3">
-                    <button type="button" onclick="closeRejectModal()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
-                        Batal
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                        Tolak
-                    </button>
+                <div class="flex justify-end gap-3 pt-4">
+                    <x-secondary-button type="button" data-close-modal class="px-4 py-2 text-sm rounded-xl">Batal</x-secondary-button>
+                    <x-danger-button type="submit" class="px-4 py-2 text-sm rounded-xl">Tolak</x-danger-button>
                 </div>
             </form>
         </div>

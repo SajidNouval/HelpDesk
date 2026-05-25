@@ -21,16 +21,16 @@
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
 
-                    <div class="space-y-5">
+                    <div class="space-y-4">
                         <div>
                             <x-input-label for="email" :value="__('Email')" />
-                            <x-text-input id="email" class="block mt-1 w-full bg-white text-gray-900 border-gray-300 dark:bg-white dark:text-gray-900 dark:border-gray-300" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
+                            <x-text-input id="email" class="block w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
                             <x-input-error :messages="$errors->get('email')" class="mt-2" />
                         </div>
 
                         <div>
                             <x-input-label for="password" :value="__('Password')" />
-                            <x-text-input id="password" class="block mt-1 w-full bg-white text-gray-900 border-gray-300 dark:bg-white dark:text-gray-900 dark:border-gray-300" type="password" name="password" required autocomplete="current-password" />
+                            <x-text-input id="password" class="block w-full" type="password" name="password" required autocomplete="current-password" />
                             <x-input-error :messages="$errors->get('password')" class="mt-2" />
                         </div>
 

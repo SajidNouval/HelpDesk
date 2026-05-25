@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use App\Models\Article;
+use App\Models\Setting;
 use App\Models\Ticket;
 use Illuminate\View\View;
 
@@ -25,7 +26,8 @@ class DashboardController extends Controller
             ->get();
 
         $articleCount = Article::where('staff_id', auth()->id())->count();
+        $liveServiceEnabled = Setting::bool('live_service_enabled', true);
 
-        return view('staff.dashboard', compact('todayTickets', 'waitingTickets', 'articleCount'));
+        return view('staff.dashboard', compact('todayTickets', 'waitingTickets', 'articleCount', 'liveServiceEnabled'));
     }
 }

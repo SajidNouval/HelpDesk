@@ -2,75 +2,45 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Article;
-use App\Services\ArticleSearchService;
+use App\Services\Chatbot\ChatbotRetrievalService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class ReindexChatbotArticles extends Command
 {
     protected $signature = 'chatbot:reindex {--force : Force reindex semua artikel}';
 
-    protected $description = 'Index atau re-index artikel untuk chatbot search';
+    protected $description = 'Index atau re-index artikel untuk chatbot TF-IDF search';
 
-    private ArticleSearchService $searchService;
+    private ChatbotRetrievalService $retrievalService;
 
-    public function __construct(ArticleSearchService $searchService)
+    public function __construct(ChatbotRetrievalService $retrievalService)
     {
         parent::__construct();
-        $this->searchService = $searchService;
+        $this->retrievalService = $retrievalService;
     }
 
     public function handle(): int
     {
-        $this->info('🔍 Memulai re-indexing artikel untuk chatbot...');
+        $this->info('🔍 Memulai re-indexing artikel untuk chatbot TF-IDF...');
 
-        // Clear index lama jika force
         if ($this->option('force')) {
-            $this->info('🗑️  Menghapus index lama...');
-            DB::table('article_keyword_index')->truncate();
+            $this->info('🗑️  Menghapus cache lama...');
+            $this->retrievalService->clearCache();
         }
 
-        // Ambil artikel yang published dan disetujui
-        $articles = Article::where('is_published', true)
-            ->where('publish_status', 'approved')
-            ->orderBy('id')
-            ->get();
+        // Rebuild cache - ini akan mengambil semua artikel published & approved
+        try {
+            $result = $this->retrievalService->rebuildCache();
 
-        if ($articles->isEmpty()) {
-            $this->warn('⚠️  Tidak ada artikel yang dipublikasikan.');
+            $this->newLine();
+            $this->info("✅ Re-indexing selesai!");
+            $this->line("   Dokumen: {$result['documents']}");
+            $this->line("   Term/Token unik: {$result['terms']}");
+
             return 0;
+        } catch (\Exception $e) {
+            $this->error("❌ Gagal re-index: {$e->getMessage()}");
+            return 1;
         }
-
-        $this->info("📄 Ditemukan {$articles->count()} artikel yang dipublikasikan.");
-
-        // Progress bar
-        $progressBar = $this->output->createProgressBar($articles->count());
-        $progressBar->start();
-
-        $indexed = 0;
-        $failed = 0;
-
-        foreach ($articles as $article) {
-            try {
-                $this->searchService->indexArticle($article);
-                $indexed++;
-            } catch (\Exception $e) {
-                $this->error("\n❌ Gagal index artikel {$article->id}: {$e->getMessage()}");
-                $failed++;
-            }
-
-            $progressBar->advance();
-        }
-
-        $progressBar->finish();
-
-        // Summary
-        $this->newLine(2);
-        $this->info("✅ Re-indexing selesai!");
-        $this->line("   Berhasil: {$indexed}");
-        $this->line("   Gagal: {$failed}");
-
-        return $failed > 0 ? 1 : 0;
     }
 }

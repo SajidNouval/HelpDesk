@@ -20,21 +20,21 @@
     <div class="max-w-7xl mx-auto px-4 py-10">
         <div class="space-y-6">
             @if (session('status') === 'profile-updated' || session('status') === 'password-updated' || session('status') === 'verification-link-sent')
-                <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                <x-alert type="success" class="mb-6">
                     @if (session('status') === 'profile-updated')
-                        ✓ {{ __('Profil berhasil diperbarui.') }}
+                        Profil berhasil diperbarui.
                     @elseif (session('status') === 'password-updated')
-                        ✓ {{ __('Kata sandi berhasil diperbarui.') }}
+                        Kata sandi berhasil diperbarui.
                     @else
-                        ✓ {{ __('Tautan verifikasi telah dikirim ke email Anda.') }}
+                        Tautan verifikasi telah dikirim ke email Anda.
                     @endif
-                </div>
+                </x-alert>
             @endif
 
             @if (session('error'))
-                <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-                    ✗ {{ session('error') }}
-                </div>
+                <x-alert type="error" class="mb-6">
+                    {{ session('error') }}
+                </x-alert>
             @endif
 
             <div class="grid gap-6 lg:grid-cols-2">

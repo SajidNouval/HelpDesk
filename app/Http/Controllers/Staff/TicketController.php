@@ -136,6 +136,51 @@ class TicketController extends Controller
     }
 
     /**
+     * ❌ Tolak tiket (assigned atau waiting)
+     */
+    public function reject(Ticket $ticket): RedirectResponse
+    {
+        $user = auth()->user();
+
+        // Validasi akses
+        if ($ticket->staff_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses');
+        }
+
+        // Hanya izinkan penolakan untuk tiket assigned atau waiting
+        if (!in_array($ticket->status, ['assigned', 'waiting'])) {
+            return back()->withErrors(['error' => 'Tiket hanya dapat ditolak saat status assigned atau waiting.']);
+        }
+
+        // Update ticket status to closed
+        $ticket->update([
+            'status' => 'closed',
+            'closed_at' => now(),
+        ]);
+
+        // Update staff status jadi tidak sibuk
+        StaffProfile::where('user_id', $user->id)->update([
+            'is_busy' => false,
+        ]);
+
+        // Log penolakan
+        TicketLog::create([
+            'ticket_id' => $ticket->id,
+            'action' => 'rejected',
+            'description' => 'Tiket ditolak oleh staff: ' . $user->name . '. Staff tidak dapat menerima tiket pada saat ini.',
+        ]);
+
+        // Send rejection email to guest/customer
+        try {
+            \Mail::to($ticket->email)->send(new \App\Mail\TicketRejectionMail($ticket));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send rejection email: ' . $e->getMessage());
+        }
+
+        return redirect()->route('staff.tickets.index')->with('success', 'Tiket berhasil ditolak. Guest telah menerima notifikasi.');
+    }
+
+    /**
      * ✅ Tandai tiket sebagai selesai
      */
     public function complete(Request $request, Ticket $ticket): RedirectResponse

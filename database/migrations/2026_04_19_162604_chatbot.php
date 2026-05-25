@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('chatbot', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id')->primary();
 
             // keyword bisa lebih dari 1 (pisah koma)
             $table->string('keywords');
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->text('response');
 
             // optional: terkait kategori tiket
-            $table->foreignId('category_id')
+            $table->foreignUlid('category_id')
                 ->nullable()
                 ->constrained()
                 ->nullOnDelete();

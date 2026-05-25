@@ -1,0 +1,219 @@
+{
+    "test_suite": "Semantic Validation Suite",
+    "date": "2026-05-24 09:06:36",
+    "total_tests": 17,
+    "passed": 15,
+    "failed": 2,
+    "pass_rate": 88.2,
+    "results": [
+        {
+            "test_name": "Query 'wifi lemot' \u2192 wifi article ONLY",
+            "query": "wifi lemot",
+            "expected_domain": "wifi",
+            "actual_domain": "wifi",
+            "passed": true,
+            "message": "Correct domain match",
+            "details": {
+                "similarity": 10.8286,
+                "article_title": "Solusi Wifi Sering Putus Nyambung",
+                "category": "Wifi"
+            }
+        },
+        {
+            "test_name": "Query 'wifi lemot' has NO cross-domain contamination",
+            "query": "wifi lemot",
+            "expected_domain": "wifi",
+            "actual_domain": "CLEAN",
+            "passed": true,
+            "message": "No cross-domain contamination",
+            "details": {
+                "forbidden_domains": [
+                    "Printer",
+                    "BSOD",
+                    "Komputer"
+                ]
+            }
+        },
+        {
+            "test_name": "Query 'printer error' \u2192 printer article ONLY",
+            "query": "printer error",
+            "expected_domain": "printer",
+            "actual_domain": "printer",
+            "passed": true,
+            "message": "Correct domain match",
+            "details": {
+                "similarity": 15.4324,
+                "article_title": "Troubleshooting Printer Tidak Mau Ngeprint",
+                "category": "Hardware"
+            }
+        },
+        {
+            "test_name": "Query 'printer error' has NO cross-domain contamination",
+            "query": "printer error",
+            "expected_domain": "printer",
+            "actual_domain": "CLEAN",
+            "passed": true,
+            "message": "No cross-domain contamination",
+            "details": {
+                "forbidden_domains": [
+                    "Wifi",
+                    "Internet",
+                    "Jaringan",
+                    "BSOD"
+                ]
+            }
+        },
+        {
+            "test_name": "Query 'komputer lemot' \u2192 komputer article ONLY",
+            "query": "komputer lemot",
+            "expected_domain": "komputer",
+            "actual_domain": "hardware",
+            "passed": true,
+            "message": "Correct domain match",
+            "details": {
+                "similarity": 1.8632,
+                "article_title": "Cara Mengamankan Data dari Serangan Ransomware",
+                "category": "Hardware"
+            }
+        },
+        {
+            "test_name": "Query 'komputer lemot' has NO cross-domain contamination",
+            "query": "komputer lemot",
+            "expected_domain": "komputer",
+            "actual_domain": "CLEAN",
+            "passed": true,
+            "message": "No cross-domain contamination",
+            "details": {
+                "forbidden_domains": [
+                    "Wifi",
+                    "Internet",
+                    "Jaringan",
+                    "Printer",
+                    "BSOD"
+                ]
+            }
+        },
+        {
+            "test_name": "Query 'internet lambat' \u2192 internet article ONLY",
+            "query": "internet lambat",
+            "expected_domain": "internet",
+            "actual_domain": "internet",
+            "passed": true,
+            "message": "Correct domain match",
+            "details": {
+                "similarity": 3.0647,
+                "article_title": "Mengatasi Email yang Tidak Bisa Dikirim",
+                "category": "Internet"
+            }
+        },
+        {
+            "test_name": "Query 'internet lambat' has NO cross-domain contamination",
+            "query": "internet lambat",
+            "expected_domain": "internet",
+            "actual_domain": "CLEAN",
+            "passed": true,
+            "message": "No cross-domain contamination",
+            "details": {
+                "forbidden_domains": [
+                    "Printer",
+                    "BSOD",
+                    "Komputer",
+                    "Hardware"
+                ]
+            }
+        },
+        {
+            "test_name": "Ransomware query returns results",
+            "query": "ransomware",
+            "expected_domain": "security",
+            "actual_domain": null,
+            "passed": false,
+            "message": "No results returned for ransomware query",
+            "details": []
+        },
+        {
+            "test_name": "Internet lambat \u2192 internet article (not VPN\/security)",
+            "query": "internet lambat",
+            "expected_domain": "internet",
+            "actual_domain": "internet",
+            "passed": true,
+            "message": "Correctly returns internet domain",
+            "details": {
+                "article_title": "Mengatasi Email yang Tidak Bisa Dikirim",
+                "category": "Internet"
+            }
+        },
+        {
+            "test_name": "Internet lambat does NOT return VPN articles",
+            "query": "internet lambat",
+            "expected_domain": "internet",
+            "actual_domain": "NO_VPN",
+            "passed": true,
+            "message": "No VPN contamination",
+            "details": []
+        },
+        {
+            "test_name": "Typo query 'pritner eror' returns results after normalization",
+            "query": "pritner eror",
+            "expected_domain": "printer",
+            "actual_domain": null,
+            "passed": false,
+            "message": "No results returned after typo normalization",
+            "details": []
+        },
+        {
+            "test_name": "Gibberish query triggers escalation flow",
+            "query": "asdfgh asdfgh asdfgh",
+            "expected_domain": "escalation",
+            "actual_domain": "ESCALATED",
+            "passed": true,
+            "message": "Correctly triggered escalation",
+            "details": {
+                "threshold_met": false,
+                "result_count": 0
+            }
+        },
+        {
+            "test_name": "Escalation flow shows contact button",
+            "query": "asdfgh asdfgh asdfgh",
+            "expected_domain": "escalation",
+            "actual_domain": "CONTACT_SHOWN",
+            "passed": true,
+            "message": "Contact button correctly shown",
+            "details": []
+        },
+        {
+            "test_name": "Greeting 'halo' detected correctly",
+            "query": "halo",
+            "expected_domain": "greeting",
+            "actual_domain": "GREETING",
+            "passed": true,
+            "message": "Greeting correctly detected",
+            "details": []
+        },
+        {
+            "test_name": "Query state doesn't leak between different queries",
+            "query": "printer error \u2192 wifi lemot",
+            "expected_domain": "independent",
+            "actual_domain": "INDEPENDENT",
+            "passed": true,
+            "message": "Queries are independent",
+            "details": {
+                "printer_result_domain": "printer",
+                "wifi_result_domain": "wifi"
+            }
+        },
+        {
+            "test_name": "Clarification chips are clean (no random names)",
+            "query": "lemot \u2192 chips",
+            "expected_domain": "clean",
+            "actual_domain": "CLEAN",
+            "passed": true,
+            "message": "All chips are clean and relevant",
+            "details": {
+                "suspicious_labels": [],
+                "total_suggestions": 2
+            }
+        }
+    ]
+}

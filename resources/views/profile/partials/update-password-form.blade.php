@@ -9,25 +9,25 @@
         </p>
     </header>
 
-    <form method="post" action="{{ route('password.update') }}" class="mt-6 space-y-6">
+    <form method="post" action="{{ route('password.update') }}" class="mt-6 space-y-4">
         @csrf
         @method('put')
 
         <div>
-            <x-input-label for="update_password_current_password" :value="__('Current Password')" class="text-sm font-medium text-gray-900" />
-            <x-text-input id="update_password_current_password" name="current_password" type="password" class="mt-1 block w-full bg-white text-gray-900 border-gray-300 focus:border-red-500 focus:ring-red-500 rounded-md shadow-sm" style="background-color: #ffffff; color: #111827;" autocomplete="current-password" />
+            <x-input-label for="update_password_current_password" :value="__('Current Password')" />
+            <x-text-input id="update_password_current_password" name="current_password" type="password" class="block w-full" autocomplete="current-password" />
             <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-2 text-sm text-red-600" />
         </div>
 
         <div>
-            <x-input-label for="update_password_password" :value="__('New Password')" class="text-sm font-medium text-gray-900" />
-            <x-text-input id="update_password_password" name="password" type="password" class="mt-1 block w-full bg-white text-gray-900 border-gray-300 focus:border-red-500 focus:ring-red-500 rounded-md shadow-sm" style="background-color: #ffffff; color: #111827;" autocomplete="new-password" />
+            <x-input-label for="update_password_password" :value="__('New Password')" />
+            <x-text-input id="update_password_password" name="password" type="password" class="block w-full" autocomplete="new-password" />
             <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-2 text-sm text-red-600" />
         </div>
 
         <div>
-            <x-input-label for="update_password_password_confirmation" :value="__('Confirm Password')" class="text-sm font-medium text-gray-900" />
-            <x-text-input id="update_password_password_confirmation" name="password_confirmation" type="password" class="mt-1 block w-full bg-white text-gray-900 border-gray-300 focus:border-red-500 focus:ring-red-500 rounded-md shadow-sm" style="background-color: #ffffff; color: #111827;" autocomplete="new-password" />
+            <x-input-label for="update_password_password_confirmation" :value="__('Confirm Password')" />
+            <x-text-input id="update_password_password_confirmation" name="password_confirmation" type="password" class="block w-full" autocomplete="new-password" />
             <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2 text-sm text-red-600" />
         </div>
 

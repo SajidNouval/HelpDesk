@@ -13,7 +13,7 @@
                     <p class="text-sm text-gray-500">Tiket</p>
                     <h2 class="text-2xl font-semibold text-gray-800">#{{ $ticket->id }} - {{ $ticket->subject }}</h2>
                 </div>
-                <span class="inline-flex rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-700">{{ ucfirst($ticket->status) }}</span>
+                <x-status-badge :status="$ticket->status" />
             </div>
             <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="rounded-3xl border border-gray-200 p-4 bg-gray-50">

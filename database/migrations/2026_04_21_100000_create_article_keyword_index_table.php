@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('article_keyword_index', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('article_id')->constrained('articles')->onDelete('cascade');
+            $table->ulid('id')->primary();
+            $table->foreignUlid('article_id')->constrained('articles')->onDelete('cascade');
             $table->string('keyword')->index();
             $table->float('tf')->default(0); // Term Frequency
             $table->json('field_boosts')->nullable(); // {'title': 3, 'content': 1}

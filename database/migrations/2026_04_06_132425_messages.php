@@ -12,16 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('messages', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id')->primary();
 
-            $table->foreignId('ticket_id')
+            $table->foreignUlid('ticket_id')
                 ->constrained()
                 ->cascadeOnDelete();
 
             $table->enum('sender_type', ['guest', 'staff']);
 
             // kalau staff kirim
-            $table->foreignId('sender_id')
+            $table->foreignUlid('sender_id')
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();

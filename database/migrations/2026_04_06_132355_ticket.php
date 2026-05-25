@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tickets', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id')->primary();
 
             // Data user (guest)
             $table->string('name');
@@ -21,18 +21,18 @@ return new class extends Migration
             $table->string('subject');
             $table->text('message');
 
-            $table->foreignId('category_id')
+            $table->foreignUlid('category_id')
                 ->constrained()
                 ->cascadeOnDelete();
 
             // optional jika login
-            $table->foreignId('user_id')
+            $table->foreignUlid('user_id')
                 ->nullable()
                 ->constrained()
                 ->nullOnDelete();
 
             // staff yang menangani
-            $table->foreignId('staff_id')
+            $table->foreignUlid('staff_id')
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();
@@ -42,7 +42,8 @@ return new class extends Migration
                 'assigned',
                 'progress',
                 'waiting',
-                'closed'
+                'closed',
+                'suspended'
             ])->default('open');
 
             $table->enum('priority', [
@@ -53,6 +54,8 @@ return new class extends Migration
 
             $table->timestamp('assigned_at')->nullable();
             $table->timestamp('closed_at')->nullable();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('tracking_token', 80)->nullable()->unique();
 
             $table->timestamps();
         });

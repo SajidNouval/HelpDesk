@@ -36,24 +36,24 @@
                 <input type="hidden" id="ticketVerificationToken" name="verification_token">
                 <input type="hidden" id="ticketType" name="type" value="livechat">
 
-                <input type="text" name="title" placeholder="Judul masalah" class="w-full text-xs px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" required>
+                <input type="text" name="title" placeholder="Judul masalah" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
                 
-                <select name="category_id" class="w-full text-xs px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" required>
+                <select name="category_id" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
                     <option value="">Pilih Kategori</option>
                     @foreach($categories ?? [] as $category)
                         <option value="{{ $category->id }}">{{ $category->name }}</option>
                     @endforeach
                 </select>
                 
-                <input type="email" name="email" placeholder="Email Anda (opsional)" id="ticketEmail" class="w-full text-xs px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
+                <input type="email" name="email" placeholder="Email Anda (opsional)" id="ticketEmail" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
                 
-                <textarea name="message_detail" placeholder="Jelaskan masalah Anda secara detail" rows="3" class="w-full text-xs px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 resize-none" required></textarea>
+                <textarea name="message_detail" placeholder="Jelaskan masalah Anda secara detail" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition resize-none" required></textarea>
 
                 <div id="ticketOtpStep" class="hidden space-y-3">
                     <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-900">
                         Kode OTP telah dikirim ke email Anda. Masukkan 6 digit kode untuk verifikasi sebelum tiket dibuat.
                     </div>
-                    <input type="text" id="ticketOtpCode" maxlength="6" placeholder="123456" class="w-full text-xs px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" />
+                    <input type="text" id="ticketOtpCode" maxlength="6" placeholder="123456" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
                     <div id="ticketOtpMessage" class="text-sm text-red-600 hidden"></div>
                 </div>
                 
@@ -75,7 +75,7 @@
                     type="text" 
                     id="articles-chat-input" 
                     placeholder="Ketik pesan..." 
-                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                    class="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
                     autocomplete="off"
                 >
                 <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-semibold">
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (response.ok) {
-                const data = await response.json();
+                const data = await window.safeJson(response) || {};
                 console.log('Active ticket check result:', data);
                 
                 if (data.ticket_id) {
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p class="text-sm text-gray-700 mb-4">
                     Silakan isi ulang formulir agar kami dapat membantu Anda kembali.
                 </p>
-                <button onclick="showTicketForm('')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold">
+                <button type="button" data-action="show-ticket-form" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold">
                     Isi Ulang Formulir
                 </button>
             </div>
@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p class="text-sm text-gray-700 mb-4">
                     Silakan isi ulang formulir agar kami dapat membantu Anda kembali dengan staff yang lain.
                 </p>
-                <button onclick="showTicketForm('')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold">
+                <button type="button" data-action="show-ticket-form" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold">
                     Isi Ulang Formulir
                 </button>
             </div>
@@ -395,7 +395,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            const messages = await response.json();
+            const messages = await window.safeJson(response) || [];
             console.log('Loaded messages:', messages);
             messagesContainer.innerHTML = '';
 
@@ -437,7 +437,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (response.ok) {
-                const data = await response.json();
+                const data = await window.safeJson(response) || {};
 
                 // If ticket is auto-closed due to staff inactivity
                 if (data.auto_closed && data.status === 'closed') {
@@ -539,7 +539,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (response.ok) {
-                const data = await response.json();
+                const data = await window.safeJson(response) || {};
                 
                 // Display bot response
                 const botDiv = document.createElement('div');
@@ -702,7 +702,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setTicketFormLoading(true);
             try {
                 const verifyResponse = await verifyOtp(verificationToken, otpCode);
-                const verifyData = await verifyResponse.json();
+                const verifyData = await window.safeJson(verifyResponse) || {};
 
                 if (!verifyResponse.ok) {
                     ticketOtpMessage.textContent = verifyData.message || 'Kode OTP tidak valid.';
@@ -755,7 +755,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 type: 'livechat'
             };
             const response = await requestOtp(otpFormData);
-            const data = await response.json();
+            const data = await window.safeJson(response) || {};
 
             if (response.ok) {
                 showOtpStep();
@@ -800,11 +800,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await window.safeJson(response) || {};
                 throw new Error(errorData.message || 'Gagal membuat tiket.');
             }
 
-            const data = await response.json();
+            const data = await window.safeJson(response) || {};
             ticketId = data.ticket_id || data.id;
 
             if (ticketId) {
@@ -847,6 +847,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     ticketFormCancel.addEventListener('click', hideTicketForm);
+
+    document.addEventListener('click', function(event) {
+        const showTicketFormBtn = event.target.closest('[data-action="show-ticket-form"]');
+        if (showTicketFormBtn) {
+            event.preventDefault();
+            showTicketForm('');
+        }
+    });
 
     // Send staff message
     async function sendStaffMessage(message) {
@@ -938,6 +946,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    async function initRealtimeAndListen() {
+        if (typeof window.initializeRealtime === 'function') {
+            await window.initializeRealtime();
+        }
+        setupWebSocketListener();
+    }
+
     // Toggle chat modal
     chatBubble.addEventListener('click', function() {
         chatModal.classList.toggle('hidden');
@@ -950,6 +965,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize on page load
     checkActiveTicket();
+    initRealtimeAndListen();
 
     // Cleanup on page unload
     window.addEventListener('beforeunload', stopPolling);

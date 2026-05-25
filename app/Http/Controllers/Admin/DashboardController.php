@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\ArticleFeedback;
+use App\Models\Setting;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -36,13 +38,29 @@ class DashboardController extends Controller
             ->orderBy('views', 'desc')
             ->paginate(10);
 
+        $liveServiceEnabled = Setting::bool('live_service_enabled', true);
+
         return view('admin.dashboard', compact(
             'staffCount',
             'articleCount',
             'helpfulFeedbackCount',
             'notHelpfulFeedbackCount',
             'pendingArticles',
-            'articles'
+            'articles',
+            'liveServiceEnabled'
         ));
+    }
+
+    public function toggleLiveService(Request $request)
+    {
+        $request->validate([
+            'status' => 'required|in:on,off',
+        ]);
+
+        $enabled = $request->status === 'on';
+        Setting::setValue('live_service_enabled', $enabled ? '1' : '0');
+
+        return redirect()->route('admin.dashboard')
+            ->with('success', 'Live service telah ' . ($enabled ? 'diaktifkan' : 'dimatikan') . '.');
     }
 }

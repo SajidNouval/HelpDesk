@@ -106,27 +106,29 @@
 
                             <div class="flex flex-wrap gap-2 mt-4 lg:mt-0">
                                 @if($article->publish_status !== 'approved')
-                                    <form method="POST" action="{{ route('admin.articles.approve', $article) }}">
+                                    <form id="approveForm" method="POST" action="{{ route('admin.articles.approve', $article) }}">
                                         @csrf
-                                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                                        <x-primary-button type="submit" class="inline-flex items-center px-4 py-2">
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                             </svg>
                                             Setujui Artikel
-                                        </button>
+                                        </x-primary-button>
                                     </form>
-                                    <button type="button" onclick="openRejectModal({{ $article->id }})" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                                    <x-danger-button type="button" data-open-modal="#rejectModal" data-modal-form-action="/admin/articles/{id}/reject" data-article-id="{{ $article->id }}" class="inline-flex items-center px-4 py-2">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
                                         Tolak Artikel
-                                    </button>
+                                    </x-danger-button>
                                 @endif
-                                <a href="{{ route('admin.articles.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                                    </svg>
-                                    Kembali
+                                <a href="{{ route('admin.articles.index') }}">
+                                    <x-secondary-button class="inline-flex items-center px-4 py-2">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                                        </svg>
+                                        Kembali
+                                    </x-secondary-button>
                                 </a>
                             </div>
                         </div>
@@ -195,45 +197,25 @@
         </div>
     </div>
 
+    
+
     <!-- Rejection Modal -->
-    <div id="rejectModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Tolak Artikel</h3>
-            <form method="POST" id="rejectForm">
+    <div id="rejectModal" data-modal class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm p-4 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-xl w-full max-w-lg">
+            <div class="px-6 py-5 border-b border-gray-100">
+                <h3 class="text-xl font-semibold text-gray-900">Tolak Artikel</h3>
+            </div>
+            <form method="POST" id="rejectForm" data-ajax data-close-on-success class="p-6 space-y-4">
                 @csrf
-                <div class="mb-4">
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Penolakan</label>
-                    <textarea name="rejection_note" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" rows="4" placeholder="Jelaskan alasan penolakan..." required></textarea>
+                    <textarea name="rejection_note" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none" rows="4" placeholder="Jelaskan alasan penolakan..." required></textarea>
                 </div>
-                <div class="flex justify-end gap-3">
-                    <button type="button" onclick="closeRejectModal()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
-                        Batal
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                        Tolak
-                    </button>
+                <div class="flex justify-end gap-3 pt-4">
+                    <x-secondary-button type="button" data-close-modal class="px-4 py-2 text-sm rounded-xl">Batal</x-secondary-button>
+                    <x-danger-button type="submit" class="px-4 py-2 text-sm rounded-xl">Tolak</x-danger-button>
                 </div>
             </form>
         </div>
     </div>
-
-    <script>
-        function openRejectModal(articleId) {
-            const modal = document.getElementById('rejectModal');
-            const form = document.getElementById('rejectForm');
-            form.action = `/admin/articles/${articleId}/reject`;
-            modal.classList.remove('hidden');
-        }
-
-        function closeRejectModal() {
-            document.getElementById('rejectModal').classList.add('hidden');
-            document.getElementById('rejectForm').reset();
-        }
-
-        document.getElementById('rejectModal')?.addEventListener('click', function (e) {
-            if (e.target === this) {
-                closeRejectModal();
-            }
-        });
-    </script>
 </x-app-layout>

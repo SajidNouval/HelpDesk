@@ -9,10 +9,15 @@
     <div class="max-w-4xl mx-auto px-4 py-10">
         <div class="bg-white shadow rounded-3xl overflow-hidden">
             <div class="grid grid-cols-1 md:grid-cols-3 bg-gray-50 p-6 gap-4">
-                <button type="button" id="liveChatTab" class="tab-button bg-red-500 text-white rounded-2xl px-4 py-3 font-semibold">Live Chat</button>
-                <button type="button" id="reportTab" class="tab-button bg-white text-gray-700 rounded-2xl px-4 py-3 font-semibold border border-gray-200">Laporan</button>
+                <x-secondary-button type="button" id="liveChatTab" class="tab-button bg-red-500 text-white rounded-2xl px-4 py-3 font-semibold">Live Chat</x-secondary-button>
+                <x-secondary-button type="button" id="reportTab" class="tab-button bg-white text-gray-700 rounded-2xl px-4 py-3 font-semibold border border-gray-200">Laporan</x-secondary-button>
                 <div class="col-span-1 md:col-span-3 text-sm text-gray-600">Setelah mengirim formulir, Anda akan menerima kode OTP ke email. Masukkan kode tersebut untuk melanjutkan.</div>
             </div>
+            @if (! $liveServiceEnabled)
+                <div class="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+                    Live chat saat ini <strong>sedang offline</strong>. Anda dapat mengirimkan tiket laporan/report dan staf akan menanganinya.
+                </div>
+            @endif
 
             <div class="p-6">
                 <div id="ticketPageAlert" class="hidden mb-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800"></div>
@@ -63,8 +68,8 @@
                     </div>
 
                     <div class="flex flex-col gap-3 sm:flex-row">
-                        <button id="ticketRequestOtpBtn" type="button" class="flex-1 rounded-2xl bg-red-600 text-white px-4 py-3 font-semibold hover:bg-red-700 transition">Minta OTP</button>
-                        <button id="ticketVerifyOtpBtn" type="button" class="hidden flex-1 rounded-2xl bg-green-600 text-white px-4 py-3 font-semibold hover:bg-green-700 transition">Verifikasi OTP</button>
+                        <x-primary-button id="ticketRequestOtpBtn" type="button" class="flex-1">Minta OTP</x-primary-button>
+                        <x-primary-button id="ticketVerifyOtpBtn" type="button" class="hidden flex-1 bg-green-600 hover:bg-green-700">Verifikasi OTP</x-primary-button>
                     </div>
                 </form>
 
@@ -149,7 +154,7 @@
                         body: JSON.stringify(payload),
                     });
 
-                    const data = await response.json();
+                    const data = await window.safeJson(response) || {};
                     if (!response.ok) {
                         throw new Error(data.message || 'Gagal mengirim OTP.');
                     }
@@ -184,7 +189,7 @@
                         }),
                     });
 
-                    const data = await response.json();
+                    const data = await window.safeJson(response) || {};
                     if (!response.ok) {
                         throw new Error(data.message || 'OTP salah.');
                     }
@@ -200,7 +205,51 @@
                 }
             });
 
-            showTab('livechat');
+            const liveServiceEnabled = {{ $liveServiceEnabled ? 'true' : 'false' }};
+
+            function showTab(selected) {
+                if (selected === 'livechat' && !liveServiceEnabled) {
+                    showAlert('Live chat sedang offline. Silakan gunakan laporan/report.', 'error');
+                    return;
+                }
+
+                if (selected === 'livechat') {
+                    liveChatTab.classList.add('bg-red-500', 'text-white');
+                    liveChatTab.classList.remove('bg-white', 'text-gray-700', 'border');
+                    reportTab.classList.add('bg-white', 'text-gray-700', 'border');
+                    reportTab.classList.remove('bg-red-500', 'text-white');
+                    ticketType.value = 'livechat';
+                } else {
+                    reportTab.classList.add('bg-red-500', 'text-white');
+                    reportTab.classList.remove('bg-white', 'text-gray-700', 'border');
+                    liveChatTab.classList.add('bg-white', 'text-gray-700', 'border');
+                    liveChatTab.classList.remove('bg-red-500', 'text-white');
+                    ticketType.value = 'report';
+                }
+                ticketPageAlert.classList.add('hidden');
+                trackingLinkContainer.classList.add('hidden');
+                otpStep.classList.add('hidden');
+                ticketVerifyOtpBtn.classList.add('hidden');
+                ticketRequestOtpBtn.classList.remove('hidden');
+                verificationToken = null;
+            }
+
+            liveChatTab.addEventListener('click', () => showTab('livechat'));
+            reportTab.addEventListener('click', () => showTab('report'));
+
+            // Check URL parameter for initial tab selection
+            const urlParams = new URLSearchParams(window.location.search);
+            const typeParam = urlParams.get('type');
+
+            if (!liveServiceEnabled) {
+                liveChatTab.disabled = true;
+                liveChatTab.classList.add('opacity-50', 'cursor-not-allowed');
+                showTab('report');
+            } else if (typeParam === 'report') {
+                showTab('report');
+            } else {
+                showTab('livechat');
+            }
         });
     </script>
 </x-app-layout>

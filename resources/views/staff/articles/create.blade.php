@@ -83,52 +83,54 @@
                             <p class="text-gray-600 mt-1">Tambahkan artikel bantuan baru untuk membantu pelanggan</p>
                         </div>
 
-                        <form method="POST" action="{{ route('staff.articles.store') }}" class="space-y-6">
+                        <form id="article-form" method="POST" action="{{ route('staff.articles.store') }}" class="space-y-6">
                             @csrf
 
-                            <div>
-                                <label for="category_id" class="block text-sm font-semibold text-gray-900 mb-2">Kategori</label>
-                                <select name="category_id" id="category_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" required>
-                                    <option value="">Pilih Kategori</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('category_id')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
+                                    <select name="category_id" id="category_id" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
+                                        <option value="">Pilih Kategori</option>
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('category_id')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
 
-                            <div>
-                                <label for="title" class="block text-sm font-semibold text-gray-900 mb-2">Judul Artikel</label>
-                                <input type="text" name="title" id="title" value="{{ old('title') }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="Masukkan judul artikel" required>
-                                @error('title')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                                <div>
+                                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Judul Artikel</label>
+                                    <input type="text" name="title" id="title" value="{{ old('title') }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="Masukkan judul artikel" required>
+                                    @error('title')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
 
-                            <div>
-                                <label for="excerpt" class="block text-sm font-semibold text-gray-900 mb-2">Ringkasan</label>
-                                <textarea name="excerpt" id="excerpt" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="Ringkasan singkat artikel (opsional)">{{ old('excerpt') }}</textarea>
-                                @error('excerpt')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                                <div>
+                                    <label for="excerpt" class="block text-sm font-medium text-gray-700 mb-2">Ringkasan</label>
+                                    <textarea name="excerpt" id="excerpt" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition resize-none" placeholder="Ringkasan singkat artikel (opsional)">{{ old('excerpt') }}</textarea>
+                                    @error('excerpt')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
 
-                            <div>
-                                <label for="content" class="block text-sm font-semibold text-gray-900 mb-2">Konten Artikel</label>
-                                <textarea name="content" id="content" rows="12" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="Tulis konten artikel di sini..." required>{{ old('content') }}</textarea>
-                                @error('content')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                                <div>
+                                    <label for="content" class="block text-sm font-medium text-gray-700 mb-2">Konten Artikel</label>
+                                    <textarea name="content" id="content" rows="12" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="Tulis konten artikel di sini..." required>{{ old('content') }}</textarea>
+                                    @error('content')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
 
-                            <div>
-                                <label for="keywords" class="block text-sm font-semibold text-gray-900 mb-2">Kata Kunci</label>
-                                <input type="text" name="keywords" id="keywords" value="{{ old('keywords') }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="Contoh: reset password, lupa password, login">
-                                @error('keywords')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
+                                <div>
+                                    <label for="keywords" class="block text-sm font-medium text-gray-700 mb-2">Kata Kunci</label>
+                                    <input type="text" name="keywords" id="keywords" value="{{ old('keywords') }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="Contoh: reset password, lupa password, login">
+                                    @error('keywords')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
                             </div>
 
                             <div class="flex items-center">
@@ -139,12 +141,10 @@
                             </div>
 
                             <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
-                                <a href="{{ route('staff.articles.index') }}" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition font-semibold">
-                                    Batal
+                                <a href="{{ route('staff.articles.index') }}">
+                                    <x-secondary-button class="px-6 py-3">Batal</x-secondary-button>
                                 </a>
-                                <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
-                                    Simpan Artikel
-                                </button>
+                                <x-primary-button type="submit" class="px-6 py-3">Simpan Artikel</x-primary-button>
                             </div>
                         </form>
                     </div>
@@ -154,4 +154,5 @@
         </div>
     </div>
 
+    
 </x-app-layout>

@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Broadcast;
 */
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+    return $user->id === $id;
 });
 
 // Channel untuk ticket chat - public channel untuk real-time updates
@@ -24,10 +24,13 @@ Broadcast::channel('ticket.{ticketId}', function ($user, $ticketId) {
         return false;
     }
 
-    // Allow all authenticated users and guests with ticket access
-    if ($user && $user->role === 'staff') {
+    if ($user && $user->role === 'admin') {
         return true;
     }
 
-    return in_array($ticketId, session()->get('my_tickets', []));
+    if ($user && $user->role === 'staff' && $ticket->staff_id === $user->id) {
+        return true;
+    }
+
+    return in_array($ticketId, session()->get('my_tickets', []), true);
 });

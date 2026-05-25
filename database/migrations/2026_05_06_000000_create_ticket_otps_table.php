@@ -12,12 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ticket_otps', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id')->primary();
             $table->string('name');
             $table->string('email');
             $table->string('subject');
             $table->text('message');
-            $table->foreignId('category_id')
+            $table->foreignUlid('category_id')
                 ->constrained()
                 ->cascadeOnDelete();
             $table->enum('type', ['livechat', 'report'])->default('livechat');

@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Searchable;
 
 class Article extends Model
 {
-    use HasFactory, Searchable;
+    use HasFactory, HasUlids, Searchable;
 
     protected $table = 'articles';
 

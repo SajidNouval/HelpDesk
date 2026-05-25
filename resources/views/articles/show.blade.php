@@ -54,9 +54,7 @@
                     <p class="text-sm text-gray-600 leading-relaxed mb-3">
                         Tidak menemukan artikel yang dicari?
                     </p>
-                    <button onclick="openReportModal()" class="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
-                        Buat Laporan
-                    </button>
+                    <x-primary-button type="button" data-open-modal="#reportModal" class="w-full">Buat Laporan</x-primary-button>
                 </div>
             </div>
         </div>
@@ -84,9 +82,9 @@
                     </div>
 
                     @if(session('success'))
-                        <div class="mt-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+                        <x-alert type="success" class="mt-6">
                             {{ session('success') }}
-                        </div>
+                        </x-alert>
                     @endif
 
                     @if(!session('article_feedback_' . $article->id))
@@ -95,16 +93,12 @@
                         <form action="{{ route('articles.feedback', $article) }}" method="POST" class="inline-block mr-4">
                             @csrf
                             <input type="hidden" name="is_helpful" value="1">
-                            <button type="submit" class="border border-red-500 text-red-500 hover:bg-red-50 font-medium py-2 px-4 rounded transition duration-200">
-                                Ya, Membantu
-                            </button>
+                            <x-primary-button type="submit" class="border border-red-500 text-red-500 bg-white hover:bg-red-50 font-medium py-2 px-4">Ya, Membantu</x-primary-button>
                         </form>
                         <form action="{{ route('articles.feedback', $article) }}" method="POST" class="inline-block">
                             @csrf
                             <input type="hidden" name="is_helpful" value="0">
-                            <button type="submit" class="border border-red-500 text-red-500 hover:bg-red-50 font-medium py-2 px-4 rounded transition duration-200">
-                                Tidak Membantu
-                            </button>
+                            <x-danger-button type="submit" class="border border-red-500 text-red-500 bg-white hover:bg-red-50 font-medium py-2 px-4">Tidak Membantu</x-danger-button>
                         </form>
                     </div>
                     @endif
@@ -113,11 +107,16 @@
 
             <!-- Back to Articles -->
             <div class="mt-8 text-center">
-                <a href="{{ request('category') ? route('articles.index', ['category' => request('category')]) : route('articles.index') }}" class="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
+                <a href="{{ request('category') ? route('articles.index', ['category' => request('category')]) : route('articles.index') }}">
+                    <x-secondary-button class="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 font-medium"> 
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
-                    Kembali ke Artikel Bantuan
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        Kembali ke Artikel Bantuan
+                    </x-secondary-button>
                 </a>
             </div>
         </div>
@@ -130,16 +129,3 @@
 @include('components.articles-chat-bubble', ['categories' => $categories])
 @include('reports.create')
 
-<script>
-function openReportModal() {
-    @if (isset($reportModal))
-        {{ $reportModal }}
-    @else
-        // Default modal opening logic
-        const modal = document.getElementById('report-modal');
-        if (modal) {
-            modal.classList.remove('hidden');
-        }
-    @endif
-}
-</script>

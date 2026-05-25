@@ -43,6 +43,8 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])
         ->name('dashboard');
+    Route::post('/live-service/toggle', [AdminDashboardController::class, 'toggleLiveService'])
+        ->name('live-service.toggle');
 
     Route::resource('/users', AdminUserController::class)
         ->except(['show']);
@@ -84,6 +86,8 @@ Route::middleware(['auth', 'staff'])->group(function () {
         ->name('staff.tickets.update-priority');
     Route::patch('/staff/tickets/{ticket}/start-progress', [StaffTicketController::class, 'startProgress'])
         ->name('staff.tickets.start-progress');
+    Route::patch('/staff/tickets/{ticket}/reject', [StaffTicketController::class, 'reject'])
+        ->name('staff.tickets.reject');
     Route::patch('/staff/tickets/{ticket}/complete', [StaffTicketController::class, 'complete'])
         ->name('staff.tickets.complete');
     Route::patch('/staff/tickets/{ticket}/suspend', [StaffTicketController::class, 'suspend'])
@@ -143,12 +147,29 @@ Route::get('/articles', [ArticleController::class, 'publicIndex'])->name('articl
 Route::get('/articles/{slug}', [ArticleController::class, 'publicShow'])->name('articles.show');
 Route::post('/articles/{article}/feedback', [ArticleController::class, 'storeFeedback'])->name('articles.feedback');
 
-// Chatbot routes
+// Chatbot routes (public)
 Route::post('/chatbot/get-response', [ChatbotController::class, 'getResponse'])->name('chatbot.get-response');
 Route::post('/chatbot/search', [ChatbotController::class, 'chatbotSearch'])->name('chatbot.search');
 Route::post('/chatbot/show-contact-form', [ChatbotController::class, 'showContactForm'])->name('chatbot.show-contact-form');
 Route::post('/chatbot/create-ticket', [ChatbotController::class, 'createTicketAndMessage'])->name('chatbot.create-ticket');
 Route::post('/chatbot/send-message', [ChatbotController::class, 'sendMessage'])->name('chatbot.send-message');
 Route::get('/chatbot/ticket/{ticket}/messages', [ChatbotController::class, 'getTicketMessages'])->name('chatbot.messages');
+
+// Interactive chatbot features (public)
+Route::get('/chatbot/greeting', [ChatbotController::class, 'getGreeting'])->name('chatbot.greeting');
+Route::post('/chatbot/category-subtopics', [ChatbotController::class, 'getCategorySubtopics'])->name('chatbot.category-subtopics');
+Route::post('/chatbot/check-ambiguity', [ChatbotController::class, 'checkAmbiguity'])->name('chatbot.check-ambiguity');
+Route::get('/chatbot/search-suggestions', [ChatbotController::class, 'getSearchSuggestions'])->name('chatbot.search-suggestions');
+
+// Legacy routes (keep for backward compatibility)
+Route::get('/chatbot/topics', [ChatbotController::class, 'getTopics'])->name('chatbot.topics');
+Route::post('/chatbot/subtopics', [ChatbotController::class, 'getSubtopics'])->name('chatbot.subtopics');
+Route::post('/chatbot/article-suggestion', [ChatbotController::class, 'getArticleSuggestion'])->name('chatbot.article-suggestion');
+
+// Chatbot admin routes (cache management)
+Route::middleware(['auth', 'admin'])->prefix('admin/chatbot')->name('admin.chatbot.')->group(function () {
+    Route::post('/rebuild-cache', [ChatbotController::class, 'rebuildCache'])->name('rebuild-cache');
+    Route::post('/clear-cache', [ChatbotController::class, 'clearCache'])->name('clear-cache');
+});
 
 require __DIR__.'/auth.php';

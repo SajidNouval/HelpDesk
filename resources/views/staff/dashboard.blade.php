@@ -61,13 +61,36 @@
             </div>
 
             <!-- Main Content Right -->
-            <div class="col-span-12 md:col-span-9">
+            @php
+                $itemsPerPage = 5;
+                $sortedTickets = $todayTickets->sortByDesc('created_at');
+                $totalPages = $todayTickets->count() ? ceil($sortedTickets->count() / $itemsPerPage) : 0;
+            @endphp
+
+            <div class="col-span-12 md:col-span-9" data-page="staff-dashboard" data-total-pages="{{ $totalPages }}">
                 
                 <!-- Statistics Overview -->
                 <div class="mb-6">
                     <p class="text-gray-600">
                         Total <span class="font-medium">{{ Auth::user()->tickets()->count() }}</span> tiket dan <span class="font-medium">{{ $articleCount }}</span> artikel
                     </p>
+                </div>
+
+                <div class="mb-6 p-6 bg-white border border-gray-200 rounded-3xl shadow-sm">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                            <p class="text-sm uppercase tracking-[0.2em] text-gray-500">Live Service</p>
+                            <h3 class="text-2xl font-semibold mt-2 {{ $liveServiceEnabled ? 'text-green-700' : 'text-red-700' }}">
+                                {{ $liveServiceEnabled ? 'Aktif' : 'Nonaktif' }}
+                            </h3>
+                            <p class="mt-2 text-sm text-gray-600">
+                                Live chat hanya akan tersedia bila layanan ini aktif. Jika mati, hanya laporan/report yang dapat dibuat.
+                            </p>
+                        </div>
+                        <div class="rounded-3xl px-4 py-3 bg-{{ $liveServiceEnabled ? 'green' : 'red' }}-50 text-{{ $liveServiceEnabled ? 'green' : 'red' }}-700 font-semibold inline-flex items-center">
+                            {{ $liveServiceEnabled ? 'Live chat dibuka' : 'Live chat ditutup' }}
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Tiket Hari Ini Section -->
@@ -81,26 +104,16 @@
                         </span>
                     </div>
 
-                    @php
-                        $itemsPerPage = 5;
-                        $sortedTickets = $todayTickets->sortByDesc('created_at');
-                        $totalPages = $todayTickets->count() ? ceil($sortedTickets->count() / $itemsPerPage) : 0;
-                    @endphp
-
                     @if ($todayTickets->count() > 0)
                         <div id="ticketsContainer" class="space-y-4">
                             @foreach ($sortedTickets as $index => $ticket)
-                                <div class="ticket-item bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition overflow-hidden" data-page="{{ ceil(($index + 1) / $itemsPerPage) }}" style="display: {{ $index < $itemsPerPage ? 'block' : 'none' }}">
+                                <div data-ticket-item class="ticket-item bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition overflow-hidden {{ $index < $itemsPerPage ? '' : 'hidden' }}" data-page="{{ ceil(($index + 1) / $itemsPerPage) }}">
                                     <div class="p-6">
                                         <div class="flex justify-between gap-4">
                                             <div class="flex-1">
                                                 <div class="flex items-center gap-2 mb-2">
                                                     <h3 class="font-semibold text-gray-900 hover:text-red-600 transition">{{ $ticket->subject }}</h3>
-                                                    <span class="px-2 py-1 text-xs font-semibold rounded-full
-                                                        {{ $ticket->status === 'open' ? 'bg-red-100 text-red-800' :
-                                                           ($ticket->status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
-                                                            'bg-green-100 text-green-800') }}">
-                                                        {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
+                                                    <x-status-badge :status="$ticket->status" />
                                                     </span>
                                                 </div>
 
@@ -116,8 +129,8 @@
                                             </div>
 
                                             <div class="flex items-center">
-                                                <a href="{{ route('staff.tickets.show', $ticket) }}" class="inline-flex items-center px-3 py-2 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition">
-                                                    Detail
+                                                <a href="{{ route('staff.tickets.show', $ticket) }}">
+                                                    <x-primary-button class="text-xs px-3 py-2">Detail</x-primary-button>
                                                 </a>
                                             </div>
                                         </div>
@@ -128,15 +141,11 @@
 
                         @if ($totalPages > 1)
                             <div class="mt-6 flex items-center justify-center gap-4">
-                                <button onclick="previousPage()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-semibold">
-                                    &lt;
-                                </button>
+                                <x-secondary-button type="button" data-pagination="previous" class="px-4 py-2">&lt;</x-secondary-button>
                                 <span id="pageInfo" class="text-sm text-gray-600 font-semibold">
                                     Halaman <span id="currentPage">1</span> dari {{ $totalPages }}
                                 </span>
-                                <button onclick="nextPage()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-semibold">
-                                    &gt;
-                                </button>
+                                <x-secondary-button type="button" data-pagination="next" class="px-4 py-2">&gt;</x-secondary-button>
                             </div>
                         @endif
                     @else
@@ -164,34 +173,7 @@
                         </div>
                     </div> -->
                 </div>
-
-                <script>
-                    let currentPage = 1;
-                    const totalPages = {{ $totalPages }};
-
-                    function showPage(page) {
-                        const items = document.querySelectorAll('.ticket-item');
-                        items.forEach(item => {
-                            item.style.display = item.getAttribute('data-page') == page ? 'block' : 'none';
-                        });
-                        document.getElementById('currentPage').textContent = page;
-                        currentPage = page;
-                    }
-
-                    function nextPage() {
-                        if (currentPage < totalPages) {
-                            showPage(currentPage + 1);
-                        }
-                    }
-
-                    function previousPage() {
-                        if (currentPage > 1) {
-                            showPage(currentPage - 1);
-                        }
-                    }
-                </script>
-            </div>
-
+                </div>
         </div>
     </div>
 </x-app-layout>

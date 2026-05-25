@@ -9,6 +9,7 @@ use App\Mail\TicketOtpMail;
 use App\Mail\TicketTrackingMail;
 use App\Models\Ticket;
 use App\Models\Category;
+use App\Models\Setting;
 use App\Models\StaffProfile;
 use App\Models\TicketLog;
 use App\Models\TicketOtp;
@@ -24,10 +25,12 @@ class TicketController extends Controller
     public function create()
     {
         $categories = Category::all();
+        $liveServiceEnabled = Setting::bool('live_service_enabled', true);
+
         // Generate simple captcha
         $captcha = rand(1000, 9999);
         session(['captcha' => $captcha]);
-        return view('guest.help', compact('categories', 'captcha'));
+        return view('guest.help', compact('categories', 'captcha', 'liveServiceEnabled'));
     }
 
     /**
@@ -267,6 +270,13 @@ class TicketController extends Controller
 
         $otpCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
+        if ($validated['type'] === 'livechat' && !Setting::bool('live_service_enabled', true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Live service sedang offline. Silakan buat laporan/report atau coba lagi nanti.',
+            ], 423);
+        }
+
         $otp = TicketOtp::create([
             'name' => $validated['name'],
             'email' => $email,
@@ -335,6 +345,12 @@ class TicketController extends Controller
                 }
 
                 $result = ['success' => false, 'code' => 422, 'message' => "OTP salah. Kesempatan tersisa: {$remaining}."];
+                return null;
+            }
+
+            if ($otp->type === 'livechat' && !Setting::bool('live_service_enabled', true)) {
+                $otp->delete();
+                $result = ['success' => false, 'code' => 423, 'message' => 'Live service sedang offline. Silakan buat laporan/report.'];
                 return null;
             }
 
