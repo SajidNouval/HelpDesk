@@ -126,6 +126,7 @@
 
 @endsection
 
-@include('components.articles-chat-bubble', ['categories' => $categories])
+<!-- Chatbot Widget -->
+<x-chatbot-widget />
 @include('reports.create')
 

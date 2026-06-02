@@ -100,7 +100,7 @@
 
                 <!-- Active Ticket Section -->
                 @if ($activeTicket)
-                    <div class="mb-8 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden border-l-4 border-blue-600">
+                    <div class="mb-8 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden border-l-4 border-red-600">
                         <div class="p-6">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
@@ -151,7 +151,7 @@
                                     <form action="{{ route('staff.tickets.start-progress', $activeTicket) }}" method="POST" class="flex-1">
                                         @csrf
                                         @method('PATCH')
-                                        <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm">
+                                        <button type="submit" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm">
                                             Mulai Mengerjakan
                                         </button>
                                     </form>

@@ -15,7 +15,14 @@ class CategoryController extends Controller
 {
     public function index(): View
     {
-        $categories = Category::orderBy('name')->paginate(10);
+        $query = Category::withCount('articles');
+
+        if (request('q')) {
+            $query->where('name', 'like', '%' . request('q') . '%')
+                  ->orWhere('description', 'like', '%' . request('q') . '%');
+        }
+
+        $categories = $query->orderBy('name')->paginate(10);
 
         return view('admin.categories.index', compact('categories'));
     }
@@ -35,7 +42,7 @@ class CategoryController extends Controller
         Category::create($validated);
 
         return Redirect::route('admin.categories.index')
-            ->with('success', 'Kategori baru berhasil ditambahkan.');
+            ->with('success', 'Kategori berhasil ditambahkan.');
     }
 
     public function assignStaffCategories(Request $request, User $staff): RedirectResponse

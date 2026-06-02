@@ -62,7 +62,7 @@
             @else
                 <div class="space-y-4">
                     @foreach($ticket->messages as $message)
-                        <div class="rounded-3xl border border-gray-200 p-4 {{ $message->sender_type === 'guest' ? 'bg-blue-50' : 'bg-gray-50' }}">
+                        <div class="rounded-3xl border border-gray-200 p-4 {{ $message->sender_type === 'guest' ? 'bg-red-50' : 'bg-gray-50' }}">
                             <div class="flex items-center justify-between mb-2 text-xs text-gray-500">
                                 <span>{{ ucfirst($message->sender_type) }}</span>
                                 <span>{{ $message->created_at->format('d M Y H:i') }}</span>

@@ -61,18 +61,20 @@
 
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9">
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-900">Daftar Staf</h2>
+                        <h2 class="text-2xl font-bold text-gray-900">Daftar Staff Helpdesk</h2>
+                        <p class="mt-1 text-gray-600 max-w-2xl">Kelola akun petugas helpdesk.</p>
                     </div>
-                    <a href="{{ route('admin.users.create') }}">
-                        <x-primary-button class="inline-flex items-center gap-2">
+
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('admin.users.create') }}" class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
-                            <span>Tambah Staf</span>
-                        </x-primary-button>
-                    </a>
+                            Tambah Staff
+                        </a>
+                    </div>
                 </div>
 
                 @if(session('success'))
@@ -87,66 +89,109 @@
                     </x-alert>
                 @endif
 
-                <div class="panel-card">
-                    <div class="p-6">
+                <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
+                    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
+                        <p class="text-sm uppercase tracking-[0.22em] text-gray-500 mb-3">Total Staff</p>
+                        <p class="text-3xl font-semibold text-gray-900">{{ number_format($totalStaff) }}</p>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
+                        <p class="text-sm uppercase tracking-[0.22em] text-gray-500 mb-3">Staff Aktif</p>
+                        <p class="text-3xl font-semibold text-gray-900">{{ number_format($activeStaff) }}</p>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
+                        <p class="text-sm uppercase tracking-[0.22em] text-gray-500 mb-3">Total Admin</p>
+                        <p class="text-3xl font-semibold text-gray-900">{{ number_format($totalAdmin) }}</p>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
+                        <p class="text-sm uppercase tracking-[0.22em] text-gray-500 mb-3">Staff Helpdesk</p>
+                        <p class="text-3xl font-semibold text-gray-900">{{ number_format($totalStaffHelpdesk) }}</p>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-100 rounded-lg shadow-sm">
+                    <div class="p-4 overflow-x-auto">
                         @if($users->count())
-                            <div class="table-wrapper overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-100">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th class="table-header text-left">Nama</th>
-                                            <th class="table-header text-left">Email</th>
-                                            <th class="table-header text-left">Role</th>
-                                            <th class="table-header text-left">Status</th>
-                                            <th class="table-header text-left">Bergabung</th>
-                                            <th class="table-header text-right">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-gray-100">
+                            <table class="min-w-full divide-y divide-gray-100">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Staff</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Artikel Dibuat</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bergabung</th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-100">
                                         @foreach($users as $user)
                                             <tr class="hover:bg-gray-50 transition">
-                                                <td class="table-cell whitespace-nowrap">
-                                                    <div class="flex items-center">
-                                                        <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
-                                                            <span class="text-red-600 font-semibold text-sm">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="w-9 h-9 bg-red-100 rounded-full flex items-center justify-center text-red-600 font-semibold">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
+                                                        <div class="space-y-1">
+                                                            <div class="flex items-center gap-2">
+                                                                <span class="text-gray-900 font-medium">{{ $user->name }}</span>
+                                                                @if($user->role === 'staff' && $user->articles_count === $topContributorCount && $topContributorCount > 0)
+                                                                    <span class="inline-flex items-center gap-1 rounded-full bg-yellow-100 text-yellow-800 text-[10px] font-semibold uppercase px-2 py-1">🏆 Top Contributor</span>
+                                                                @endif
+                                                            </div>
                                                         </div>
-                                                        <span class="text-gray-900 font-medium">{{ $user->name }}</span>
                                                     </div>
                                                 </td>
-                                                <td class="table-cell whitespace-nowrap">
+                                                <td class="px-4 py-3 whitespace-nowrap">
                                                     <span class="text-gray-600 text-sm">{{ $user->email }}</span>
                                                 </td>
-                                                <td class="table-cell whitespace-nowrap">
-                                                    <span class="px-2 py-1 text-xs font-medium rounded-full
-                                                        {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800' }}">
-                                                        {{ ucfirst($user->role) }}
-                                                    </span>
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">{{ ucfirst($user->role) }}</span>
                                                 </td>
-                                                <td class="table-cell whitespace-nowrap">
-                                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                                                        Aktif
-                                                    </span>
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $user->status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-700' }}">{{ $user->status === 'active' ? 'Aktif' : 'Nonaktif' }}</span>
                                                 </td>
-                                                <td class="table-cell whitespace-nowrap">
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <span class="text-gray-600 text-sm">{{ $user->articles_count }}</span>
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap">
                                                     <span class="text-gray-600 text-sm">{{ $user->created_at->format('d M Y') }}</span>
                                                 </td>
-                                                <td class="table-cell text-right whitespace-nowrap">
-                                                    <div class="action-group">
-                                                        <a href="{{ route('admin.users.edit', $user) }}" class="btn-action-sm btn-action-secondary">
-                                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                <td class="px-4 py-3 text-right whitespace-nowrap">
+                                                    <div class="inline-flex items-center gap-2">
+                                                        <a href="{{ route('admin.users.edit', $user) }}" class="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:border-red-500 hover:text-red-600 mr-2" title="Edit">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                             </svg>
-                                                            Edit
                                                         </a>
+
                                                         @if(auth()->id() !== $user->id)
-                                                            <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline-block">
+                                                            <form id="toggle-form-user-{{ $user->id }}" action="{{ route('admin.users.update', $user) }}" method="POST" class="inline-block">
+                                                                @csrf
+                                                                @method('PATCH')
+                                                                <input type="hidden" name="status" value="{{ $user->status === 'active' ? 'inactive' : 'active' }}" />
+                                                                <button type="button"
+                                                                        data-toggle-user="toggle-form-user-{{ $user->id }}"
+                                                                        data-user-name="{{ $user->name }}"
+                                                                        data-user-status="{{ $user->status }}"
+                                                                        class="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 transition text-sm font-medium"
+                                                                        title="{{ $user->status === 'active' ? 'Nonaktifkan Staff' : 'Aktifkan Staff' }}">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3" />
+                                                                    </svg>
+                                                                </button>
+                                                            </form>
+
+                                                            <form id="delete-form-user-{{ $user->id }}" action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline-block">
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button type="submit" class="btn-action-sm btn-action-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus pengguna ini?')">
-                                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                                <button type="button"
+                                                                        data-delete-user="delete-form-user-{{ $user->id }}"
+                                                                        data-user-name="{{ $user->name }}"
+                                                                        data-user-email="{{ $user->email }}"
+                                                                        data-user-role="{{ ucfirst($user->role) }}"
+                                                                        class="inline-flex items-center px-3 py-1.5 rounded-md border border-red-600 text-red-600 hover:bg-red-50 transition text-sm font-medium gap-1"
+                                                                        title="Hapus">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                                     </svg>
-                                                                    Hapus
                                                                 </button>
                                                             </form>
                                                         @endif
@@ -180,5 +225,95 @@
         </div>
     </div>
 
-    
+    <!-- Delete Confirmation Dialog -->
+    <x-confirm-dialog 
+        id="confirm-delete-staff"
+        title="Hapus Staf"
+        message="Akun staff yang dihapus tidak dapat dikembalikan."
+        primaryText="Hapus Staff"
+        secondaryText="Batal"
+    >
+        <div class="space-y-3 text-sm text-gray-600 mt-4">
+            <div>
+                <p class="font-semibold text-gray-900">Nama: <span id="confirm-delete-staff-name"></span></p>
+            </div>
+            <div>
+                <p class="font-semibold text-gray-900">Email: <span id="confirm-delete-staff-email"></span></p>
+            </div>
+            <div>
+                <p class="font-semibold text-gray-900">Role: <span id="confirm-delete-staff-role"></span></p>
+            </div>
+        </div>
+    </x-confirm-dialog>
+
+    <script>
+        // Handle delete button clicks
+        document.querySelectorAll('[data-delete-user]').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const formId = this.getAttribute('data-delete-user');
+                const name = this.getAttribute('data-user-name');
+                const email = this.getAttribute('data-user-email');
+                const role = this.getAttribute('data-user-role');
+
+                document.getElementById('confirm-delete-staff-name').textContent = name;
+                document.getElementById('confirm-delete-staff-email').textContent = email;
+                document.getElementById('confirm-delete-staff-role').textContent = role;
+
+                window.confirmDialog.open('confirm-delete-staff', {
+                    onConfirm: function() {
+                        document.getElementById(formId).submit();
+                    }
+                });
+            });
+        });
+
+        // Handle status toggle button clicks
+        document.querySelectorAll('[data-toggle-user]').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const formId = this.getAttribute('data-toggle-user');
+                const name = this.getAttribute('data-user-name');
+                const currentStatus = this.getAttribute('data-user-status');
+                const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+
+                // populate dialog content
+                const el = document.getElementById('confirm-toggle-staff-name');
+                if(el) el.textContent = name;
+                const statusEl = document.getElementById('confirm-toggle-staff-newstatus');
+                if(statusEl) statusEl.textContent = newStatus === 'active' ? 'Aktif' : 'Nonaktif';
+
+                window.confirmDialog.open('confirm-toggle-staff', {
+                    onConfirm: function() {
+                        // ensure hidden input value is set correctly then submit
+                        const form = document.getElementById(formId);
+                        if(form) {
+                            const input = form.querySelector('input[name="status"]');
+                            if(input) input.value = newStatus;
+                            form.submit();
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
+    <!-- Toggle Status Confirmation Dialog -->
+    <x-confirm-dialog
+        id="confirm-toggle-staff"
+        title="Ubah Status Staff"
+        message="Konfirmasi perubahan status staff."
+        primaryText="Ubah Status"
+        secondaryText="Batal"
+    >
+        <div class="space-y-3 text-sm text-gray-600 mt-4">
+            <div>
+                <p class="font-semibold text-gray-900">Nama: <span id="confirm-toggle-staff-name"></span></p>
+            </div>
+            <div>
+                <p class="font-semibold text-gray-900">Status Baru: <span id="confirm-toggle-staff-newstatus"></span></p>
+            </div>
+        </div>
+    </x-confirm-dialog>
+
 </x-app-layout>

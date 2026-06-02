@@ -86,7 +86,7 @@
                                     <div class="flex justify-between items-start mb-3">
                                         <div class="flex-1">
                                             <h3 class="text-base font-semibold text-gray-900 mb-1">
-                                                <a href="{{ route('staff.articles.show', $article) }}" class="hover:text-blue-600 transition">
+                                                <a href="{{ route('staff.articles.show', $article) }}" class="hover:text-red-600 transition">
                                                     {{ $article->title }}
                                                 </a>
                                             </h3>

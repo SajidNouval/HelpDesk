@@ -2,11 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
 @layer components {
 
     /* Card Component - Clean modern light admin panel style */
     .panel-card {
         @apply bg-white rounded-2xl border border-gray-200 shadow-sm;
+    }
+
+    /* Login Page Styling */
+    .login-card {
+        @apply bg-white rounded-2xl shadow-sm border border-gray-200 p-8 sm:p-10;
+    }
+
+    .login-card-header {
+        @apply mb-8;
+    }
+
+    .login-card-title {
+        @apply text-2xl font-bold text-gray-900;
+    }
+
+    .login-card-subtitle {
+        @apply mt-2 text-sm text-gray-600;
+    }
+
+    .login-form-group {
+        @apply space-y-5;
+    }
+
+    .login-input-wrapper {
+        @apply block;
+    }
+
+    .login-input-label {
+        @apply text-gray-700 font-semibold text-sm mb-2 block;
+    }
+
+    .login-input {
+        @apply w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors duration-200;
+    }
+
+    .login-input:disabled {
+        @apply bg-gray-100 text-gray-500 cursor-not-allowed;
+    }
+
+    .login-error-message {
+        @apply mt-2 text-sm text-red-600;
+    }
+
+    .login-button {
+        @apply w-full py-3 text-base font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200;
+    }
+
+    .login-checkbox {
+        @apply w-4 h-4 border-gray-300 rounded text-red-600 focus:ring-red-500 cursor-pointer;
+    }
+
+    .login-checkbox-label {
+        @apply flex items-center gap-2 cursor-pointer;
+    }
+
+    .login-helper-text {
+        @apply text-sm text-gray-600 font-medium;
+    }
+
+    .login-link {
+        @apply text-sm text-red-600 hover:text-red-700 font-medium transition-colors duration-200;
+    }
+
+    .login-divider {
+        @apply mt-8 pt-6 border-t border-gray-200;
+    }
+
+    .login-footer-text {
+        @apply text-xs text-gray-500 text-center;
+    }
+
+    /* Guide Step Indicator */
+    .guide-step-number {
+        @apply flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-700 font-bold text-sm;
+    }
+
+    .guide-step-title {
+        @apply font-semibold text-gray-900 text-sm;
+    }
+
+    .guide-step-description {
+        @apply mt-1 text-sm text-gray-600;
     }
 
     /* Table Wrapper - Clean light style */
@@ -55,7 +146,7 @@
     }
 
     .btn-action-primary {
-        @apply bg-indigo-600 text-white hover:bg-indigo-700;
+        @apply bg-red-600 text-white hover:bg-red-700;
     }
 
     .btn-action-secondary {

@@ -10,16 +10,16 @@
 @php
     $borderColor = match($ticket->status) {
         'closed' => 'border-green-500',
-        'progress' => 'border-blue-500',
-        'assigned' => 'border-indigo-500',
+        'progress' => 'border-red-500',
+        'assigned' => 'border-red-500',
         'waiting' => 'border-orange-500',
         default => 'border-yellow-500',
     };
     
     $statusColor = match($ticket->status) {
         'closed' => 'bg-green-100 text-green-800',
-        'progress' => 'bg-blue-100 text-blue-800',
-        'assigned' => 'bg-indigo-100 text-indigo-800',
+        'progress' => 'bg-red-100 text-red-800',
+        'assigned' => 'bg-red-100 text-red-800',
         'waiting' => 'bg-orange-100 text-orange-800',
         default => 'bg-yellow-100 text-yellow-800',
     };

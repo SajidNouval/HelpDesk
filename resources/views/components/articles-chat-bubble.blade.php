@@ -23,7 +23,7 @@
 
         <!-- Ticket Button Offer -->
         <div id="ticket-offer-container" class="hidden border-t border-gray-200 p-4 bg-gray-50">
-            <button id="ticket-offer-btn" type="button" class="w-full bg-blue-600 text-white text-xs font-semibold py-2 rounded hover:bg-blue-700 transition">
+            <button id="ticket-offer-btn" type="button" class="w-full bg-red-600 text-white text-xs font-semibold py-2 rounded hover:bg-red-700 transition">
                 Buat Tiket untuk Bantuan Lebih Lanjut
             </button>
         </div>
@@ -36,29 +36,29 @@
                 <input type="hidden" id="ticketVerificationToken" name="verification_token">
                 <input type="hidden" id="ticketType" name="type" value="livechat">
 
-                <input type="text" name="title" placeholder="Judul masalah" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
+                <input type="text" name="title" placeholder="Judul masalah" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" required>
                 
-                <select name="category_id" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
+                <select name="category_id" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" required>
                     <option value="">Pilih Kategori</option>
                     @foreach($categories ?? [] as $category)
                         <option value="{{ $category->id }}">{{ $category->name }}</option>
                     @endforeach
                 </select>
                 
-                <input type="email" name="email" placeholder="Email Anda (opsional)" id="ticketEmail" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                <input type="email" name="email" placeholder="Email Anda (opsional)" id="ticketEmail" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
                 
-                <textarea name="message_detail" placeholder="Jelaskan masalah Anda secara detail" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition resize-none" required></textarea>
+                <textarea name="message_detail" placeholder="Jelaskan masalah Anda secara detail" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition resize-none" required></textarea>
 
                 <div id="ticketOtpStep" class="hidden space-y-3">
                     <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-900">
                         Kode OTP telah dikirim ke email Anda. Masukkan 6 digit kode untuk verifikasi sebelum tiket dibuat.
                     </div>
-                    <input type="text" id="ticketOtpCode" maxlength="6" placeholder="123456" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+                    <input type="text" id="ticketOtpCode" maxlength="6" placeholder="123456" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
                     <div id="ticketOtpMessage" class="text-sm text-red-600 hidden"></div>
                 </div>
                 
                 <div class="flex gap-2">
-                    <button type="submit" class="flex-1 bg-blue-600 text-white text-xs font-semibold py-2 rounded hover:bg-blue-700 transition" id="ticketSubmitBtn">
+                    <button type="submit" class="flex-1 bg-red-600 text-white text-xs font-semibold py-2 rounded hover:bg-red-700 transition" id="ticketSubmitBtn">
                         Minta OTP
                     </button>
                     <button type="button" id="articles-ticket-cancel" class="flex-1 bg-gray-200 text-gray-700 text-xs font-semibold py-2 rounded hover:bg-gray-300 transition">
@@ -75,10 +75,10 @@
                     type="text" 
                     id="articles-chat-input" 
                     placeholder="Ketik pesan..." 
-                    class="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    class="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
                     autocomplete="off"
                 >
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-semibold">
+                <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition font-semibold">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5.951-1.488 5.951 1.488a1 1 0 001.169-1.409l-7-14z"></path>
                     </svg>
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p class="text-sm text-gray-700 mb-4">
                     Silakan isi ulang formulir agar kami dapat membantu Anda kembali.
                 </p>
-                <button type="button" data-action="show-ticket-form" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold">
+                <button type="button" data-action="show-ticket-form" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-sm font-semibold">
                     Isi Ulang Formulir
                 </button>
             </div>
@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p class="text-sm text-gray-700 mb-4">
                     Silakan isi ulang formulir agar kami dapat membantu Anda kembali dengan staff yang lain.
                 </p>
-                <button type="button" data-action="show-ticket-form" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold">
+                <button type="button" data-action="show-ticket-form" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-sm font-semibold">
                     Isi Ulang Formulir
                 </button>
             </div>
@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const msgDiv = document.createElement('div');
         msgDiv.className = 'flex items-start';
         msgDiv.innerHTML = `
-            <div class="bg-blue-100 text-blue-900 rounded-lg p-3 max-w-xs">
+            <div class="bg-red-100 text-red-900 rounded-lg p-3 max-w-xs">
                 <p class="text-sm font-semibold">Halo! 👋</p>
                 <p class="text-sm mt-2">Kami siap membantu Anda. Silakan jelaskan masalah atau pertanyaan Anda, dan kami akan mencari artikel yang relevan.</p>
             </div>
@@ -406,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const bubble = document.createElement('div');
                 bubble.className = isGuest 
-                    ? 'bg-blue-600 text-white rounded-lg p-3 max-w-xs'
+                    ? 'bg-red-600 text-white rounded-lg p-3 max-w-xs'
                     : 'bg-gray-200 text-gray-900 rounded-lg p-3 max-w-xs';
                 
                 bubble.innerHTML = `
@@ -520,7 +520,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const msgDiv = document.createElement('div');
         msgDiv.className = 'flex justify-end';
         msgDiv.innerHTML = `
-            <div class="bg-blue-600 text-white rounded-lg p-3 max-w-xs">
+            <div class="bg-red-600 text-white rounded-lg p-3 max-w-xs">
                 <p class="text-sm break-words">${message}</p>
             </div>
         `;
@@ -545,7 +545,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const botDiv = document.createElement('div');
                 botDiv.className = 'flex justify-start';
                 botDiv.innerHTML = `
-                    <div class="bg-blue-100 text-blue-900 rounded-lg p-3 max-w-xs">
+                    <div class="bg-red-100 text-red-900 rounded-lg p-3 max-w-xs">
                         <p class="text-sm break-words">${data.response || 'Maaf, saya tidak dapat memproses pertanyaan Anda.'}</p>
                     </div>
                 `;
@@ -562,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <ul class="space-y-1">
                                 ${data.articles.map(article => `
                                     <li>
-                                        <a href="/articles/${article.slug}" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs underline">
+                                        <a href="/articles/${article.slug}" target="_blank" class="text-red-600 hover:text-red-800 text-xs underline">
                                             ${article.title}
                                         </a>
                                     </li>
@@ -767,7 +767,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const infoDiv = document.createElement('div');
                 infoDiv.className = 'flex justify-start';
                 infoDiv.innerHTML = `
-                    <div class="bg-blue-100 text-blue-900 rounded-lg p-3 max-w-xs">
+                    <div class="bg-red-100 text-red-900 rounded-lg p-3 max-w-xs">
                         <p class="text-sm font-semibold">Kode OTP dikirim.</p>
                         <p class="text-xs mt-1">Periksa email Anda untuk verifikasi.</p>
                     </div>
@@ -861,7 +861,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const msgDiv = document.createElement('div');
         msgDiv.className = 'flex justify-end';
         msgDiv.innerHTML = `
-            <div class="bg-blue-600 text-white rounded-lg p-3 max-w-xs">
+            <div class="bg-red-600 text-white rounded-lg p-3 max-w-xs">
                 <p class="text-sm break-words">${message}</p>
             </div>
         `;

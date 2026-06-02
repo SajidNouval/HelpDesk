@@ -67,7 +67,7 @@ function updateVisibilityBadge(row, isHidden) {
         visibilityEl.classList.add('bg-gray-200', 'text-gray-800', 'border-gray-300');
         visibilityEl.textContent = 'Disembunyikan';
     } else {
-        visibilityEl.classList.add('bg-blue-100', 'text-blue-800', 'border-blue-300');
+        visibilityEl.classList.add('bg-red-100', 'text-red-800', 'border-red-300');
         visibilityEl.textContent = 'Publik';
     }
 }
@@ -116,7 +116,7 @@ function updateToggleButton(row, isHidden) {
     toggleButton.className = 'toggle-visibility-button inline-flex items-center text-xs px-2 py-1 rounded shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition';
 
     if (isHidden) {
-        toggleButton.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
+        toggleButton.classList.add('bg-red-600', 'text-white', 'hover:bg-red-700');
     } else {
         toggleButton.classList.add('bg-yellow-600', 'text-white', 'hover:bg-yellow-700');
     }
@@ -271,8 +271,52 @@ function initGlobalHandlers() {
         }
 
         const confirmMessage = form.dataset.confirm;
-        if (confirmMessage && !window.confirm(confirmMessage)) {
+        if (confirmMessage) {
             event.preventDefault();
+            
+            // Get or create a hidden dialog for this form
+            let dialogId = `confirm-form-${form.id || Math.random().toString(36).substr(2, 9)}`;
+            let dialog = document.getElementById(dialogId);
+
+            if (!dialog) {
+                // Create a hidden dialog with the message
+                dialog = document.createElement('div');
+                dialog.id = dialogId;
+                dialog.className = 'hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                dialog.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-lg max-w-sm w-full mx-4">
+                        <div class="flex items-center justify-center h-12 w-12 mx-auto mt-4 rounded-2xl bg-red-100">
+                            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 0a9 9 0 11-18 0 9 9 0 0118 0zm0-4a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-center mt-2 text-lg font-medium text-gray-900">Konfirmasi</h3>
+                        <p class="text-center mt-2 text-sm text-gray-600 px-4">${confirmMessage}</p>
+                        <div class="mt-6 flex gap-3 justify-center px-4 pb-4">
+                            <button type="button" data-confirm-cancel class="inline-flex items-center justify-center rounded-2xl border border-gray-300 bg-white text-gray-700 text-sm font-medium px-4 py-2 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                                Batal
+                            </button>
+                            <button type="button" data-confirm-submit class="inline-flex items-center justify-center rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 transition focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                                Lanjutkan
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(dialog);
+            }
+
+            if (typeof window.confirmDialog !== 'undefined') {
+                window.confirmDialog.open(dialogId, {
+                    onConfirm: () => {
+                        form.submit();
+                    }
+                });
+            } else {
+                // Fallback to window.confirm if confirmDialog not available
+                if (window.confirm(confirmMessage)) {
+                    form.submit();
+                }
+            }
             return;
         }
 

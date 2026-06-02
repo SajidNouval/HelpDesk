@@ -12,7 +12,7 @@
             hover:bg-gray-50
             focus:outline-none
             focus:ring-2
-            focus:ring-indigo-500
+            focus:ring-red-500
             transition
         '
     ])

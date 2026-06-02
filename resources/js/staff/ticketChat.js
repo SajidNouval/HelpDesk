@@ -364,7 +364,7 @@ class TicketChatManager {
         div.appendChild(senderDiv);
 
         const messageBubble = document.createElement('div');
-        messageBubble.className = `inline-block max-w-xs px-4 py-3 rounded-2xl ${msg.sender_type === 'staff' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100'}`;
+        messageBubble.className = `inline-block max-w-xs px-4 py-3 rounded-2xl ${msg.sender_type === 'staff' ? 'bg-red-600 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100'}`;
 
         const messageText = document.createElement('p');
         messageText.className = 'text-sm leading-relaxed';

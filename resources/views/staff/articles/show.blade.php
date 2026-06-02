@@ -165,15 +165,15 @@
                                         Reset Review
                                     </x-secondary-button>
                                 </form>
-                                <form id="delete-article-form" method="POST" action="{{ route('staff.articles.destroy', $article) }}" class="inline">
+                                <form id="delete-article-form-{{ $article->id }}" method="POST" action="{{ route('staff.articles.destroy', $article) }}" class="inline">
                                     @csrf
                                     @method('DELETE')
-                                    <x-danger-button type="submit" class="inline-flex items-center px-4 py-2">
+                                    <button type="button" data-delete-article="delete-article-form-{{ $article->id }}" class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-red-600 border border-red-600 rounded-lg hover:bg-red-700 transition">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
                                         Hapus
-                                    </x-danger-button>
+                                    </button>
                                 </form>
                             @endif
                             <a href="{{ route('staff.articles.index') }}">
@@ -201,6 +201,30 @@
             </div>
         </div>
     </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <x-confirm-dialog 
+        id="confirm-delete-article"
+        title="Hapus Artikel"
+        message="Artikel yang dihapus tidak dapat dikembalikan."
+        primaryText="Hapus"
+        secondaryText="Batal"
+    />
+
+    <script>
+        // Handle delete button clicks
+        document.querySelectorAll('[data-delete-article]').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const formId = this.getAttribute('data-delete-article');
+                window.confirmDialog.open('confirm-delete-article', {
+                    onConfirm: function() {
+                        document.getElementById(formId).submit();
+                    }
+                });
+            });
+        });
+    </script>
 
     
 </x-app-layout>

@@ -2,7 +2,7 @@
 
 <div id="chatbot-widget" class="fixed bottom-4 right-4 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 hidden">
     <!-- Header -->
-    <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white p-4 rounded-t-2xl flex justify-between items-center">
+    <div class="bg-gradient-to-r from-red-600 to-red-700 text-white p-4 rounded-t-2xl flex justify-between items-center">
         <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -12,7 +12,7 @@
             </div>
             <div>
                 <h3 class="font-bold text-sm">SiMinfo Assistant</h3>
-                <p class="text-xs text-indigo-200">Bantuan Otomatis</p>
+                <p class="text-xs text-red-200">Bantuan Otomatis</p>
             </div>
         </div>
         <button id="chatbot-close" class="text-white hover:bg-white/20 p-2 rounded-xl transition">
@@ -28,7 +28,7 @@
         <div id="chatbot-greeting" class="space-y-3" data-chatbot-greeting>
             <!-- Greeting message -->
             <div class="flex items-start">
-                <div class="bg-indigo-100 text-indigo-900 rounded-2xl rounded-tl-md p-3 max-w-xs" data-chatbot-greeting-message>
+                <div class="bg-red-100 text-red-900 rounded-2xl rounded-tl-md p-3 max-w-xs" data-chatbot-greeting-message>
                     <p class="text-sm font-semibold">Halo! 👋</p>
                     <p class="text-sm mt-1">Ada yang bisa saya bantu?</p>
                 </div>
@@ -87,18 +87,18 @@
         <form id="ticket-form" class="space-y-3">
             <input type="hidden" name="message" id="form-message">
             
-            <input type="text" name="title" placeholder="Judul masalah" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
+            <input type="text" name="title" placeholder="Judul masalah" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" required>
             
-            <select name="category_id" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
+            <select name="category_id" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" required>
                 <option value="">Pilih Kategori</option>
                 @foreach($categories ?? [] as $category)
                     <option value="{{ $category->id }}">{{ $category->name }}</option>
                 @endforeach
             </select>
             
-            <input type="email" name="email" placeholder="Email Anda (opsional)" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+            <input type="email" name="email" placeholder="Email Anda (opsional)" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
             
-            <textarea name="message" placeholder="Jelaskan masalah Anda secara detail" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition resize-none" required></textarea>
+            <textarea name="message" placeholder="Jelaskan masalah Anda secara detail" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition resize-none" required></textarea>
             
             <div class="flex gap-2">
                 <x-primary-button type="submit" class="flex-1 text-xs py-2">Buat Tiket</x-primary-button>
@@ -115,7 +115,7 @@
                     type="text" 
                     id="chatbot-input" 
                     placeholder="Ketik pertanyaan Anda..." 
-                    class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
                     autocomplete="off"
                 >
                 <!-- Clear button -->
@@ -135,7 +135,7 @@
 </div>
 
 <!-- Floating Button -->
-<button id="chatbot-toggle" class="fixed bottom-4 right-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-4 shadow-lg transition transform hover:scale-105 z-50">
+<button id="chatbot-toggle" class="fixed bottom-4 right-4 bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg transition transform hover:scale-105 z-50">
     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
         <path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5z"></path>
         <path d="M15 7H5"></path>
@@ -164,27 +164,27 @@
     }
 
     .bot-bubble {
-        @apply bg-indigo-100 text-indigo-900 rounded-tl-md;
+        @apply bg-red-100 text-red-900 rounded-tl-md;
     }
 
     .user-bubble {
-        @apply bg-indigo-600 text-white rounded-tr-md;
+        @apply bg-red-600 text-white rounded-tr-md;
     }
 
     .category-chip {
-        @apply px-4 py-2 bg-indigo-50 text-indigo-700 text-xs font-medium rounded-full hover:bg-indigo-100 transition-all duration-200 cursor-pointer border border-indigo-200;
+        @apply px-4 py-2 bg-red-50 text-red-700 text-xs font-medium rounded-full hover:bg-red-100 transition-all duration-200 cursor-pointer border border-red-200;
     }
 
     .category-chip:hover {
-        @apply bg-indigo-100 border-indigo-300 transform scale-105;
+        @apply bg-red-100 border-red-300 transform scale-105;
     }
 
     .suggestion-chip {
-        @apply px-3 py-1.5 bg-white text-gray-700 text-xs rounded-lg hover:bg-indigo-50 transition-all duration-200 cursor-pointer border border-gray-200;
+        @apply px-3 py-1.5 bg-white text-gray-700 text-xs rounded-lg hover:bg-red-50 transition-all duration-200 cursor-pointer border border-gray-200;
     }
 
     .suggestion-chip:hover {
-        @apply border-indigo-300 text-indigo-700;
+        @apply border-red-300 text-red-700;
     }
 
     .typing-dot {
@@ -772,14 +772,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         articles.forEach((article, index) => {
             const card = document.createElement('div');
-            card.className = 'group bg-white border border-gray-200 rounded-xl p-3 hover:border-indigo-400 hover:shadow-md hover:shadow-indigo-100 transition-all duration-200 cursor-pointer';
+            card.className = 'group bg-white border border-gray-200 rounded-xl p-3 hover:border-red-400 hover:shadow-md hover:shadow-red-100 transition-all duration-200 cursor-pointer';
             
             // Determine confidence badge styling
             let confidenceBadge = '';
             if (article.confidence === 'high') {
                 confidenceBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Sangat Relevan</span>';
             } else if (article.confidence === 'medium') {
-                confidenceBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">Relevan</span>';
+                confidenceBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">Relevan</span>';
             } else {
                 confidenceBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">Mungkin Relevan</span>';
             }
@@ -788,15 +788,15 @@ document.addEventListener('DOMContentLoaded', function() {
             let cardContent = `<div class="flex items-start gap-3">`;
             
             // Icon with background
-            cardContent += `<div class="flex-shrink-0 w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">`;
-            cardContent += `<svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">`;
+            cardContent += `<div class="flex-shrink-0 w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center group-hover:bg-red-100 transition-colors">`;
+            cardContent += `<svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">`;
             cardContent += `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>`;
             cardContent += `</svg></div>`;
             
             cardContent += `<div class="flex-1 min-w-0">`;
             
             // Title with link
-            cardContent += `<a href="{{ url('/articles') }}/${article.slug}" target="_blank" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition-colors line-clamp-2">`;
+            cardContent += `<a href="{{ url('/articles') }}/${article.slug}" target="_blank" class="text-sm font-semibold text-gray-900 hover:text-red-600 transition-colors line-clamp-2">`;
             cardContent += article.title;
             cardContent += `</a>`;
             
@@ -823,7 +823,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // External link arrow
             cardContent += `<div class="flex-shrink-0 self-center">`;
-            cardContent += `<svg class="w-4 h-4 text-gray-300 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">`;
+            cardContent += `<svg class="w-4 h-4 text-gray-300 group-hover:text-red-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">`;
             cardContent += `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>`;
             cardContent += `</svg></div>`;
             

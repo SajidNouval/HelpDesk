@@ -13,6 +13,7 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <script src="{{ asset('js/confirm-dialog.js') }}"></script>
     </head>
     <body class="font-sans antialiased bg-gray-100">
         <div class="min-h-screen bg-gray-100">
@@ -32,9 +33,30 @@
                 @yield('content')
                 {{ $slot ?? '' }}
             </main>
+
+            <!-- Toast Container -->
+            <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none" aria-live="polite" aria-atomic="true"></div>
         </div>
-        
-        <!-- Chatbot Widget -->
-        <x-chatbot-widget />
+
+        <!-- Flash Message Toast Handler -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                @if(session('success'))
+                    window.toast?.success('{{ session('success') }}', 4000);
+                @endif
+
+                @if(session('error'))
+                    window.toast?.error('{{ session('error') }}', 4000);
+                @endif
+
+                @if(session('info'))
+                    window.toast?.info('{{ session('info') }}', 4000);
+                @endif
+
+                @if(session('warning'))
+                    window.toast?.warning('{{ session('warning') }}', 4000);
+                @endif
+            });
+        </script>
     </body>
 </html>

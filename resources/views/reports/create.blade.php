@@ -26,7 +26,7 @@
                 <label for="report_category_id" class="block text-sm font-medium text-gray-700 mb-2">
                     Kategori <span class="text-red-500">*</span>
                 </label>
-                <select id="report_category_id" name="category_id" required class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <select id="report_category_id" name="category_id" required class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
                     <option value="">-- Pilih Kategori --</option>
                     @forelse($categories as $category)
                         <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -45,7 +45,7 @@
                     Nama <span class="text-red-500">*</span>
                 </label>
                 <input type="text" id="report_name" name="name" required placeholder="Nama Anda" 
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     value="{{ old('name') }}">
                 @error('name')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -58,7 +58,7 @@
                     Email <span class="text-red-500">*</span>
                 </label>
                 <input type="email" id="report_email" name="email" required placeholder="email@example.com"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     value="{{ old('email') }}">
                 @error('email')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -71,7 +71,7 @@
                     Subjek <span class="text-red-500">*</span>
                 </label>
                 <input type="text" id="report_subject" name="subject" required placeholder="Subjek laporan"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     value="{{ old('subject') }}">
                 @error('subject')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -84,7 +84,7 @@
                     Pesan <span class="text-red-500">*</span>
                 </label>
                 <textarea id="report_message" name="message" required rows="4" placeholder="Jelaskan masalah Anda..."
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none">{{ old('message') }}</textarea>
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none">{{ old('message') }}</textarea>
                 @error('message')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
@@ -96,7 +96,7 @@
                 </div>
                 <div>
                     <label for="report_otp_code" class="block text-sm font-medium text-gray-700 mb-2">Kode OTP</label>
-                    <input id="report_otp_code" type="text" maxlength="6" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="123456">
+                    <input id="report_otp_code" type="text" maxlength="6" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="123456">
                 </div>
             </div>
 
@@ -105,7 +105,7 @@
                 <button type="button" data-close-modal class="flex-1 px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition font-medium">
                     Batal
                 </button>
-                <button type="submit" class="flex-1 px-4 py-2 text-sm text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition submit-btn font-medium" id="submitReportBtn">
+                <button type="submit" class="flex-1 px-4 py-2 text-sm text-white bg-red-600 rounded-xl hover:bg-red-700 transition submit-btn font-medium" id="submitReportBtn">
                     <span class="submit-text">Minta OTP</span>
                     <span class="submit-loading hidden ml-2">
                         <svg class="inline w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">

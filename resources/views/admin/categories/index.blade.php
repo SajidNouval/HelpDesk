@@ -5,9 +5,6 @@
             <h1 class="text-2xl font-bold text-gray-900">
                 Kelola Kategori
             </h1>
-            <p class="mt-1 text-sm text-gray-500">
-                Mengelola daftar kategori artikel
-            </p>
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
@@ -52,30 +49,26 @@
                         </li>
                     </ul>
 
-                    <!-- Profile Card -->
-                    <div class="mt-8 p-4 bg-gray-50 rounded">
-                        <h4 class="font-semibold text-gray-700 mb-2">Profil Anda</h4>
-                        <p class="text-sm text-gray-600 mb-2">{{ Auth::user()->name }}</p>
-                        <p class="text-xs text-gray-500 mb-3">{{ Auth::user()->email }}</p>
-                        <p class="text-xs font-semibold text-green-600">● Aktif</p>
-                    </div>
+                    
                 </div>
             </div>
 
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9">
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
                     <div>
                         <h2 class="text-2xl font-bold text-gray-900">Daftar Kategori</h2>
+                        <p class="text-sm text-gray-500">Kelola kategori Knowledge Base.</p>
                     </div>
-                    <a href="{{ route('admin.categories.create') }}">
-                        <x-primary-button class="inline-flex items-center gap-2">
+                    <div class="flex items-center gap-3">
+                        
+                        <a href="{{ route('admin.categories.create') }}" class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
-                            <span>Tambah Kategori</span>
-                        </x-primary-button>
-                    </a>
+                            Tambah Kategori
+                        </a>
+                    </div>
                 </div>
 
                 @if(session('success'))
@@ -84,76 +77,123 @@
                     </x-alert>
                 @endif
 
-                <div class="panel-card">
-                    <div class="p-6">
-                        @if($categories->count())
-                            <div class="table-wrapper overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-100">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th class="table-header text-left">Nama</th>
-                                            <th class="table-header text-left">Deskripsi</th>
-                                            <th class="table-header text-right">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-gray-100">
-                                        @foreach($categories as $category)
-                                            <tr class="hover:bg-gray-50 transition">
-                                                <td class="table-cell whitespace-nowrap">
-                                                    <div class="flex items-center">
-                                                        <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
-                                                            <span class="text-orange-600 font-semibold text-sm">{{ strtoupper(substr($category->name, 0, 1)) }}</span>
-                                                        </div>
-                                                        <span class="text-gray-900 font-medium">{{ $category->name }}</span>
-                                                    </div>
-                                                </td>
-                                                <td class="table-cell">
-                                                    <span class="text-gray-600 text-sm">{{ Str::limit($category->description, 50) }}</span>
-                                                </td>
-                                                <td class="table-cell text-right">
-                                                    <div class="action-group">
-                                                        <a href="{{ route('admin.categories.edit', $category) }}" class="btn-action-sm btn-action-secondary">
-                                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                                            </svg>
-                                                            Edit
-                                                        </a>
-                                                        <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" class="inline-block">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn-action-sm btn-action-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus kategori ini?')">
-                                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                                                </svg>
-                                                                Hapus
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @else
-                            <x-empty-state 
-                                icon="folder"
-                                title="Belum Ada Kategori"
-                                subtitle="Tambahkan kategori pertama untuk mulai mengelola konten."
-                                actionText="Tambah Kategori Pertama"
-                                actionUrl="{{ route('admin.categories.create') }}"
-                                actionIcon="plus"
-                                size="md"
-                            />
-                        @endif
+                <!-- Statistics -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white border border-gray-100 rounded-lg p-4 flex items-center justify-between">
+                        <div>
+                            <div class="text-sm text-gray-500">Total Kategori</div>
+                            <div class="text-xl font-semibold text-gray-900">{{ $totalCategories ?? $categories->total() ?? $categories->count() }}</div>
+                        </div>
+                        <div class="text-red-600">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </div>
+                    </div>
+                    
+                </div>
 
-                        @if($categories->hasPages())
-                            <div class="mt-6">
-                                <x-pagination :paginator="$categories" :elements="$categories->links()->elements" />
+                <div class="bg-white border border-gray-100 rounded-lg shadow-sm">
+                    <div class="p-4 overflow-x-auto">
+                        @if($categories->count())
+                            <table class="min-w-full divide-y divide-gray-100">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Kategori</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Artikel</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Terakhir Diperbarui</th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-100">
+                                    @foreach($categories as $category)
+                                        <tr class="hover:bg-gray-50 transition">
+                                            <td class="px-4 py-3 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">{{ $category->name }}</div>
+                                                @if($category->slug)
+                                                    <div class="text-xs text-gray-400">/{{ $category->slug }}</div>
+                                                @endif
+                                            </td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                                                {{ $category->articles_count ?? $category->articles()->count() }}
+                                            </td>
+                                            <td class="px-4 py-3 max-w-sm text-sm text-gray-600">
+                                                <div class="line-clamp-2">{{ $category->description }}</div>
+                                            </td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                                @if($category->updated_at)
+                                                    <div>{{ $category->updated_at->format('d M Y') }}</div>
+                                                    <div class="text-xs text-gray-400">{{ $category->updated_at->diffForHumans() }}</div>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                                                <a href="{{ route('admin.categories.edit', $category) }}" class="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:border-red-500 hover:text-red-600 mr-2" title="Edit">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                    </svg>
+                                                </a>
+                                                <form id="delete-form-{{ $category->id }}" action="{{ route('admin.categories.destroy', $category) }}" method="POST" class="inline-block">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="button" data-delete-category="delete-form-{{ $category->id }}" class="inline-flex items-center px-3 py-1.5 rounded-md border border-red-600 text-red-600 hover:bg-red-50" title="Hapus">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @else
+                            <div class="p-6">
+                                <x-empty-state 
+                                    icon="folder"
+                                    title="Belum Ada Kategori"
+                                    subtitle="Tambahkan kategori pertama untuk mulai mengelola konten."
+                                    actionText="Tambah Kategori Pertama"
+                                    actionUrl="{{ route('admin.categories.create') }}"
+                                    actionIcon="plus"
+                                    size="md"
+                                />
                             </div>
                         @endif
                     </div>
+
+                    @if($categories->hasPages())
+                        <div class="p-4 border-t border-gray-100">
+                            <x-pagination :paginator="$categories" :elements="$categories->links()->elements" />
+                        </div>
+                    @endif
                 </div>
+
+                <!-- Delete Confirmation Dialog -->
+                <x-confirm-dialog 
+                    id="confirm-delete-category"
+                    title="Hapus Kategori"
+                    message="Kategori yang dihapus tidak dapat dikembalikan."
+                    primaryText="Hapus"
+                    secondaryText="Batal"
+                />
+
+                <script>
+                    // Handle delete button clicks
+                    document.querySelectorAll('[data-delete-category]').forEach(btn => {
+                        btn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const formId = this.getAttribute('data-delete-category');
+                            window.confirmDialog.open('confirm-delete-category', {
+                                onConfirm: function() {
+                                    document.getElementById(formId).submit();
+                                }
+                            });
+                        });
+                    });
+                </script>
             </div>
         </div>
     </div>

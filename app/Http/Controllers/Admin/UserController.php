@@ -14,11 +14,39 @@ use Illuminate\View\View;
 
 class UserController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $users = User::orderBy('name')->paginate(10);
+        $search = $request->query('search');
 
-        return view('admin.users.index', compact('users'));
+        $usersQuery = User::withCount('articles')
+            ->orderBy('name')
+            ->when($search, function ($query, $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            });
+
+        $users = $usersQuery->paginate(10)->withQueryString();
+
+        $totalStaff = User::count();
+        $totalAdmin = User::where('role', 'admin')->count();
+        $totalStaffHelpdesk = User::where('role', 'staff')->count();
+        $activeStaff = User::where('role', 'staff')->where('status', 'active')->count();
+        $topContributorCount = User::where('role', 'staff')
+            ->withCount('articles')
+            ->orderByDesc('articles_count')
+            ->value('articles_count') ?? 0;
+
+        return view('admin.users.index', compact(
+            'users',
+            'search',
+            'totalStaff',
+            'totalAdmin',
+            'totalStaffHelpdesk',
+            'activeStaff',
+            'topContributorCount'
+        ));
     }
 
     public function create(): View
@@ -31,34 +59,26 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'categories' => ['nullable', 'array'],
-            'categories.*' => ['exists:categories,id'],
+            'role' => ['required', Rule::in(['admin', 'staff'])],
+            'status' => ['required', Rule::in(['active', 'inactive'])],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $user = User::create([
+        User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'role' => 'staff',
-            'password' => Hash::make('password'),
+            'role' => $validated['role'],
+            'status' => $validated['status'],
+            'password' => Hash::make($validated['password']),
         ]);
 
-        // Save categories if provided
-        if (!empty($validated['categories'])) {
-            foreach ($validated['categories'] as $categoryId) {
-                StaffProfile::create([
-                    'user_id' => $user->id,
-                    'category_id' => $categoryId,
-                ]);
-            }
-        }
-
         return Redirect::route('admin.users.index')
-            ->with('success', 'Pengguna baru berhasil dibuat. Password default: password');
+            ->with('success', 'Staf baru berhasil dibuat.');
     }
 
     public function edit(User $user): View
     {
-        return view('admin.users.edit', compact('user'));
+        return view('admin.users.edit', ['user' => $user->loadCount('articles')]);
     }
 
     public function update(Request $request, User $user): RedirectResponse
@@ -67,36 +87,13 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'role' => ['required', Rule::in(['admin', 'staff'])],
-            'password' => ['nullable', 'string', 'min:6'],
-            'categories' => ['nullable', 'array'],
-            'categories.*' => ['exists:categories,id'],
+            'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
-
-        if ($request->filled('password')) {
-            $validated['password'] = Hash::make($validated['password']);
-        } else {
-            unset($validated['password']);
-        }
-
-        // Remove categories from user update data
-        $categories = $validated['categories'] ?? [];
-        unset($validated['categories']);
 
         $user->update($validated);
 
-        // Update staff categories
-        StaffProfile::where('user_id', $user->id)->delete();
-        if (!empty($categories)) {
-            foreach ($categories as $categoryId) {
-                StaffProfile::create([
-                    'user_id' => $user->id,
-                    'category_id' => $categoryId,
-                ]);
-            }
-        }
-
         return Redirect::route('admin.users.index')
-            ->with('success', 'Data pengguna berhasil diperbarui.');
+            ->with('success', 'Data staf berhasil diperbarui.');
     }
 
     public function destroy(User $user): RedirectResponse

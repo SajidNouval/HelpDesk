@@ -87,10 +87,11 @@
                     </div>
                 @endif
 
-                <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm max-w-2xl mx-auto">
                     <div class="p-6">
-                        <form id="staff-form" action="{{ route('admin.users.store') }}" method="POST" class="space-y-6" data-confirm="Apakah Anda yakin ingin menambahkan staf baru?">
+                        <form id="staff-form" action="{{ route('admin.users.store') }}" method="POST" class="space-y-6">
                             @csrf
+                            <input type="hidden" name="status" value="active">
 
                             <div class="space-y-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -99,7 +100,7 @@
                                             Nama Lengkap <span class="text-red-500">*</span>
                                         </label>
                                         <input id="name" name="name" type="text" value="{{ old('name') }}" required
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
                                                placeholder="Masukkan nama lengkap">
                                     </div>
 
@@ -108,55 +109,39 @@
                                             Email <span class="text-red-500">*</span>
                                         </label>
                                         <input id="email" name="email" type="email" value="{{ old('email') }}" required
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
                                                placeholder="Masukkan alamat email">
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Role
+                                    <label for="role" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Role <span class="text-red-500">*</span>
                                     </label>
-                                    <div class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-700 text-sm">
-                                        Staff
-                                    </div>
-                                    <p class="mt-1 text-sm text-gray-500">Role staf sudah dipilih otomatis. Admin tidak dapat dibuat dari halaman ini.</p>
+                                    <select id="role" name="role" required
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
+                                        <option value="">Pilih role</option>
+                                        <option value="staff" {{ old('role') === 'staff' ? 'selected' : '' }}>Staff</option>
+                                        <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
+                                    </select>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Kategori
+                                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Password <span class="text-red-500">*</span>
                                     </label>
-                                    <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-300 rounded-xl p-3">
-                                    @php
-                                        $categories = \App\Models\Category::orderBy('name')->get();
-                                    @endphp
-                                    @forelse($categories as $category)
-                                        <div class="flex items-center">
-                                            <input type="checkbox" id="category_{{ $category->id }}" name="categories[]" value="{{ $category->id }}" class="w-4 h-4 text-red-600 rounded focus:ring-2 focus:ring-red-500" {{ in_array($category->id, old('categories', [])) ? 'checked' : '' }}>
-                                            <label for="category_{{ $category->id }}" class="ml-2 text-sm text-gray-700 cursor-pointer">
-                                                {{ $category->name }}
-                                            </label>
-                                        </div>
-                                    @empty
-                                        <p class=\"text-sm text-gray-500\">Belum ada kategori</p>
-                                    @endforelse
+                                    <input id="password" name="password" type="password" required
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
+                                           placeholder="Masukkan password">
                                 </div>
-                                <p class="mt-1 text-sm text-gray-500\">Pilih kategori yang akan ditangani oleh staf ini.</p>
-                            </div>
 
-                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <div class="flex">
-                                    <svg class="w-5 h-5 text-blue-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <div>
-                                        <h3 class="text-sm font-medium text-blue-800">Informasi Password</h3>
-                                        <p class="mt-1 text-sm text-blue-700">
-                                            Password default untuk staf baru adalah <strong>"password"</strong>.
-                                            Pastikan staf mengubah password mereka setelah login pertama kali.
-                                        </p>
-                                    </div>
+                                <div>
+                                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Konfirmasi Password <span class="text-red-500">*</span>
+                                    </label>
+                                    <input id="password_confirmation" name="password_confirmation" type="password" required
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
+                                           placeholder="Ulangi password">
                                 </div>
                             </div>
 

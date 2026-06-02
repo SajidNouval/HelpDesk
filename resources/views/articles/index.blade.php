@@ -58,7 +58,7 @@
                     <!-- Live Service Status -->
                     <div class="mb-4 p-3 rounded-lg {{ $liveServiceEnabled ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200' }}">
                         <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full {{ $liveServiceEnabled ? 'bg-green-500' : 'bg-red-500' }}"></div>
+                                <div class="w-2 h-2 rounded-full {{ $liveServiceEnabled ? 'bg-red-500' : 'bg-red-500' }}"></div>
                             <span class="text-xs font-semibold {{ $liveServiceEnabled ? 'text-green-700' : 'text-red-700' }}">
                                 Live Chat {{ $liveServiceEnabled ? 'Aktif' : 'Nonaktif' }}
                             </span>
@@ -124,7 +124,8 @@
 
 @endsection
 
-@include('components.articles-chat-bubble', ['categories' => $categories])
+<!-- Chatbot Widget -->
+<x-chatbot-widget />
 
 <!-- Modal Pilihan Tiket -->
 <div id="ticketChoiceModal" data-modal class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm p-4 flex items-center justify-center z-50">
@@ -243,10 +244,10 @@
 
 @endif
             <!-- Report Option -->
-            <x-secondary-button type="button" id="reportOption" data-open-modal="#reportModal" class="w-full p-4 rounded-2xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group">
+            <x-secondary-button type="button" id="reportOption" data-open-modal="#reportModal" class="w-full p-4 rounded-2xl border-2 border-gray-200 hover:border-red-300 hover:bg-red-50 transition-all duration-200 text-left group">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                     </div>
@@ -298,7 +299,7 @@
                 <label for="livechat_category_id" class="block text-sm font-medium text-gray-700 mb-2">
                     Kategori <span class="text-red-500">*</span>
                 </label>
-                <select id="livechat_category_id" name="category_id" required class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <select id="livechat_category_id" name="category_id" required class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
                     <option value="">-- Pilih Kategori --</option>
                     @forelse($categories as $category)
                         <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -314,7 +315,7 @@
                     Nama <span class="text-red-500">*</span>
                 </label>
                 <input type="text" id="livechat_name" name="name" required placeholder="Nama Anda" 
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
             </div>
 
             <!-- Email -->
@@ -323,7 +324,7 @@
                     Email <span class="text-red-500">*</span>
                 </label>
                 <input type="email" id="livechat_email" name="email" required placeholder="email@example.com"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
             </div>
 
             <!-- Subject -->
@@ -332,7 +333,7 @@
                     Subjek <span class="text-red-500">*</span>
                 </label>
                 <input type="text" id="livechat_subject" name="subject" required placeholder="Topik pertanyaan"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
             </div>
 
             <!-- Message -->
@@ -341,7 +342,7 @@
                     Pesan <span class="text-red-500">*</span>
                 </label>
                 <textarea id="livechat_message" name="message" required rows="4" placeholder="Jelaskan pertanyaan Anda..."
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"></textarea>
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"></textarea>
             </div>
 
             <div id="liveChatOtpStep" class="hidden space-y-4">
@@ -350,7 +351,7 @@
                 </div>
                 <div>
                     <label for="livechat_otp_code" class="block text-sm font-medium text-gray-700 mb-2">Kode OTP</label>
-                    <input id="livechat_otp_code" type="text" maxlength="6" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="123456">
+                    <input id="livechat_otp_code" type="text" maxlength="6" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="123456">
                 </div>
             </div>
 

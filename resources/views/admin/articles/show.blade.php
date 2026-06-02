@@ -57,7 +57,7 @@
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Views:</span>
-                                <span class="font-semibold text-blue-600">{{ $article->views }}</span>
+                                <span class="font-semibold text-red-600">{{ $article->views }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Membantu:</span>
@@ -106,7 +106,7 @@
 
                             <div class="flex flex-wrap gap-2 mt-4 lg:mt-0">
                                 @if($article->publish_status !== 'approved')
-                                    <form id="approveForm" method="POST" action="{{ route('admin.articles.approve', $article) }}">
+                                    <form id="approveForm" method="POST" action="{{ route('admin.articles.approve', $article) }}" data-confirm="Setujui artikel ini?">
                                         @csrf
                                         <x-primary-button type="submit" class="inline-flex items-center px-4 py-2">
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,15 +156,15 @@
 
                         <!-- Article Statistics -->
                         <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                                 <div class="flex items-center">
-                                    <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-8 h-8 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
                                     <div>
-                                        <p class="text-sm text-blue-600 font-medium">Views</p>
-                                        <p class="text-xl font-bold text-blue-900">{{ $article->views }}</p>
+                                        <p class="text-sm text-red-600 font-medium">Views</p>
+                                        <p class="text-xl font-bold text-red-900">{{ $article->views }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -209,7 +209,7 @@
                 @csrf
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Penolakan</label>
-                    <textarea name="rejection_note" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none" rows="4" placeholder="Jelaskan alasan penolakan..." required></textarea>
+                    <textarea name="rejection_note" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none" rows="4" placeholder="Jelaskan alasan penolakan..." required></textarea>
                 </div>
                 <div class="flex justify-end gap-3 pt-4">
                     <x-secondary-button type="button" data-close-modal class="px-4 py-2 text-sm rounded-xl">Batal</x-secondary-button>

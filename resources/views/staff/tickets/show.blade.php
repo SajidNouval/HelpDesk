@@ -98,7 +98,7 @@
                                                         System
                                                     @endif
                                                 </div>
-                                                <div class="inline-block max-w-full px-4 py-3 rounded-2xl {{ $message->sender_type === 'staff' ? 'bg-blue-600 text-white' : 'bg-white text-slate-900 border border-slate-200' }}">
+                                                <div class="inline-block max-w-full px-4 py-3 rounded-2xl {{ $message->sender_type === 'staff' ? 'bg-red-600 text-white' : 'bg-white text-slate-900 border border-slate-200' }}">
                                                     <p class="text-sm leading-relaxed">{{ $message->message }}</p>
                                                     <p class="text-xs opacity-75 mt-2">{{ $message->created_at->format('H:i') }}</p>
                                                 </div>
@@ -109,7 +109,7 @@
 
                                 <form id="message-form" class="flex gap-3 border-t border-slate-200 pt-4">
                                     <input type="text" id="message-input" name="message" placeholder="Ketik pesan..."
-                                        class="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
+                                        class="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" required>
                                     <x-primary-button type="submit" class="rounded-xl px-5 py-3 font-semibold">Kirim</x-primary-button>
                                 </form>
                             </div>
@@ -129,7 +129,7 @@
                                     @csrf
                                     <div>
                                         <label for="description" class="text-sm font-semibold text-slate-900"></label>
-                                        <textarea name="description" id="description" rows="4" required class="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"></textarea>
+                                        <textarea name="description" id="description" rows="4" required class="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"></textarea>
                                     </div>
                                     <x-primary-button id="log-submit-btn" type="submit" class="rounded-3xl px-6 py-3 font-semibold">Simpan Log</x-primary-button>
                                 </form>
@@ -235,7 +235,7 @@
                                     @csrf
                                     @method('PATCH')
                                     <label class="text-sm font-semibold text-slate-900">Ubah Priority</label>
-                                    <select name="priority" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                                    <select name="priority" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
                                         <option value="low" {{ $ticket->priority === 'low' ? 'selected' : '' }}>Low</option>
                                         <option value="medium" {{ $ticket->priority === 'medium' ? 'selected' : '' }}>Medium</option>
                                         <option value="high" {{ $ticket->priority === 'high' ? 'selected' : '' }}>High</option>
@@ -253,7 +253,7 @@
                                     <form action="{{ route('staff.tickets.start-progress', $ticket) }}" method="POST">
                                         @csrf
                                         @method('PATCH')
-                                        <x-primary-button type="submit" class="w-full rounded-3xl px-4 py-3 font-semibold bg-blue-600 hover:bg-blue-700">Mulai Mengerjakan</x-primary-button>
+                                        <x-primary-button type="submit" class="w-full rounded-3xl px-4 py-3 font-semibold bg-red-600 hover:bg-red-700">Mulai Mengerjakan</x-primary-button>
                                     </form>
                                     <form action="{{ route('staff.tickets.reject', $ticket) }}" method="POST">
                                         @csrf

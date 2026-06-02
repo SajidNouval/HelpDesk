@@ -90,7 +90,7 @@
                             <div class="space-y-4">
                                 <div>
                                     <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
-                                    <select name="category_id" id="category_id" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
+                                    <select name="category_id" id="category_id" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" required>
                                         <option value="">Pilih Kategori</option>
                                         @foreach($categories as $category)
                                             <option value="{{ $category->id }}" {{ $article->category_id == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
@@ -103,7 +103,7 @@
 
                                 <div>
                                     <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Judul Artikel</label>
-                                    <input type="text" name="title" id="title" value="{{ old('title', $article->title) }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="Masukkan judul artikel" required>
+                                    <input type="text" name="title" id="title" value="{{ old('title', $article->title) }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" placeholder="Masukkan judul artikel" required>
                                     @error('title')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
@@ -111,7 +111,7 @@
 
                                 <div>
                                     <label for="excerpt" class="block text-sm font-medium text-gray-700 mb-2">Ringkasan</label>
-                                    <textarea name="excerpt" id="excerpt" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition resize-none" placeholder="Ringkasan singkat artikel (opsional)">{{ old('excerpt', $article->excerpt) }}</textarea>
+                                    <textarea name="excerpt" id="excerpt" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition resize-none" placeholder="Ringkasan singkat artikel (opsional)">{{ old('excerpt', $article->excerpt) }}</textarea>
                                     @error('excerpt')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
@@ -119,7 +119,7 @@
 
                                 <div>
                                     <label for="content" class="block text-sm font-medium text-gray-700 mb-2">Konten Artikel</label>
-                                    <textarea name="content" id="content" rows="12" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="Tulis konten artikel di sini..." required>{{ old('content', $article->content) }}</textarea>
+                                    <textarea name="content" id="content" rows="12" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" placeholder="Tulis konten artikel di sini..." required>{{ old('content', $article->content) }}</textarea>
                                     @error('content')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
@@ -127,7 +127,7 @@
 
                                 <div>
                                     <label for="keywords" class="block text-sm font-medium text-gray-700 mb-2">Kata Kunci</label>
-                                    <input type="text" name="keywords" id="keywords" value="{{ old('keywords', $article->keywords) }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="Contoh: reset password, lupa password, login">
+                                    <input type="text" name="keywords" id="keywords" value="{{ old('keywords', $article->keywords) }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" placeholder="Contoh: reset password, lupa password, login">
                                     @error('keywords')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
@@ -135,7 +135,7 @@
                             </div>
 
                             <div class="flex items-center">
-                                <input type="checkbox" name="is_published" id="is_published" value="1" {{ old('is_published', $article->is_published) ? 'checked' : '' }} class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <input type="checkbox" name="is_published" id="is_published" value="1" {{ old('is_published', $article->is_published) ? 'checked' : '' }} class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
                                 <label for="is_published" class="ml-3 block text-sm font-semibold text-gray-900">
                                     Publikasikan artikel ini
                                 </label>

@@ -50,13 +50,7 @@
                         </li>
                     </ul>
 
-                    <!-- Profile Card -->
-                    <div class="mt-8 p-4 bg-gray-50 rounded">
-                        <h4 class="font-semibold text-gray-700 mb-2">Profil Anda</h4>
-                        <p class="text-sm text-gray-600 mb-2">{{ Auth::user()->name }}</p>
-                        <p class="text-xs text-gray-500 mb-3">{{ Auth::user()->email }}</p>
-                        <p class="text-xs font-semibold text-green-600">● Aktif</p>
-                    </div>
+                    
                 </div>
             </div>
 
@@ -68,6 +62,26 @@
                     <p class="text-gray-600">
                         Total <span class="font-medium">{{ $staffCount }}</span> staf dan <span class="font-medium">{{ $articleCount }}</span> artikel
                     </p>
+                </div>
+
+                <!-- Global Ticket Summary -->
+                <div class="mb-6 grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div class="p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
+                        <p class="text-xs uppercase tracking-[0.15em] text-gray-500">Total Tiket</p>
+                        <h3 class="text-2xl font-semibold mt-2 text-gray-900">{{ $totalTickets }}</h3>
+                    </div>
+                    <div class="p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
+                        <p class="text-xs uppercase tracking-[0.15em] text-gray-500">Tiket Waiting</p>
+                        <h3 class="text-2xl font-semibold mt-2 text-gray-900">{{ $ticketsWaiting }}</h3>
+                    </div>
+                    <div class="p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
+                        <p class="text-xs uppercase tracking-[0.15em] text-gray-500">Tiket Diproses</p>
+                        <h3 class="text-2xl font-semibold mt-2 text-gray-900">{{ $ticketsProcessing }}</h3>
+                    </div>
+                    <div class="p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
+                        <p class="text-xs uppercase tracking-[0.15em] text-gray-500">Tiket Selesai</p>
+                        <h3 class="text-2xl font-semibold mt-2 text-gray-900">{{ $ticketsDone }}</h3>
+                    </div>
                 </div>
 
                 <div class="mb-6 p-6 bg-white border border-gray-200 rounded-3xl shadow-sm">
@@ -88,6 +102,55 @@
                                 {{ $liveServiceEnabled ? 'Matikan Live Service' : 'Nyalakan Live Service' }}
                             </x-primary-button>
                         </form>
+                    </div>
+                </div>
+
+                <!-- Chatbot Statistics + Top Lists -->
+                <div class="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div class="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm">
+                        <p class="text-sm uppercase tracking-[0.2em] text-gray-500">Statistik Chatbot</p>
+                        <div class="mt-3 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Total Pertanyaan</span>
+                                <span class="font-semibold text-gray-900">{{ $chatbotStats['total_questions'] }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Pertanyaan Hari Ini</span>
+                                <span class="font-semibold text-gray-900">{{ $chatbotStats['today'] }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Terjawab</span>
+                                <span class="font-semibold text-gray-900">{{ $chatbotStats['answered'] }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Tidak Terjawab</span>
+                                <span class="font-semibold text-gray-900">{{ $chatbotStats['unanswered'] }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm">
+                        <p class="text-sm uppercase tracking-[0.2em] text-gray-500">Top Artikel Terpopuler</p>
+                        <div class="mt-4 space-y-3">
+                            @foreach($topArticles as $ta)
+                                <div class="flex items-center justify-between">
+                                    <div class="text-sm text-gray-700">{{ \Illuminate\Support\Str::limit($ta->title, 60) }}</div>
+                                    <div class="text-sm font-semibold text-gray-900">{{ $ta->views }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm">
+                        <p class="text-sm uppercase tracking-[0.2em] text-gray-500">Top Performer Staff</p>
+                        <div class="mt-4 space-y-3">
+                            @foreach($topStaff as $ts)
+                                <div class="flex items-center justify-between">
+                                    <div class="text-sm text-gray-700">{{ $ts->name }}</div>
+                                    <div class="text-sm font-semibold text-gray-900">{{ $ts->completed_count ?? 0 }}</div>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
 
@@ -198,6 +261,40 @@
                         @endif
                     </div>
                 </div>
+
+                <!-- Statistik Kinerja Staff -->
+                <div class="mt-8 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Statistik Kinerja Staff</h3>
+                            
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            @foreach($staffStats as $staff)
+                                <div class="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="font-semibold text-gray-800">{{ $staff->name }}</div>
+                                        <div class="text-xs text-gray-500">ID: {{ $staff->id }}</div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                                        <div class="flex justify-between"><span>Total Selesai</span><span class="font-semibold text-gray-900">{{ $staff->tickets_done }}</span></div>
+                                        <div class="flex justify-between"><span>Total Ditolak</span><span class="font-semibold text-gray-900">{{ $staff->tickets_rejected }}</span></div>
+                                        <div class="flex justify-between"><span>Total Menunggu</span><span class="font-semibold text-gray-900">{{ $staff->tickets_waiting }}</span></div>
+                                        <div class="flex justify-between"><span>Artikel Disetujui</span><span class="font-semibold text-gray-900">{{ $staff->articles_approved }}</span></div>
+                                        <div class="flex justify-between col-span-2"><span>Artikel Ditolak</span><span class="font-semibold text-gray-900">{{ $staff->articles_rejected }}</span></div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="mt-6 flex items-center justify-center gap-4">
+                            <a href="{{ $staffStats->previousPageUrl() }}" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-semibold {{ $staffStats->onFirstPage() ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $staffStats->onFirstPage() ? 'aria-disabled=true tabindex=-1' : '' }}>&lt;</a>
+                            <span class="text-sm text-gray-600 font-semibold">Halaman {{ $staffStats->currentPage() }} dari {{ $staffStats->lastPage() }}</span>
+                            <a href="{{ $staffStats->nextPageUrl() }}" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-semibold {{ $staffStats->currentPage() === $staffStats->lastPage() ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $staffStats->currentPage() === $staffStats->lastPage() ? 'aria-disabled=true tabindex=-1' : '' }}>&gt;</a>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -213,7 +310,7 @@
                 @csrf
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Penolakan</label>
-                    <textarea name="rejection_note" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none" rows="4" placeholder="Jelaskan alasan penolakan..." required></textarea>
+                    <textarea name="rejection_note" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none" rows="4" placeholder="Jelaskan alasan penolakan..." required></textarea>
                 </div>
                 <div class="flex justify-end gap-3 pt-4">
                     <x-secondary-button type="button" data-close-modal class="px-4 py-2 text-sm rounded-xl">Batal</x-secondary-button>

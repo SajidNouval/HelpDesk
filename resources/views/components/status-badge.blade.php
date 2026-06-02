@@ -2,8 +2,8 @@
 
 @php
     $color = match($status) {
-        'progress' => 'bg-blue-100 text-blue-800',
-        'assigned' => 'bg-indigo-100 text-indigo-800',
+        'progress' => 'bg-red-100 text-red-800',
+        'assigned' => 'bg-red-100 text-red-800',
         'waiting', 'pending' => 'bg-yellow-100 text-yellow-800',
         'closed', 'rejected' => 'bg-red-100 text-red-800',
         'approved' => 'bg-green-100 text-green-800',

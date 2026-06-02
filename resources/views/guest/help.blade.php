@@ -20,7 +20,7 @@
             @endif
 
             <div class="p-6">
-                <div id="ticketPageAlert" class="hidden mb-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800"></div>
+                <div id="ticketPageAlert" class="hidden mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"></div>
 
                 <form id="guestTicketForm" class="space-y-5">
                     <input type="hidden" name="type" id="ticketType" value="livechat">
@@ -126,7 +126,7 @@
                 } else if (type === 'error') {
                     ticketPageAlert.classList.add('bg-red-50', 'border', 'border-red-200', 'text-red-900');
                 } else {
-                    ticketPageAlert.classList.add('bg-blue-50', 'border', 'border-blue-200', 'text-blue-900');
+                    ticketPageAlert.classList.add('bg-red-50', 'border', 'border-red-200', 'text-red-900');
                 }
             }
 
