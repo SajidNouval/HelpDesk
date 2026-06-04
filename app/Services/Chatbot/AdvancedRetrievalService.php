@@ -443,13 +443,27 @@ class AdvancedRetrievalService
         $this->debugInfo['out_of_domain_check'] = $outOfDomainCheck;
         
         if ($outOfDomainCheck['is_out_of_domain']) {
+            // If the reason is 'no_it_keywords', defer rejection and allow
+            // retrieval to run as a fallback. Explicit out-of-domain reasons
+            // (empty_query, explicit_out_of_domain_keywords, etc.) still
+            // cause immediate rejection.
+            $reason = $outOfDomainCheck['reason'] ?? '';
+            if ($reason !== 'no_it_keywords') {
+                $this->debugInfo['stages'][] = [
+                    'stage' => 'out_of_domain_detection',
+                    'input' => $query,
+                    'output' => 'REJECTED - ' . $reason,
+                ];
+
+                return $this->outOfDomainResult($query);
+            }
+
+            // Log that we deferred rejection for no_it_keywords
             $this->debugInfo['stages'][] = [
                 'stage' => 'out_of_domain_detection',
                 'input' => $query,
-                'output' => 'REJECTED - ' . $outOfDomainCheck['reason'],
+                'output' => 'DEFERRED_REJECTION - ' . $reason,
             ];
-            
-            return $this->outOfDomainResult($query);
         }
         
         $this->debugInfo['stages'][] = [
