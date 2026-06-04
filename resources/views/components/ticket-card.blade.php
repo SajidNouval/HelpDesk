@@ -38,18 +38,18 @@
 <{{ $wrapperClass }} 
     @if($href) href="{{ $href }}" @endif
     target="{{ $target }}"
-    {{ $attributes->merge(['class' => "w-full block text-left bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition overflow-hidden border-l-4 $borderColor"]) }}
+    {{ $attributes->merge(['class' => "w-full block text-left bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border-l-4 $borderColor"]) }}
 >
     <div class="p-4">
         <!-- Header: Title + Status -->
         <div class="flex justify-between items-start mb-3">
             <div class="flex-1">
-                <h4 class="font-semibold text-gray-900 text-sm">#{{ $ticket->id }} - {{ $ticket->subject }}</h4>
-                <p class="text-xs text-gray-600 mt-1">{{ $ticket->category->name }}</p>
+                <h4 class="font-semibold text-gray-900 text-sm">#{{ $ticket->id }} - <x-truncate-text :value="$ticket->subject" /></h4>
+                <p class="text-xs text-gray-600 mt-1 truncate max-w-[150px]">{{ $ticket->category->name }}</p>
             </div>
             <div class="text-right">
                 @if($showStatus)
-                    <span class="inline-block text-xs px-2 py-1 rounded-full font-medium {{ $statusColor }}">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $statusColor }}">
                         {{ $statusLabel }}
                     </span>
                 @endif
@@ -60,7 +60,7 @@
         </div>
 
         <!-- Message Preview -->
-        <p class="text-sm text-gray-700 mb-2 leading-relaxed">{{ Str::limit($ticket->message, 120) }}</p>
+        <x-truncate-text :value="$ticket->message" :limit="120" class="text-sm text-gray-700 mb-2 block" />
 
         <!-- Additional Info Row -->
         @if($showWorkTime || $showPriority)

@@ -129,10 +129,20 @@ export function initLiveChatForm() {
             }
 
             showInlineAlert(liveChatAlert, 'Live chat session dimulai. Tunggu staf kami untuk connect...', 'success');
-            if (response.data?.tracking_url) {
-                setTimeout(() => {
-                    window.location.href = response.data.tracking_url;
-                }, 1500);
+            
+            const emailVal = document.getElementById('livechat_email')?.value?.trim();
+            if (typeof window.startLiveChatMode === 'function') {
+                window.startLiveChatMode(
+                    response.data.ticket_id,
+                    response.data.ticket_status,
+                    emailVal
+                );
+            } else {
+                if (response.data?.tracking_url) {
+                    setTimeout(() => {
+                        window.location.href = response.data.tracking_url;
+                    }, 1500);
+                }
             }
         } catch (error) {
             showInlineAlert(liveChatAlert, error.message, 'error');

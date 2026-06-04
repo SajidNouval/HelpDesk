@@ -2,23 +2,31 @@
 
 namespace App\Events;
 
-use App\Models\Message;
+use App\Models\Ticket;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class MessageSent implements ShouldBroadcast
+class TicketClosed implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct(public Message $message) {}
+    /**
+     * Create a new event instance.
+     */
+    public function __construct(public Ticket $ticket) {}
 
+    /**
+     * Get the channels the event should broadcast on.
+     *
+     * @return array<int, \Illuminate\Broadcasting\Channel>
+     */
     public function broadcastOn(): array
     {
         return [
-            new Channel('ticket.' . $this->message->ticket_id),
+            new Channel('ticket.' . $this->ticket->id),
         ];
     }
 
@@ -27,18 +35,18 @@ class MessageSent implements ShouldBroadcast
      */
     public function broadcastAs(): string
     {
-        return 'MessageSent';
+        return 'TicketClosed';
     }
 
+    /**
+     * Get the data to broadcast.
+     *
+     * @return array<string, mixed>
+     */
     public function broadcastWith(): array
     {
         return [
-            'id'          => $this->message->id,
-            'ticket_id'   => $this->message->ticket_id,
-            'message'     => $this->message->message,
-            'sender_type' => $this->message->sender_type,
-            'sender_name' => $this->message->sender_name ?? 'Guest',
-            'created_at'  => $this->message->created_at->toDateTimeString(),
+            'ticket_id' => $this->ticket->id,
         ];
     }
 }

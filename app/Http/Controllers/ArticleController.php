@@ -63,6 +63,14 @@ class ArticleController extends Controller
 
     public function show(Article $article)
     {
+        $article->loadCount([
+            'feedback as helpful_count' => function ($query) {
+                $query->where('is_helpful', true);
+            },
+            'feedback as not_helpful_count' => function ($query) {
+                $query->where('is_helpful', false);
+            },
+        ]);
         return view('staff.articles.show', compact('article'));
     }
 

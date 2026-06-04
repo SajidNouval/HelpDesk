@@ -104,56 +104,11 @@ export function setModalFormAction(modal, pattern, articleId) {
 }
 
 /**
- * Initialize global modal event handlers
- * Handles: open buttons, close buttons, backdrop clicks, escape key
+ * Initialize global modal keyboard handler
+ * Handles: escape key to close open modals
+ * Note: click handling (open/close/backdrop) is consolidated in shared/ui.js
  */
 export function initModalHandlers() {
-    // Click handler for modal interactions
-    document.addEventListener('click', (event) => {
-        const target = event.target;
-        if (!(target instanceof HTMLElement)) {
-            return;
-        }
-
-        // Handle modal open buttons
-        const openButton = target.closest('[data-open-modal]');
-        if (openButton instanceof HTMLElement) {
-            event.preventDefault();
-            const modalSelector = openButton.dataset.openModal;
-            const modal = modalSelector ? document.querySelector(modalSelector) : null;
-            if (!(modal instanceof HTMLElement)) {
-                return;
-            }
-
-            const actionPattern = openButton.dataset.modalFormAction;
-            const articleId = openButton.dataset.articleId;
-            if (actionPattern && articleId) {
-                setModalFormAction(modal, actionPattern, articleId);
-            }
-
-            openModal(modal);
-            return;
-        }
-
-        // Handle modal close buttons (only if inside a modal)
-        const closeButton = target.closest('[data-close-modal]');
-        if (closeButton instanceof HTMLElement) {
-            event.preventDefault();
-            const modal = closeButton.closest('[data-modal]');
-            if (modal instanceof HTMLElement) {
-                closeModal(modal);
-            }
-            return;
-        }
-
-        // Handle modal backdrop clicks (click on overlay to close modal)
-        const modal = target.closest('[data-modal]');
-        if (modal instanceof HTMLElement && target === modal && !modal.classList.contains('hidden')) {
-            closeModal(modal);
-            return;
-        }
-    });
-
     // Escape key handler for modals
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') {

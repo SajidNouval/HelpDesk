@@ -58,7 +58,7 @@ class DashboardController extends Controller
                 'articles as articles_rejected' => function ($q) { $q->where('publish_status', 'rejected'); },
             ])
             ->orderByDesc('tickets_done')
-            ->paginate(5);
+            ->paginate(10);
 
         // Top articles and top performers
         $topArticles = Article::orderByDesc('views')->take(5)->get(['id', 'title', 'views']);

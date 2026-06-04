@@ -1,11 +1,14 @@
 <x-app-layout>
 
     <!-- Header Section -->
-    <div class="bg-gray-100 py-10 border-b">
+    <div class="bg-gray-100 py-6 border-b">
         <div class="max-w-7xl mx-auto px-4">
-            <h1 class="text-3xl font-semibold text-gray-700 tracking-wide">
+            <h1 class="text-3xl font-semibold text-gray-900">
                 Buat Artikel Baru
             </h1>
+            <p class="mt-1 text-sm text-gray-500">
+                Tambahkan artikel bantuan baru untuk membantu pelanggan.
+            </p>
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
@@ -19,8 +22,8 @@
     </div>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 py-10">
-        <div class="grid grid-cols-12 gap-8">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="grid grid-cols-12 gap-6">
 
             <!-- Sidebar Left -->
             <div class="col-span-12 md:col-span-3">
@@ -29,7 +32,7 @@
                         Menu Staf
                     </h3>
 
-                    <ul class="space-y-3 text-gray-700">
+                    <ul class="space-y-1 text-gray-700">
                         <li>
                             <a href="{{ route('staff.dashboard') }}" class="block rounded-l-md px-3 py-2 transition hover:text-red-500">
                                 Dashboard
@@ -53,7 +56,7 @@
                     </ul>
 
                     <!-- Profile Card -->
-                    <div class="mt-8 p-4 bg-gray-50 rounded">
+                    <div class="mt-6 p-4 bg-gray-50 rounded">
                         <h4 class="font-semibold text-gray-700 mb-2">Profil Anda</h4>
                         <p class="text-sm text-gray-600 mb-2">{{ Auth::user()->name }}</p>
                         <p class="text-xs text-gray-500 mb-3">{{ Auth::user()->email }}</p>
@@ -75,21 +78,22 @@
                     </div>
                 @endif
 
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900">Form Buat Artikel</h2>
+                    <p class="text-sm text-gray-500">Isi detail artikel baru di bawah ini.</p>
+                </div>
+
                 <!-- Form Card -->
-                <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm max-w-4xl">
                     <div class="p-6">
-                        <div class="mb-6">
-                            <h2 class="text-2xl font-bold text-gray-900">Buat Artikel Baru</h2>
-                            <p class="text-gray-600 mt-1">Tambahkan artikel bantuan baru untuk membantu pelanggan</p>
-                        </div>
 
                         <form id="article-form" method="POST" action="{{ route('staff.articles.store') }}" class="space-y-6">
                             @csrf
 
                             <div class="space-y-4">
                                 <div>
-                                    <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
-                                    <select name="category_id" id="category_id" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" required>
+                                    <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">Kategori <span class="text-red-500">*</span></label>
+                                    <select name="category_id" id="category_id" class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" required>
                                         <option value="">Pilih Kategori</option>
                                         @foreach($categories as $category)
                                             <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -101,8 +105,8 @@
                                 </div>
 
                                 <div>
-                                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Judul Artikel</label>
-                                    <input type="text" name="title" id="title" value="{{ old('title') }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" placeholder="Masukkan judul artikel" required>
+                                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Judul Artikel <span class="text-red-500">*</span></label>
+                                    <input type="text" name="title" id="title" value="{{ old('title') }}" class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" placeholder="Masukkan judul artikel" required>
                                     @error('title')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
@@ -117,7 +121,7 @@
                                 </div>
 
                                 <div>
-                                    <label for="content" class="block text-sm font-medium text-gray-700 mb-2">Konten Artikel</label>
+                                    <label for="content" class="block text-sm font-medium text-gray-700 mb-2">Konten Artikel <span class="text-red-500">*</span></label>
                                     <textarea name="content" id="content" rows="12" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" placeholder="Tulis konten artikel di sini..." required>{{ old('content') }}</textarea>
                                     @error('content')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -126,7 +130,7 @@
 
                                 <div>
                                     <label for="keywords" class="block text-sm font-medium text-gray-700 mb-2">Kata Kunci</label>
-                                    <input type="text" name="keywords" id="keywords" value="{{ old('keywords') }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" placeholder="Contoh: reset password, lupa password, login">
+                                    <input type="text" name="keywords" id="keywords" value="{{ old('keywords') }}" class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" placeholder="Contoh: reset password, lupa password, login">
                                     @error('keywords')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
@@ -140,11 +144,15 @@
                                 </label>
                             </div>
 
-                            <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
+                            <div class="pt-6 border-t border-gray-200 flex justify-end gap-3">
                                 <a href="{{ route('staff.articles.index') }}">
-                                    <x-secondary-button class="px-6 py-3">Batal</x-secondary-button>
+                                    <button type="button" class="h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
+                                        Batal
+                                    </button>
                                 </a>
-                                <x-primary-button type="submit" class="px-6 py-3">Simpan Artikel</x-primary-button>
+                                <button type="submit" class="h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
+                                    Simpan Artikel
+                                </button>
                             </div>
                         </form>
                     </div>

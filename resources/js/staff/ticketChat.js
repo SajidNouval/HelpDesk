@@ -14,6 +14,7 @@ class TicketChatManager {
         this.lastMessageIds = new Set();
         this.websocketConnected = false;
         this.pollingInterval = null;
+        this._channelSubscribed = false;
     }
 
     /**
@@ -123,6 +124,7 @@ class TicketChatManager {
      */
     setupWebSocketListener() {
         if (!this.ticketId) return;
+        if (this._channelSubscribed) return; // Prevent double subscription
 
         if (typeof window.Echo === 'undefined' || window.Echo === null) {
             console.warn('⚠ Echo is not initialized. Real-time chat unavailable.');
@@ -138,12 +140,28 @@ class TicketChatManager {
             const connectedState = pusherConnection?.state === 'connected';
 
             const subscribeToChannel = () => {
-                if (!this.ticketId) return;
+                if (!this.ticketId || this._channelSubscribed) return;
+                this._channelSubscribed = true;
+
+                // Remove any existing error notification once we're connected
+                this.clearWebSocketError();
+
                 window.Echo.channel(channelName)
-                    .listen('MessageSent', async (e) => {
+                    .listen('.MessageSent', async (e) => {
                         console.log('📨 New message received via WebSocket', e);
-                        await this.loadMessages();
+                        // Append inbound message directly without full reload
+                        if (e.sender_type !== 'staff') {
+                            // Guest message received — show it live
+                            if (e.id && !this.lastMessageIds.has(e.id)) {
+                                this.appendMessage(e);
+                            }
+                        } else {
+                            // Our own staff message — already optimistically shown;
+                            // reload to replace temp ID with real ID
+                            await this.loadMessages();
+                        }
                     });
+
                 this.websocketConnected = true;
                 console.log('✓ WebSocket listener initialized for ticket:', this.ticketId);
             };
@@ -162,12 +180,14 @@ class TicketChatManager {
                 pusherConnection.bind('error', (error) => {
                     console.error('✗ WebSocket connection error:', error);
                     this.websocketConnected = false;
+                    this._channelSubscribed = false;
                     this.showWebSocketError();
                 });
 
                 pusherConnection.bind('disconnected', () => {
                     console.warn('⚠ WebSocket connection closed');
                     this.websocketConnected = false;
+                    this._channelSubscribed = false;
                     this.showWebSocketError();
                 });
 
@@ -182,16 +202,26 @@ class TicketChatManager {
     }
 
     /**
-     * Show WebSocket error message
+     * Show WebSocket error message (only once, deduplicated)
      */
     showWebSocketError() {
+        if (document.getElementById('websocket-error-notification')) return; // already shown
         const errorDiv = document.createElement('div');
-        errorDiv.className = 'p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 rounded mb-4';
-        errorDiv.innerHTML = '<p class="font-semibold">⚠️ Real-time chat tidak tersedia. Pastikan server Reverb berjalan.</p>';
+        errorDiv.id = 'websocket-error-notification';
+        errorDiv.className = 'p-3 bg-amber-50 border border-amber-300 text-amber-800 rounded-xl mb-3 text-sm flex items-center gap-2';
+        errorDiv.innerHTML = '<span class="text-amber-500">⚠️</span><span>Real-time chat tidak tersedia. Pastikan server Reverb berjalan.</span>';
         const container = document.getElementById('chat-container');
         if (container) {
             container.prepend(errorDiv);
         }
+    }
+
+    /**
+     * Remove WebSocket error notification if present
+     */
+    clearWebSocketError() {
+        const el = document.getElementById('websocket-error-notification');
+        if (el) el.remove();
     }
 
     /**
@@ -210,13 +240,6 @@ class TicketChatManager {
             console.log('Waiting for Echo to initialize...');
             setTimeout(() => this.initializeWebSocket(), 1000);
         }
-
-        // Fallback polling every 5 seconds if WebSocket not available
-        this.pollingInterval = setInterval(() => {
-            if (!this.websocketConnected) {
-                this.loadMessages();
-            }
-        }, 5000);
     }
 
     /**
@@ -238,12 +261,13 @@ class TicketChatManager {
             const message = messageInput.value.trim();
             if (!message) return;
 
-            // Optimistic UI - show message immediately
+            // Optimistic UI — show message immediately on the left (staff side)
+            const staffName = messageInput.dataset.senderName || 'Staff';
             const optimisticMsg = {
                 id: 'temp-' + Date.now(),
                 message: message,
                 sender_type: 'staff',
-                sender_name: messageInput.dataset.senderName || 'Staff',
+                sender_name: staffName,
                 created_at: new Date().toISOString()
             };
             this.appendMessage(optimisticMsg);
@@ -265,19 +289,18 @@ class TicketChatManager {
                 .then(async res => {
                     if (res.ok) {
                         messageInput.value = '';
-                        // Reload messages to update with actual ID from server
-                        setTimeout(() => this.loadMessages(), 500);
+                        // Reload to replace the temp-ID message with real server message
+                        setTimeout(() => this.loadMessages(), 400);
                     } else {
                         // Remove optimistic message if failed
-                        const optimisticEl = Array.from(this.messagesList.children).pop();
+                        const optimisticEl = this.messagesList.querySelector(`[data-message-id="${optimisticMsg.id}"]`);
                         if (optimisticEl) optimisticEl.remove();
                         this.lastMessageIds.delete(optimisticMsg.id);
                         console.error('Failed to send message:', res.status);
                     }
                 })
                 .catch(err => {
-                    // Remove optimistic message if error
-                    const optimisticEl = Array.from(this.messagesList.children).pop();
+                    const optimisticEl = this.messagesList.querySelector(`[data-message-id="${optimisticMsg.id}"]`);
                     if (optimisticEl) optimisticEl.remove();
                     this.lastMessageIds.delete(optimisticMsg.id);
                     console.error('Error sending message:', err);
@@ -345,6 +368,10 @@ class TicketChatManager {
 
     /**
      * Append a message to the messages list
+     * Staff perspective:
+     *   - Guest messages → right side, primary red bubble, white text
+     *   - Staff messages → left side, light grey bubble, dark text
+     *
      * @param {Object} msg - The message object
      */
     appendMessage(msg) {
@@ -353,37 +380,59 @@ class TicketChatManager {
             return;
         }
 
-        const div = document.createElement('div');
-        div.className = `mb-3 ${msg.sender_type === 'staff' ? 'text-right' : 'text-left'}`;
-        div.dataset.messageId = msg.id || 'temp';
+        const isGuest = msg.sender_type !== 'staff';
+        const senderLabel = isGuest ? (msg.sender_name || 'Guest') : (msg.sender_name || 'Staff');
 
-        // Add sender name
-        const senderDiv = document.createElement('div');
-        senderDiv.className = 'text-xs text-gray-500 mb-1';
-        senderDiv.textContent = msg.sender_name || 'Guest';
-        div.appendChild(senderDiv);
-
-        const messageBubble = document.createElement('div');
-        messageBubble.className = `inline-block max-w-xs px-4 py-3 rounded-2xl ${msg.sender_type === 'staff' ? 'bg-red-600 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100'}`;
-
-        const messageText = document.createElement('p');
-        messageText.className = 'text-sm leading-relaxed';
-        messageText.textContent = msg.message;
-
-        const timestamp = document.createElement('p');
-        timestamp.className = 'text-xs opacity-75 mt-2';
         const msgTime = typeof msg.created_at === 'string'
             ? new Date(msg.created_at)
-            : msg.created_at;
-        timestamp.textContent = msgTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            : (msg.created_at instanceof Date ? msg.created_at : new Date());
 
-        messageBubble.appendChild(messageText);
-        messageBubble.appendChild(timestamp);
-        div.appendChild(messageBubble);
-        this.messagesList.appendChild(div);
+        const timeStr = msgTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+        const wrapperDiv = document.createElement('div');
+        wrapperDiv.className = `flex ${isGuest ? 'justify-end' : 'justify-start'} mb-3`;
+        wrapperDiv.dataset.messageId = msg.id || 'temp';
+
+        if (isGuest) {
+            // Guest → right side bubble (red)
+            wrapperDiv.innerHTML = `
+                <div class="max-w-xs lg:max-w-sm">
+                    <p class="text-xs text-gray-500 mb-1 text-right">${senderLabel}</p>
+                    <div class="px-4 py-3 rounded-2xl rounded-tr-sm bg-red-600 text-white shadow-sm">
+                        <p class="text-sm leading-relaxed whitespace-pre-wrap">${this.escapeHtml(msg.message)}</p>
+                        <p class="text-xs opacity-70 mt-1.5 text-right">${timeStr}</p>
+                    </div>
+                </div>`;
+        } else {
+            // Staff → left side bubble (grey)
+            wrapperDiv.innerHTML = `
+                <div class="max-w-xs lg:max-w-sm">
+                    <p class="text-xs text-gray-500 mb-1">${senderLabel}</p>
+                    <div class="px-4 py-3 rounded-2xl rounded-tl-sm bg-gray-100 text-gray-900 shadow-sm">
+                        <p class="text-sm leading-relaxed whitespace-pre-wrap">${this.escapeHtml(msg.message)}</p>
+                        <p class="text-xs text-gray-400 mt-1.5">${timeStr}</p>
+                    </div>
+                </div>`;
+        }
+
+        this.messagesList.appendChild(wrapperDiv);
 
         if (msg.id) this.lastMessageIds.add(msg.id);
         this.scrollMessagesToBottom();
+    }
+
+    /**
+     * Escape HTML special characters
+     * @param {string} str
+     * @returns {string}
+     */
+    escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     /**

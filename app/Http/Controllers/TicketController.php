@@ -395,8 +395,9 @@ class TicketController extends Controller
                 }
             }
 
+            $ticketType = $otp->type; // capture before delete
             $otp->delete();
-            $result = ['success' => true, 'ticket' => $ticket];
+            $result = ['success' => true, 'ticket' => $ticket, 'ticket_type' => $ticketType];
             return $ticket;
         });
 
@@ -408,10 +409,12 @@ class TicketController extends Controller
         Mail::to($ticket->email)->send(new TicketTrackingMail($ticket, $trackingUrl));
 
         return response()->json([
-            'success' => true,
-            'message' => 'OTP berhasil diverifikasi. Tiket Anda telah dibuat.',
-            'ticket_id' => $ticket->id,
-            'tracking_url' => $trackingUrl,
+            'success'       => true,
+            'message'       => 'OTP berhasil diverifikasi. Tiket Anda telah dibuat.',
+            'ticket_id'     => $ticket->id,
+            'tracking_url'  => $trackingUrl,
+            'ticket_status' => $ticket->status,          // 'assigned' | 'waiting'
+            'ticket_type'   => $result['ticket_type'],   // 'livechat' | 'report'
         ]);
     }
 

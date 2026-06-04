@@ -1,11 +1,14 @@
 <x-app-layout>
 
     <!-- Header Section -->
-    <div class="bg-gray-100 py-8 border-b border-gray-200">
+    <div class="bg-gray-100 py-6 border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4">
-            <h1 class="text-2xl font-bold text-gray-900">
+            <h1 class="text-3xl font-semibold text-gray-900">
                 Kelola Artikel
             </h1>
+            <p class="mt-1 text-sm text-gray-500">
+                Kelola artikel bantuan untuk pelanggan.
+            </p>
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
@@ -17,8 +20,8 @@
     </div>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <div class="grid grid-cols-12 gap-8">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="grid grid-cols-12 gap-6">
 
             <!-- Sidebar Left -->
             <div class="col-span-12 md:col-span-3">
@@ -27,7 +30,7 @@
                         Menu Staf
                     </h3>
 
-                    <ul class="space-y-3 text-gray-700">
+                    <ul class="space-y-1 text-gray-700">
                         <li>
                             <a href="{{ route('staff.dashboard') }}" class="block rounded-l-md px-3 py-2 transition hover:text-red-500">
                                 Dashboard
@@ -51,7 +54,7 @@
                     </ul>
 
                     <!-- Profile Card -->
-                    <div class="mt-8 p-4 bg-gray-50 rounded">
+                    <div class="mt-6 p-4 bg-gray-50 rounded">
                         <h4 class="font-semibold text-gray-700 mb-2">Profil Anda</h4>
                         <p class="text-sm text-gray-600 mb-2">{{ Auth::user()->name }}</p>
                         <p class="text-xs text-gray-500 mb-3">{{ Auth::user()->email }}</p>
@@ -71,9 +74,18 @@
                 @endif
 
                 <!-- Header with Add Button -->
-                <div class="mb-6 flex justify-between items-center">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-900">Daftar Artikel</h2>
+                        <h2 class="text-xl font-semibold text-gray-900">Daftar Artikel</h2>
+                        <p class="text-sm text-gray-500">Artikel yang telah Anda buat.</p>
+                    </div>
+                    <div class="flex items-center">
+                        <a href="{{ route('staff.articles.create') }}" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Buat Artikel Baru
+                        </a>
                     </div>
                 </div>
 
@@ -81,7 +93,7 @@
                 @if($articles->count() > 0)
                     <div class="space-y-3">
                         @foreach($articles as $article)
-                            <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition overflow-hidden">
+                            <div class="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition">
                                 <div class="p-5">
                                     <div class="flex justify-between items-start mb-3">
                                         <div class="flex-1">
@@ -125,7 +137,7 @@
                     </div>
 
                     <!-- Pagination -->
-                    <div class="mt-8">
+                    <div class="mt-6">
                         {{ $articles->links() }}
                     </div>
                 @else

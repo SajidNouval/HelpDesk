@@ -1,10 +1,13 @@
 <x-app-layout>
     <!-- Header Section -->
-    <div class="bg-gray-100 py-10 border-b">
+    <div class="bg-gray-100 py-6 border-b">
         <div class="max-w-7xl mx-auto px-4">
-            <h1 class="text-3xl font-semibold text-gray-700 tracking-wide">
-                Tambah Staf Baru
+            <h1 class="text-3xl font-semibold text-gray-900">
+                Tambah Staf
             </h1>
+            <p class="mt-1 text-sm text-gray-500">
+                Buat akun staf baru untuk sistem helpdesk.
+            </p>
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
@@ -18,8 +21,8 @@
     </div>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 py-10">
-        <div class="grid grid-cols-12 gap-8">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="grid grid-cols-12 gap-6">
 
             <!-- Sidebar Left -->
             <div class="col-span-12 md:col-span-3">
@@ -28,7 +31,7 @@
                         Menu Admin
                     </h3>
 
-                    <ul class="space-y-3 text-gray-700">
+                    <ul class="space-y-1 text-gray-700">
                         <li>
                             <a href="{{ route('admin.dashboard') }}" class="block rounded-l-md px-3 py-2 transition hover:text-red-500">
                                 Dashboard
@@ -52,7 +55,7 @@
                     </ul>
 
                     <!-- Profile Card -->
-                    <div class="mt-8 p-4 bg-gray-50 rounded">
+                    <div class="mt-6 p-4 bg-gray-50 rounded">
                         <h4 class="font-semibold text-gray-700 mb-2">Profil Anda</h4>
                         <p class="text-sm text-gray-600 mb-2">{{ Auth::user()->name }}</p>
                         <p class="text-xs text-gray-500 mb-3">{{ Auth::user()->email }}</p>
@@ -63,10 +66,9 @@
 
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9">
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-900">Tambah Staf</h2>
-                    </div>
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900">Form Tambah Staf</h2>
+                    <p class="text-sm text-gray-500">Isi detail staf baru di bawah ini.</p>
                 </div>
 
                 @if($errors->any())
@@ -87,7 +89,7 @@
                     </div>
                 @endif
 
-                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm max-w-2xl mx-auto">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm max-w-4xl">
                     <div class="p-6">
                         <form id="staff-form" action="{{ route('admin.users.store') }}" method="POST" class="space-y-6">
                             @csrf
@@ -100,7 +102,7 @@
                                             Nama Lengkap <span class="text-red-500">*</span>
                                         </label>
                                         <input id="name" name="name" type="text" value="{{ old('name') }}" required
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
+                                               class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
                                                placeholder="Masukkan nama lengkap">
                                     </div>
 
@@ -109,7 +111,7 @@
                                             Email <span class="text-red-500">*</span>
                                         </label>
                                         <input id="email" name="email" type="email" value="{{ old('email') }}" required
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
+                                               class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
                                                placeholder="Masukkan alamat email">
                                     </div>
                                 </div>
@@ -119,7 +121,7 @@
                                         Role <span class="text-red-500">*</span>
                                     </label>
                                     <select id="role" name="role" required
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
+                                            class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
                                         <option value="">Pilih role</option>
                                         <option value="staff" {{ old('role') === 'staff' ? 'selected' : '' }}>Staff</option>
                                         <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
@@ -131,7 +133,7 @@
                                         Password <span class="text-red-500">*</span>
                                     </label>
                                     <input id="password" name="password" type="password" required
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
+                                           class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
                                            placeholder="Masukkan password">
                                 </div>
 
@@ -140,23 +142,49 @@
                                         Konfirmasi Password <span class="text-red-500">*</span>
                                     </label>
                                     <input id="password_confirmation" name="password_confirmation" type="password" required
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
+                                           class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
                                            placeholder="Ulangi password">
                                 </div>
                             </div>
 
-                            <div class="flex justify-end pt-4 border-t border-gray-200">
-                                <div class="flex space-x-3">
-                                    <a href="{{ route('admin.users.index') }}">
-                                        <x-secondary-button class="px-4 py-2">Batal</x-secondary-button>
-                                    </a>
-                                    <x-primary-button type="submit" class="px-6 py-2 flex items-center">
-                                        <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                        </svg>
-                                        Simpan Staf
-                                    </x-primary-button>
+                            <!-- Kategori Assignment (hanya untuk role staff) -->
+                            <div id="category-section" class="hidden">
+                                <div class="pt-4 border-t border-gray-100">
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">
+                                        Kategori yang Ditangani
+                                        <span class="ml-1 text-xs text-gray-400 font-normal">(opsional, bisa lebih dari satu)</span>
+                                    </label>
+                                    @if($categories->isEmpty())
+                                        <p class="text-sm text-gray-500 italic">Belum ada kategori. <a href="{{ route('admin.categories.index') }}" class="text-red-500 hover:underline">Buat kategori terlebih dahulu.</a></p>
+                                    @else
+                                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                            @foreach($categories as $category)
+                                                <label for="category_{{ $category->id }}" class="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-red-50 hover:border-red-300 transition has-[:checked]:bg-red-50 has-[:checked]:border-red-400">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="category_{{ $category->id }}"
+                                                        name="categories[]"
+                                                        value="{{ $category->id }}"
+                                                        {{ in_array($category->id, old('categories', [])) ? 'checked' : '' }}
+                                                        class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                                                    >
+                                                    <span class="text-sm text-gray-700 font-medium">{{ $category->name }}</span>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 </div>
+                            </div>
+
+                            <div class="pt-4 border-t border-gray-200 flex justify-end gap-3">
+                                <a href="{{ route('admin.users.index') }}">
+                                    <button type="button" class="h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
+                                        Batal
+                                    </button>
+                                </a>
+                                <button type="submit" class="h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
+                                    Simpan Staf
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -164,4 +192,25 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (function () {
+            const roleSelect = document.getElementById('role');
+            const categorySection = document.getElementById('category-section');
+
+            function toggleCategories() {
+                if (roleSelect.value === 'staff') {
+                    categorySection.classList.remove('hidden');
+                } else {
+                    categorySection.classList.add('hidden');
+                    // Uncheck all when role is not staff
+                    categorySection.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                }
+            }
+
+            roleSelect.addEventListener('change', toggleCategories);
+            // Trigger on load (e.g. old() values retained after validation error)
+            toggleCategories();
+        })();
+    </script>
 </x-app-layout>

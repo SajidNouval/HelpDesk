@@ -1,11 +1,14 @@
 <x-app-layout>
 
     <!-- Header Section -->
-    <div class="bg-gray-100 py-8 border-b border-gray-200">
+    <div class="bg-gray-100 py-6 border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4">
-            <h1 class="text-2xl font-bold text-gray-900">
+            <h1 class="text-3xl font-semibold text-gray-900">
                 Kelola Tiket
             </h1>
+            <p class="mt-1 text-sm text-gray-500">
+                Kelola tiket bantuan pelanggan dan logs progress pekerjaan.
+            </p>
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
@@ -17,8 +20,8 @@
     </div>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <div class="grid grid-cols-12 gap-8">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="grid grid-cols-12 gap-6">
 
             <!-- Sidebar Left -->
             <div class="col-span-12 md:col-span-3">
@@ -27,53 +30,53 @@
                         Menu Staf
                     </h3>
 
-                    <ul class="space-y-2 text-gray-700">
+                    <ul class="space-y-1 text-gray-700">
                         <li>
-                            <a href="{{ route('staff.dashboard') }}" class="block rounded-l-md px-3 py-2 text-sm transition hover:text-red-500">
+                            <a href="{{ route('staff.dashboard') }}" class="block rounded-l-md px-3 py-2 transition hover:text-red-500">
                                 Dashboard
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('staff.tickets.index') }}" class="block rounded-l-md px-3 py-2 text-sm transition text-red-500 font-semibold border-l-4 border-red-500 bg-red-50">
+                            <a href="{{ route('staff.tickets.index') }}" class="block rounded-l-md px-3 py-2 transition text-red-500 font-semibold border-l-4 border-red-500 bg-red-50">
                                 Kelola Tiket
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('staff.articles.index') }}" class="block rounded-l-md px-3 py-2 text-sm transition hover:text-red-500">
+                            <a href="{{ route('staff.articles.index') }}" class="block rounded-l-md px-3 py-2 transition hover:text-red-500">
                                 Kelola Artikel
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('staff.articles.create') }}" class="block rounded-l-md px-3 py-2 text-sm transition hover:text-red-500">
+                            <a href="{{ route('staff.articles.create') }}" class="block rounded-l-md px-3 py-2 transition hover:text-red-500">
                                 Buat Artikel Baru
                             </a>
                         </li>
                     </ul>
 
                     <!-- Stats Card -->
-                    <div class="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <h4 class="font-semibold text-gray-700 mb-3 text-sm">Statistik</h4>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between">
+                    <div class="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <h4 class="font-semibold text-gray-700 mb-3">Statistik</h4>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center py-1 border-b border-gray-100">
                                 <span class="text-gray-600">Total Tiket</span>
-                                <span class="font-semibold text-gray-900">{{ $tickets->count() }}</span>
+                                <span class="font-semibold text-gray-900 text-base">{{ $tickets->count() }}</span>
                             </div>
-                            <div class="flex justify-between">
+                            <div class="flex justify-between items-center py-1 {{ $waitingTickets->count() > 0 ? 'border-b border-gray-100' : '' }}">
                                 <span class="text-gray-600">Selesai</span>
-                                <span class="font-semibold text-green-600">{{ $completedTickets->count() }}</span>
+                                <span class="font-semibold text-green-600 text-base">{{ $completedTickets->count() }}</span>
                             </div>
                             @if ($waitingTickets->count() > 0)
-                                <div class="flex justify-between">
+                                <div class="flex justify-between items-center py-1">
                                     <span class="text-gray-600">Menunggu</span>
-                                    <span class="font-semibold text-orange-600">{{ $waitingTickets->count() }}</span>
+                                    <span class="font-semibold text-orange-600 text-base">{{ $waitingTickets->count() }}</span>
                                 </div>
                             @endif
                         </div>
                     </div>
 
                     <!-- Profile Card -->
-                    <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <h4 class="font-semibold text-gray-700 mb-2 text-sm">Profil Anda</h4>
+                    <div class="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <h4 class="font-semibold text-gray-700 mb-2">Profil Anda</h4>
                         <p class="text-sm text-gray-600 mb-2">{{ Auth::user()->name }}</p>
                         <p class="text-xs text-gray-500 mb-3">{{ Auth::user()->email }}</p>
                         <p class="text-xs font-semibold text-green-600">● Aktif</p>
@@ -100,11 +103,11 @@
 
                 <!-- Active Ticket Section -->
                 @if ($activeTicket)
-                    <div class="mb-8 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden border-l-4 border-red-600">
+                    <div class="mb-8 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden border-l-4 border-red-600">
                         <div class="p-6">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
-                                    <h2 class="text-xl font-bold text-gray-900">
+                                    <h2 class="text-xl font-semibold text-gray-900">
                                         #{{ $activeTicket->id }} - {{ $activeTicket->subject }}
                                     </h2>
                                 </div>
@@ -151,14 +154,14 @@
                                     <form action="{{ route('staff.tickets.start-progress', $activeTicket) }}" method="POST" class="flex-1">
                                         @csrf
                                         @method('PATCH')
-                                        <button type="submit" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm">
+                                        <button type="submit" class="w-full h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
                                             Mulai Mengerjakan
                                         </button>
                                     </form>
                                     <form action="{{ route('staff.tickets.reject', $activeTicket) }}" method="POST" class="flex-1">
                                         @csrf
                                         @method('PATCH')
-                                        <button type="submit" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm">
+                                        <button type="submit" class="w-full h-10 px-4 rounded-xl border border-red-600 text-red-600 hover:bg-red-50 text-sm font-medium transition">
                                             Tolak
                                         </button>
                                     </form>
@@ -167,12 +170,12 @@
                                         @csrf
                                         @method('PATCH')
                                         <input type="hidden" name="priority" value="{{ $activeTicket->priority }}">
-                                        <button type="submit" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm">
+                                        <button type="submit" class="w-full h-10 px-5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition">
                                             Tandai Selesai
                                         </button>
                                     </form>
 
-                                    <a href="{{ route('staff.tickets.show', $activeTicket) }}" class="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-center font-medium text-sm">
+                                    <a href="{{ route('staff.tickets.show', $activeTicket) }}" class="flex-1 inline-flex items-center justify-center h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition text-center">
                                         Detail Lengkap
                                     </a>
                                 @endif
@@ -181,7 +184,7 @@
                     </div>
                 @else
                     <!-- No Active Ticket -->
-                    <div class="mb-8 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                    <div class="mb-8 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                         <x-empty-state 
                             icon="check"
                             title="Tidak Ada Tiket Aktif"
@@ -236,10 +239,14 @@
                         </div>
 
                         @if ($allPages > 1)
-                            <div class="mt-6 flex items-center justify-center gap-3">
-                                <button type="button" data-pagination="previous" data-pagination-button data-tab="all" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition font-medium"><</button>
-                                <span class="text-sm text-gray-600 font-medium">Halaman <span data-current-page="all">1</span> dari {{ $allPages }}</span>
-                                <button type="button" data-pagination="next" data-pagination-button data-tab="all" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition font-medium">></button>
+                            <div class="mt-6 flex items-center justify-center gap-1">
+                                <button type="button" data-pagination="previous" data-pagination-button data-tab="all" class="relative inline-flex items-center h-8 px-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:text-red-600 transition-colors">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                                </button>
+                                <span class="text-sm text-gray-600 font-medium px-2">Halaman <span data-current-page="all">1</span> dari {{ $allPages }}</span>
+                                <button type="button" data-pagination="next" data-pagination-button data-tab="all" class="relative inline-flex items-center h-8 px-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:text-red-600 transition-colors">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                                </button>
                             </div>
                         @endif
                     @else
@@ -274,10 +281,14 @@
                         </div>
 
                         @if ($completedPages > 1)
-                            <div class="mt-6 flex items-center justify-center gap-3">
-                                <button type="button" data-pagination="previous" data-pagination-button data-tab="completed" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition font-medium"><</button>
-                                <span class="text-sm text-gray-600 font-medium">Halaman <span data-current-page="completed">1</span> dari {{ $completedPages }}</span>
-                                <button type="button" data-pagination="next" data-pagination-button data-tab="completed" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition font-medium">></button>
+                            <div class="mt-6 flex items-center justify-center gap-1">
+                                <button type="button" data-pagination="previous" data-pagination-button data-tab="completed" class="relative inline-flex items-center h-8 px-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:text-red-600 transition-colors">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                                </button>
+                                <span class="text-sm text-gray-600 font-medium px-2">Halaman <span data-current-page="completed">1</span> dari {{ $completedPages }}</span>
+                                <button type="button" data-pagination="next" data-pagination-button data-tab="completed" class="relative inline-flex items-center h-8 px-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:text-red-600 transition-colors">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                                </button>
                             </div>
                         @endif
                     @else
@@ -306,10 +317,14 @@
                         </div>
 
                         @if ($waitingPages > 1)
-                            <div class="mt-6 flex items-center justify-center gap-3">
-                                <button type="button" data-pagination="previous" data-pagination-button data-tab="waiting" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition font-medium"><</button>
-                                <span class="text-sm text-gray-600 font-medium">Halaman <span data-current-page="waiting">1</span> dari {{ $waitingPages }}</span>
-                                <button type="button" data-pagination="next" data-pagination-button data-tab="waiting" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition font-medium">></button>
+                            <div class="mt-6 flex items-center justify-center gap-1">
+                                <button type="button" data-pagination="previous" data-pagination-button data-tab="waiting" class="relative inline-flex items-center h-8 px-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:text-red-600 transition-colors">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                                </button>
+                                <span class="text-sm text-gray-600 font-medium px-2">Halaman <span data-current-page="waiting">1</span> dari {{ $waitingPages }}</span>
+                                <button type="button" data-pagination="next" data-pagination-button data-tab="waiting" class="relative inline-flex items-center h-8 px-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:text-red-600 transition-colors">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                                </button>
                             </div>
                         @endif
                     </div>

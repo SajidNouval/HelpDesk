@@ -6,6 +6,11 @@ class ConfirmDialogManager {
     constructor() {
         this.currentDialog = null;
         this.currentForm = null;
+        // Track the backdrop listener so it can be removed before re-registering.
+        // Without this, every open() call stacks an additional anonymous listener
+        // on the dialog element that can never be garbage-collected.
+        this._backdropHandler = null;
+        this._currentDialogElement = null;
     }
 
     /**
@@ -29,12 +34,20 @@ class ConfirmDialogManager {
         dialog.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
 
-        // Close on backdrop click
-        dialog.addEventListener('click', (e) => {
+        // Remove any backdrop listener registered by a previous open() call
+        // before adding a new one. This prevents listener accumulation when
+        // the dialog is opened more than once without a full page reload.
+        if (this._backdropHandler && this._currentDialogElement) {
+            this._currentDialogElement.removeEventListener('click', this._backdropHandler);
+        }
+        this._backdropHandler = (e) => {
             if (e.target === dialog) this.close();
-        });
+        };
+        this._currentDialogElement = dialog;
+        dialog.addEventListener('click', this._backdropHandler);
 
-        // Close button
+        // Cancel/submit buttons use .onclick so re-assignment is naturally
+        // idempotent — no accumulation risk here.
         const cancelBtn = dialog.querySelector('[data-confirm-cancel]');
         const submitBtn = dialog.querySelector('[data-confirm-submit]');
 
@@ -58,6 +71,15 @@ class ConfirmDialogManager {
 
         this.currentDialog.element.classList.add('hidden');
         document.body.style.overflow = '';
+
+        // Remove the stored backdrop listener so it does not fire on future
+        // interactions and does not prevent the element from being GC'd.
+        if (this._backdropHandler && this._currentDialogElement) {
+            this._currentDialogElement.removeEventListener('click', this._backdropHandler);
+            this._backdropHandler = null;
+            this._currentDialogElement = null;
+        }
+
         this.currentDialog = null;
     }
 }

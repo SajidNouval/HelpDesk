@@ -1,10 +1,13 @@
 <x-app-layout>
     <!-- Header Section -->
-    <div class="bg-gray-100 py-8 border-b border-gray-200">
+    <div class="bg-gray-100 py-6 border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4">
-            <h1 class="text-2xl font-bold text-gray-900">
+            <h1 class="text-3xl font-semibold text-gray-900">
                 Kelola Kategori
             </h1>
+            <p class="mt-1 text-sm text-gray-500">
+                Manajemen kategori untuk artikel Knowledge Base.
+            </p>
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
@@ -16,8 +19,8 @@
     </div>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <div class="grid grid-cols-12 gap-8">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="grid grid-cols-12 gap-6">
 
             <!-- Sidebar Left -->
             <div class="col-span-12 md:col-span-3">
@@ -26,7 +29,7 @@
                         Menu Admin
                     </h3>
 
-                    <ul class="space-y-3 text-gray-700">
+                    <ul class="space-y-1 text-gray-700">
                         <li>
                             <a href="{{ route('admin.dashboard') }}" class="block rounded-l-md px-3 py-2 transition hover:text-red-500">
                                 Dashboard
@@ -55,14 +58,14 @@
 
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-900">Daftar Kategori</h2>
+                        <h2 class="text-xl font-semibold text-gray-900">Daftar Kategori</h2>
                         <p class="text-sm text-gray-500">Kelola kategori Knowledge Base.</p>
                     </div>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center">
                         
-                        <a href="{{ route('admin.categories.create') }}" class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm">
+                        <a href="{{ route('admin.categories.create') }}" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
@@ -79,18 +82,12 @@
 
                 <!-- Statistics -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                    <div class="bg-white border border-gray-100 rounded-lg p-4 flex items-center justify-between">
+                    <div class="bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
                         <div>
                             <div class="text-sm text-gray-500">Total Kategori</div>
                             <div class="text-xl font-semibold text-gray-900">{{ $totalCategories ?? $categories->total() ?? $categories->count() }}</div>
                         </div>
-                        <div class="text-red-600">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </div>
                     </div>
-                    
                 </div>
 
                 <div class="bg-white border border-gray-100 rounded-lg shadow-sm">
@@ -110,7 +107,7 @@
                                     @foreach($categories as $category)
                                         <tr class="hover:bg-gray-50 transition">
                                             <td class="px-4 py-3 whitespace-nowrap">
-                                                <div class="text-sm font-medium text-gray-900">{{ $category->name }}</div>
+                                                <x-truncate-text :value="$category->name" class="text-sm font-medium text-gray-900 block" />
                                                 @if($category->slug)
                                                     <div class="text-xs text-gray-400">/{{ $category->slug }}</div>
                                                 @endif
@@ -119,7 +116,7 @@
                                                 {{ $category->articles_count ?? $category->articles()->count() }}
                                             </td>
                                             <td class="px-4 py-3 max-w-sm text-sm text-gray-600">
-                                                <div class="line-clamp-2">{{ $category->description }}</div>
+                                                <x-truncate-text :value="$category->description" class="text-sm text-gray-600 block" />
                                             </td>
                                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                                                 @if($category->updated_at)

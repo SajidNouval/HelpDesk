@@ -1,15 +1,18 @@
 <x-app-layout>
 
     <!-- Header Section -->
-    <div class="bg-gray-100 py-10 border-b">
+    <div class="bg-gray-100 py-6 border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4">
-            <h1 class="text-3xl font-semibold text-gray-700 tracking-wide">
+            <h1 class="text-3xl font-semibold text-gray-900">
                 Dashboard Admin
             </h1>
+            <p class="mt-1 text-sm text-gray-500">
+                Pantau aktivitas helpdesk, artikel, staf, dan performa sistem.
+            </p>
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
-                <a href="{{ route('admin.dashboard') }}" class="text-red-500 hover:text-red-600 font-medium">Dashboard</a>
+                <a href="{{ route('admin.dashboard') }}" class="text-red-500 hover:text-red-600 font-medium">Dashboard Admin</a>
                 <span class="mx-2 text-gray-400">/</span>
                 <span class="text-gray-700">Dashboard</span>
             </div>
@@ -17,8 +20,8 @@
     </div>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 py-10">
-        <div class="grid grid-cols-12 gap-8">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="grid grid-cols-12 gap-6">
 
             <!-- Sidebar Left -->
             <div class="col-span-12 md:col-span-3">
@@ -27,7 +30,7 @@
                         Menu Admin
                     </h3>
 
-                    <ul class="space-y-3 text-gray-700">
+                    <ul class="space-y-1 text-gray-700">
                         <li>
                             <a href="{{ route('admin.dashboard') }}" class="block rounded-l-md px-3 py-2 transition text-red-500 font-semibold border-l-4 border-red-500 bg-red-50">
                                 Dashboard
@@ -49,173 +52,162 @@
                             </a>
                         </li>
                     </ul>
-
-                    
                 </div>
             </div>
 
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9">
 
-                <!-- Statistics Overview -->
-                <div class="mb-6">
-                    <p class="text-gray-600">
-                        Total <span class="font-medium">{{ $staffCount }}</span> staf dan <span class="font-medium">{{ $articleCount }}</span> artikel
-                    </p>
+                @if(session('success'))
+                    <div class="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm font-medium">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                <!-- Statistics Overview Grid -->
+                <div class="mb-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <!-- Total Staff -->
+                    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Total Staff</p>
+                        <h3 class="text-2xl font-bold mt-2 text-gray-900">{{ $staffCount }}</h3>
+                    </div>
+                    <!-- Total Artikel -->
+                    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Total Artikel</p>
+                        <h3 class="text-2xl font-bold mt-2 text-gray-900">{{ $articleCount }}</h3>
+                    </div>
+                    <!-- Total Tiket -->
+                    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Total Tiket</p>
+                        <h3 class="text-2xl font-bold mt-2 text-gray-900">{{ $totalTickets }}</h3>
+                    </div>
+                    <!-- Tiket Waiting -->
+                    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Tiket Waiting</p>
+                        <h3 class="text-2xl font-bold mt-2 text-gray-900">{{ $ticketsWaiting }}</h3>
+                    </div>
+                    <!-- Tiket Diproses -->
+                    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Tiket Diproses</p>
+                        <h3 class="text-2xl font-bold mt-2 text-gray-900">{{ $ticketsProcessing }}</h3>
+                    </div>
+                    <!-- Tiket Selesai -->
+                    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Tiket Selesai</p>
+                        <h3 class="text-2xl font-bold mt-2 text-gray-900">{{ $ticketsDone }}</h3>
+                    </div>
                 </div>
 
-                <!-- Global Ticket Summary -->
-                <div class="mb-6 grid grid-cols-1 sm:grid-cols-4 gap-4">
-                    <div class="p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
-                        <p class="text-xs uppercase tracking-[0.15em] text-gray-500">Total Tiket</p>
-                        <h3 class="text-2xl font-semibold mt-2 text-gray-900">{{ $totalTickets }}</h3>
-                    </div>
-                    <div class="p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
-                        <p class="text-xs uppercase tracking-[0.15em] text-gray-500">Tiket Waiting</p>
-                        <h3 class="text-2xl font-semibold mt-2 text-gray-900">{{ $ticketsWaiting }}</h3>
-                    </div>
-                    <div class="p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
-                        <p class="text-xs uppercase tracking-[0.15em] text-gray-500">Tiket Diproses</p>
-                        <h3 class="text-2xl font-semibold mt-2 text-gray-900">{{ $ticketsProcessing }}</h3>
-                    </div>
-                    <div class="p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
-                        <p class="text-xs uppercase tracking-[0.15em] text-gray-500">Tiket Selesai</p>
-                        <h3 class="text-2xl font-semibold mt-2 text-gray-900">{{ $ticketsDone }}</h3>
-                    </div>
-                </div>
-
-                <div class="mb-6 p-6 bg-white border border-gray-200 rounded-3xl shadow-sm">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div>
-                            <p class="text-sm uppercase tracking-[0.2em] text-gray-500">Live Service</p>
-                            <h3 class="text-2xl font-semibold mt-2 text-gray-900">
-                                {{ $liveServiceEnabled ? 'Aktif' : 'Nonaktif' }}
-                            </h3>
-                            <p class="mt-2 text-sm text-gray-600">
+                <!-- Live Service Settings Card -->
+                <div class="mb-6 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status Live Service</span>
+                                <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full {{ $liveServiceEnabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                    {{ $liveServiceEnabled ? 'Aktif' : 'Nonaktif' }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-500">
                                 Live chat tiket hanya akan tersedia jika layanan ini aktif. Laporan/report tetap dapat dibuat kapan saja.
                             </p>
                         </div>
-                        <form action="{{ route('admin.live-service.toggle') }}" method="POST" class="flex items-center gap-3">
+                        <form action="{{ route('admin.live-service.toggle') }}" method="POST" class="shrink-0">
                             @csrf
                             <input type="hidden" name="status" value="{{ $liveServiceEnabled ? 'off' : 'on' }}">
-                            <x-primary-button type="submit" class="rounded-3xl px-5 py-3">
-                                {{ $liveServiceEnabled ? 'Matikan Live Service' : 'Nyalakan Live Service' }}
-                            </x-primary-button>
+                            <button type="submit" class="inline-flex items-center justify-center h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition whitespace-nowrap">
+                                Kelola Live Service
+                            </button>
                         </form>
                     </div>
                 </div>
 
-                <!-- Chatbot Statistics + Top Lists -->
-                <div class="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div class="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm">
-                        <p class="text-sm uppercase tracking-[0.2em] text-gray-500">Statistik Chatbot</p>
-                        <div class="mt-3 space-y-2">
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-600">Total Pertanyaan</span>
-                                <span class="font-semibold text-gray-900">{{ $chatbotStats['total_questions'] }}</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-600">Pertanyaan Hari Ini</span>
-                                <span class="font-semibold text-gray-900">{{ $chatbotStats['today'] }}</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-600">Terjawab</span>
-                                <span class="font-semibold text-gray-900">{{ $chatbotStats['answered'] }}</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-600">Tidak Terjawab</span>
-                                <span class="font-semibold text-gray-900">{{ $chatbotStats['unanswered'] }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm">
-                        <p class="text-sm uppercase tracking-[0.2em] text-gray-500">Top Artikel Terpopuler</p>
-                        <div class="mt-4 space-y-3">
-                            @foreach($topArticles as $ta)
-                                <div class="flex items-center justify-between">
-                                    <div class="text-sm text-gray-700">{{ \Illuminate\Support\Str::limit($ta->title, 60) }}</div>
-                                    <div class="text-sm font-semibold text-gray-900">{{ $ta->views }}</div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <div class="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm">
-                        <p class="text-sm uppercase tracking-[0.2em] text-gray-500">Top Performer Staff</p>
-                        <div class="mt-4 space-y-3">
-                            @foreach($topStaff as $ts)
-                                <div class="flex items-center justify-between">
-                                    <div class="text-sm text-gray-700">{{ $ts->name }}</div>
-                                    <div class="text-sm font-semibold text-gray-900">{{ $ts->completed_count ?? 0 }}</div>
-                                </div>
-                            @endforeach
-                        </div>
+                <!-- Top Artikel Terpopuler -->
+                <div class="mb-6 bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Top Artikel Terpopuler</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-gray-100">
+                                    <th class="text-left pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Judul</th>
+                                    <th class="text-right pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Views</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                @foreach($topArticles as $ta)
+                                    <tr>
+                                        <td class="py-2.5 text-gray-700 pr-2">
+                                            <x-truncate-text :value="$ta->title" :limit="80" class="text-xs font-medium text-gray-900 block" />
+                                        </td>
+                                        <td class="py-2.5 text-right font-semibold text-gray-900 text-xs whitespace-nowrap">
+                                            {{ $ta->views }} Views
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
                 <!-- Pending Articles Review Section -->
-                <div class="space-y-6">
-                    <div class="flex justify-between items-center mb-4">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
                         <div>
-                            <h2 class="text-2xl font-bold text-gray-900">Artikel Menunggu Persetujuan</h2>
+                            <h2 class="text-xl font-semibold text-gray-900">Artikel Menunggu Persetujuan</h2>
+                            <p class="text-sm text-gray-500">Daftar usulan artikel baru dari staf yang perlu Anda tinjau.</p>
                         </div>
-                        <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+                        <span class="px-2.5 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
                             {{ $pendingArticles->count() }} artikel
                         </span>
                     </div>
 
                     @if ($pendingArticles->count() > 0)
-                        <div class="space-y-4">
+                        <div class="grid grid-cols-1 gap-4">
                             @foreach ($pendingArticles as $article)
-                                <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition overflow-hidden">
-                                    <div class="p-6">
-                                        <div class="flex justify-between gap-4">
-                                            <div class="flex-1">
-                                                <div class="flex items-center gap-2 mb-2">
-                                                    <h3 class="font-semibold text-gray-900">{{ $article->title }}</h3>
-                                                    <x-status-badge status="pending" />
-                                                </div>
-
-                                                <p class="text-sm text-gray-600 mb-2">Penulis: <span class="font-medium">{{ $article->staff?->name ?? 'Tidak ada' }}</span></p>
-
-                                                <div class="flex flex-wrap gap-3 text-xs text-gray-500">
-                                                    <span>{{ $article->category->name ?? 'Tanpa kategori' }}</span>
-                                                    <span>•</span>
-                                                    <span>{{ $article->created_at->format('d M Y, H:i') }}</span>
-                                                </div>
-                                            </div>
-
+                                <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 hover:shadow-md transition">
+                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                        <div class="space-y-1">
                                             <div class="flex items-center gap-2">
-                                                <form method="POST" action="{{ route('admin.articles.approve', $article) }}" style="display: inline;">
-                                                    @csrf
-                                                    <x-primary-button type="submit" class="inline-flex items-center px-3 py-2 text-xs font-semibold">
-                                                        Setujui
-                                                    </x-primary-button>
-                                                </form>
-                                                <x-danger-button type="button" data-open-modal="#rejectModal" data-modal-form-action="/admin/articles/{id}/reject" data-article-id="{{ $article->id }}" class="inline-flex items-center px-3 py-2 text-xs font-semibold">
-                                                    Tolak
-                                                </x-danger-button>
+                                                <h3 class="font-semibold text-gray-900 text-sm">{{ $article->title }}</h3>
+                                                <span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-[10px] font-semibold rounded-full">Pending</span>
                                             </div>
+                                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+                                                <span>Penulis: <strong class="text-gray-700 font-medium">{{ $article->staff?->name ?? 'Tidak ada' }}</strong></span>
+                                                <span>•</span>
+                                                <span>Kategori: <strong class="text-gray-700 font-medium">{{ $article->category->name ?? 'Tanpa kategori' }}</strong></span>
+                                                <span>•</span>
+                                                <span>{{ $article->created_at->format('d M Y, H:i') }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="shrink-0">
+                                            <a href="{{ route('admin.articles.index') }}" class="inline-flex items-center justify-center h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-xs font-medium transition">
+                                                Tinjau di Kelola Artikel
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     @else
-                        <div class="text-center py-16 bg-white border border-gray-200 rounded-lg">
-                            <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        <div class="text-center py-12 bg-white border border-gray-200 rounded-xl shadow-sm">
+                            <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
-                            <h3 class="text-xl font-semibold text-gray-900 mb-2">Tidak Ada Artikel Menunggu</h3>
+                            <h3 class="text-sm font-semibold text-gray-900 mb-1">Tidak Ada Artikel Menunggu</h3>
+                            <p class="text-xs text-gray-500">Semua pengajuan artikel telah diproses.</p>
                         </div>
                     @endif
                 </div>
 
                 <!-- Per-Article Statistics -->
-                <div class="mt-8 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                <div class="mt-8 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                     <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Statistik Artikel</h3>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Statistik Artikel</h3>
+                            <a href="{{ route('admin.articles.index') }}" class="text-xs font-semibold text-red-500 hover:text-red-600 transition flex items-center gap-1">
+                                Lihat Semua Artikel →
+                            </a>
+                        </div>
 
                         @if($articles->count() > 0)
                             <div class="overflow-x-auto">
@@ -233,7 +225,9 @@
                                     <tbody class="divide-y divide-gray-100">
                                         @foreach($articles as $article)
                                             <tr class="hover:bg-gray-50 transition">
-                                                <td class="px-6 py-4 text-gray-900 font-medium">{{ $article->title }}</td>
+                                                <td class="px-6 py-4 text-gray-900 font-medium">
+                                                    <x-truncate-text :value="$article->title" class="block text-gray-700" />
+                                                </td>
                                                 <td class="px-6 py-4 text-gray-600">{{ $article->staff?->name ?? 'Tidak ada' }}</td>
                                                 <td class="px-6 py-4 text-center text-gray-900 font-semibold">{{ $article->views }}</td>
                                                 <td class="px-6 py-4 text-center">
@@ -250,10 +244,14 @@
                             </div>
 
                             @if($articles->hasPages())
-                                <div class="mt-6 flex items-center justify-center gap-4">
-                                    <a href="{{ $articles->previousPageUrl() }}" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-semibold {{ $articles->onFirstPage() ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $articles->onFirstPage() ? 'aria-disabled=true tabindex=-1' : '' }}>&lt;</a>
-                                    <span class="text-sm text-gray-600 font-semibold">Halaman {{ $articles->currentPage() }} dari {{ $articles->lastPage() }}</span>
-                                    <a href="{{ $articles->nextPageUrl() }}" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-semibold {{ $articles->currentPage() === $articles->lastPage() ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $articles->currentPage() === $articles->lastPage() ? 'aria-disabled=true tabindex=-1' : '' }}>&gt;</a>
+                                <div class="mt-6 flex items-center justify-center gap-1">
+                                    <a href="{{ $articles->previousPageUrl() }}" class="relative inline-flex items-center px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-transparent hover:border-gray-200 rounded-md hover:text-red-600 transition-colors {{ $articles->onFirstPage() ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' }}" {{ $articles->onFirstPage() ? 'aria-disabled=true tabindex=-1' : '' }}>
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                                    </a>
+                                    <span class="text-sm text-gray-600 font-medium px-2 font-semibold">Halaman {{ $articles->currentPage() }} dari {{ $articles->lastPage() }}</span>
+                                    <a href="{{ $articles->nextPageUrl() }}" class="relative inline-flex items-center px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-transparent hover:border-gray-200 rounded-md hover:text-red-600 transition-colors {{ $articles->currentPage() === $articles->lastPage() ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' }}" {{ $articles->currentPage() === $articles->lastPage() ? 'aria-disabled=true tabindex=-1' : '' }}>
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                                    </a>
                                 </div>
                             @endif
                         @else
@@ -263,60 +261,52 @@
                 </div>
 
                 <!-- Statistik Kinerja Staff -->
-                <div class="mt-8 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                <div class="mt-8 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-900">Statistik Kinerja Staff</h3>
-                            
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            @foreach($staffStats as $staff)
-                                <div class="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <div class="font-semibold text-gray-800">{{ $staff->name }}</div>
-                                        <div class="text-xs text-gray-500">ID: {{ $staff->id }}</div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                                        <div class="flex justify-between"><span>Total Selesai</span><span class="font-semibold text-gray-900">{{ $staff->tickets_done }}</span></div>
-                                        <div class="flex justify-between"><span>Total Ditolak</span><span class="font-semibold text-gray-900">{{ $staff->tickets_rejected }}</span></div>
-                                        <div class="flex justify-between"><span>Total Menunggu</span><span class="font-semibold text-gray-900">{{ $staff->tickets_waiting }}</span></div>
-                                        <div class="flex justify-between"><span>Artikel Disetujui</span><span class="font-semibold text-gray-900">{{ $staff->articles_approved }}</span></div>
-                                        <div class="flex justify-between col-span-2"><span>Artikel Ditolak</span><span class="font-semibold text-gray-900">{{ $staff->articles_rejected }}</span></div>
-                                    </div>
-                                </div>
-                            @endforeach
+                        <div>
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Nama Staff</th>
+                                        <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Tiket Selesai</th>
+                                        <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Tiket Menunggu</th>
+                                        <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Artikel Disetujui</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    @foreach($staffStats as $staff)
+                                        <tr class="hover:bg-gray-50 transition">
+                                            <td class="px-6 py-4 text-gray-900 font-medium break-all max-w-xs" title="{{ $staff->name }}">
+                                                {{ $staff->name }}
+                                            </td>
+                                            <td class="px-6 py-4 text-center text-gray-900 font-semibold">{{ $staff->tickets_done }}</td>
+                                            <td class="px-6 py-4 text-center text-gray-900 font-semibold">{{ $staff->tickets_waiting }}</td>
+                                            <td class="px-6 py-4 text-center text-gray-900 font-semibold">{{ $staff->articles_approved }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
 
-                        <div class="mt-6 flex items-center justify-center gap-4">
-                            <a href="{{ $staffStats->previousPageUrl() }}" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-semibold {{ $staffStats->onFirstPage() ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $staffStats->onFirstPage() ? 'aria-disabled=true tabindex=-1' : '' }}>&lt;</a>
-                            <span class="text-sm text-gray-600 font-semibold">Halaman {{ $staffStats->currentPage() }} dari {{ $staffStats->lastPage() }}</span>
-                            <a href="{{ $staffStats->nextPageUrl() }}" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-semibold {{ $staffStats->currentPage() === $staffStats->lastPage() ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $staffStats->currentPage() === $staffStats->lastPage() ? 'aria-disabled=true tabindex=-1' : '' }}>&gt;</a>
-                        </div>
+                        @if($staffStats->hasPages())
+                            <div class="mt-6 flex items-center justify-center gap-1">
+                                <a href="{{ $staffStats->previousPageUrl() }}" class="relative inline-flex items-center px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-transparent hover:border-gray-200 rounded-md hover:text-red-600 transition-colors {{ $staffStats->onFirstPage() ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' }}" {{ $staffStats->onFirstPage() ? 'aria-disabled=true tabindex=-1' : '' }}>
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                                </a>
+                                <span class="text-sm text-gray-600 font-medium px-2">Halaman {{ $staffStats->currentPage() }} dari {{ $staffStats->lastPage() }}</span>
+                                <a href="{{ $staffStats->nextPageUrl() }}" class="relative inline-flex items-center px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-transparent hover:border-gray-200 rounded-md hover:text-red-600 transition-colors {{ $staffStats->currentPage() === $staffStats->lastPage() ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' }}" {{ $staffStats->currentPage() === $staffStats->lastPage() ? 'aria-disabled=true tabindex=-1' : '' }}>
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
 
-        </div>
-    </div>
-
-    <!-- Rejection Modal -->
-    <div id="rejectModal" data-modal class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm p-4 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-xl w-full max-w-lg">
-            <div class="px-6 py-5 border-b border-gray-100">
-                <h3 class="text-xl font-semibold text-gray-900">Tolak Artikel</h3>
-            </div>
-            <form method="POST" id="rejectForm" data-ajax data-close-on-success class="p-6 space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Penolakan</label>
-                    <textarea name="rejection_note" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none" rows="4" placeholder="Jelaskan alasan penolakan..." required></textarea>
-                </div>
-                <div class="flex justify-end gap-3 pt-4">
-                    <x-secondary-button type="button" data-close-modal class="px-4 py-2 text-sm rounded-xl">Batal</x-secondary-button>
-                    <x-danger-button type="submit" class="px-4 py-2 text-sm rounded-xl">Tolak</x-danger-button>
-                </div>
-            </form>
         </div>
     </div>
 </x-app-layout>

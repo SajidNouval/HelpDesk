@@ -28,7 +28,7 @@
                 @if($showCategory || $showAuthor || $showViews)
                     <div class="flex items-center gap-4 mt-2 text-sm text-gray-600 flex-wrap">
                         @if($showCategory && $article->category)
-                            <span>Kategori: <span class="font-medium">{{ $article->category->name }}</span></span>
+                            <span class="truncate max-w-[200px]">Kategori: <span class="font-medium">{{ $article->category->name }}</span></span>
                         @endif
                         @if($showCategory && !$article->category)
                             <span>Kategori: <span class="font-medium">Umum</span></span>
@@ -52,7 +52,7 @@
 
         <!-- Article Excerpt -->
         <div class="text-gray-700 leading-relaxed mb-4">
-            {!! Str::limit(strip_tags($article->content), 200) !!}
+            <x-truncate-text :value="strip_tags($article->content)" :limit="200" class="block" />
         </div>
 
         <!-- Footer: Read More + Date -->

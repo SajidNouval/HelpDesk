@@ -244,10 +244,12 @@ async function submitAjaxForm(form) {
 
 /**
  * Initialize global event handlers
- * Handles: toast close, form submission with confirmation
+ * Handles: toast close, modal open/close/backdrop, form submission with confirmation
  */
 function initGlobalHandlers() {
-    // Single click handler for toast close buttons
+    // Single unified click handler for all click interactions.
+    // Keeping this as one listener prevents race conditions between
+    // multiple document-level handlers processing the same click event.
     document.addEventListener('click', (event) => {
         const target = event.target;
         if (!(target instanceof HTMLElement)) {
@@ -259,6 +261,48 @@ function initGlobalHandlers() {
         if (closeToastButton instanceof HTMLElement) {
             event.preventDefault();
             closeSuccessToast();
+            return;
+        }
+
+        // Handle modal open buttons.
+        // preventDefault() is intentional here: these are <button> elements
+        // (or elements with data-open-modal) that must not trigger link navigation.
+        // Plain <a> sidebar links never carry [data-open-modal] and are unaffected.
+        const openButton = target.closest('[data-open-modal]');
+        if (openButton instanceof HTMLElement) {
+            event.preventDefault();
+            const modalSelector = openButton.dataset.openModal;
+            const modal = modalSelector ? document.querySelector(modalSelector) : null;
+            if (!(modal instanceof HTMLElement)) {
+                return;
+            }
+
+            const actionPattern = openButton.dataset.modalFormAction;
+            const articleId = openButton.dataset.articleId;
+            if (actionPattern && articleId) {
+                setModalFormAction(modal, actionPattern, articleId);
+            }
+
+            openModal(modal);
+            return;
+        }
+
+        // Handle modal close buttons (only if the button is inside a [data-modal] element)
+        const closeButton = target.closest('[data-close-modal]');
+        if (closeButton instanceof HTMLElement) {
+            event.preventDefault();
+            const modal = closeButton.closest('[data-modal]');
+            if (modal instanceof HTMLElement) {
+                closeModal(modal);
+            }
+            return;
+        }
+
+        // Handle modal backdrop clicks: only fires when the click lands directly
+        // on the backdrop element itself (not on any child content inside the modal)
+        const modal = target.closest('[data-modal]');
+        if (modal instanceof HTMLElement && target === modal && !modal.classList.contains('hidden')) {
+            closeModal(modal);
             return;
         }
     });
@@ -333,10 +377,11 @@ function initGlobalHandlers() {
  * Initialize all shared UI components
  */
 function initSharedUI() {
-    // Initialize modal handlers from utils
+    // Register the Escape key handler for modals.
+    // Modal click handling (open/close/backdrop) lives inside initGlobalHandlers().
     initModalHandlers();
 
-    // Initialize global handlers
+    // Register the unified document click + form submit handlers.
     initGlobalHandlers();
 
     // Initialize report modal

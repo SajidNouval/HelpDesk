@@ -1,10 +1,13 @@
 <x-app-layout>
     <!-- Header Section -->
-    <div class="bg-gray-100 py-8 border-b border-gray-200">
+    <div class="bg-gray-100 py-6 border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4">
-            <h1 class="text-2xl font-bold text-gray-900">
+            <h1 class="text-3xl font-semibold text-gray-900">
                 Kelola Staf
             </h1>
+            <p class="mt-1 text-sm text-gray-500">
+                Manajemen staf untuk sistem helpdesk.
+            </p>
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
@@ -16,8 +19,8 @@
     </div>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <div class="grid grid-cols-12 gap-8">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="grid grid-cols-12 gap-6">
 
             <!-- Sidebar Left -->
             <div class="col-span-12 md:col-span-3">
@@ -26,7 +29,7 @@
                         Menu Admin
                     </h3>
 
-                    <ul class="space-y-3 text-gray-700">
+                    <ul class="space-y-1 text-gray-700">
                         <li>
                             <a href="{{ route('admin.dashboard') }}" class="block rounded-l-md px-3 py-2 transition hover:text-red-500">
                                 Dashboard
@@ -50,7 +53,7 @@
                     </ul>
 
                     <!-- Profile Card -->
-                    <div class="mt-8 p-4 bg-gray-50 rounded">
+                    <div class="mt-6 p-4 bg-gray-50 rounded">
                         <h4 class="font-semibold text-gray-700 mb-2">Profil Anda</h4>
                         <p class="text-sm text-gray-600 mb-2">{{ Auth::user()->name }}</p>
                         <p class="text-xs text-gray-500 mb-3">{{ Auth::user()->email }}</p>
@@ -61,18 +64,18 @@
 
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9">
-                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-900">Daftar Staff Helpdesk</h2>
-                        <p class="mt-1 text-gray-600 max-w-2xl">Kelola akun petugas helpdesk.</p>
+                        <h2 class="text-xl font-semibold text-gray-900">Daftar Staf</h2>
+                        <p class="text-sm text-gray-500">Kelola akun petugas helpdesk.</p>
                     </div>
 
-                    <div class="flex items-center gap-3">
-                        <a href="{{ route('admin.users.create') }}" class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm">
+                    <div class="flex items-center">
+                        <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
-                            Tambah Staff
+                            Tambah Staf
                         </a>
                     </div>
                 </div>
@@ -90,21 +93,21 @@
                 @endif
 
                 <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
-                    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-                        <p class="text-sm uppercase tracking-[0.22em] text-gray-500 mb-3">Total Staff</p>
-                        <p class="text-3xl font-semibold text-gray-900">{{ number_format($totalStaff) }}</p>
+                    <div class="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                        <div class="text-sm text-gray-500">Total Staf</div>
+                        <div class="text-xl font-semibold text-gray-900">{{ number_format($totalStaff) }}</div>
                     </div>
-                    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-                        <p class="text-sm uppercase tracking-[0.22em] text-gray-500 mb-3">Staff Aktif</p>
-                        <p class="text-3xl font-semibold text-gray-900">{{ number_format($activeStaff) }}</p>
+                    <div class="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                        <div class="text-sm text-gray-500">Staf Aktif</div>
+                        <div class="text-xl font-semibold text-gray-900">{{ number_format($activeStaff) }}</div>
                     </div>
-                    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-                        <p class="text-sm uppercase tracking-[0.22em] text-gray-500 mb-3">Total Admin</p>
-                        <p class="text-3xl font-semibold text-gray-900">{{ number_format($totalAdmin) }}</p>
+                    <div class="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                        <div class="text-sm text-gray-500">Total Admin</div>
+                        <div class="text-xl font-semibold text-gray-900">{{ number_format($totalAdmin) }}</div>
                     </div>
-                    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-                        <p class="text-sm uppercase tracking-[0.22em] text-gray-500 mb-3">Staff Helpdesk</p>
-                        <p class="text-3xl font-semibold text-gray-900">{{ number_format($totalStaffHelpdesk) }}</p>
+                    <div class="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                        <div class="text-sm text-gray-500">Staf Helpdesk</div>
+                        <div class="text-xl font-semibold text-gray-900">{{ number_format($totalStaffHelpdesk) }}</div>
                     </div>
                 </div>
 
@@ -131,16 +134,14 @@
                                                         <div class="w-9 h-9 bg-red-100 rounded-full flex items-center justify-center text-red-600 font-semibold">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
                                                         <div class="space-y-1">
                                                             <div class="flex items-center gap-2">
-                                                                <span class="text-gray-900 font-medium">{{ $user->name }}</span>
-                                                                @if($user->role === 'staff' && $user->articles_count === $topContributorCount && $topContributorCount > 0)
-                                                                    <span class="inline-flex items-center gap-1 rounded-full bg-yellow-100 text-yellow-800 text-[10px] font-semibold uppercase px-2 py-1">🏆 Top Contributor</span>
-                                                                @endif
+                                                                <x-truncate-text :value="$user->name" class="text-gray-900 font-medium block" />
+                                                                
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td class="px-4 py-3 whitespace-nowrap">
-                                                    <span class="text-gray-600 text-sm">{{ $user->email }}</span>
+                                                    <x-truncate-text :value="$user->email" class="text-gray-600 text-sm block" />
                                                 </td>
                                                 <td class="px-4 py-3 whitespace-nowrap">
                                                     <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">{{ ucfirst($user->role) }}</span>
@@ -204,7 +205,7 @@
                             </div>
 
                             @if ($users->hasPages())
-                                <div class="mt-6">
+                                <div class="p-4 border-t border-gray-100">
                                     <x-pagination :paginator="$users" :elements="$users->links()->elements" />
                                 </div>
                             @endif

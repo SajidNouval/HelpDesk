@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\StaffProfile;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -51,7 +52,8 @@ class UserController extends Controller
 
     public function create(): View
     {
-        return view('admin.users.create');
+        $categories = Category::orderBy('name')->get();
+        return view('admin.users.create', compact('categories'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -62,9 +64,11 @@ class UserController extends Controller
             'role' => ['required', Rule::in(['admin', 'staff'])],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'categories' => ['nullable', 'array'],
+            'categories.*' => ['exists:categories,id'],
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
@@ -72,13 +76,29 @@ class UserController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
+        // Sync kategori melalui StaffProfile
+        if ($validated['role'] === 'staff' && ! empty($validated['categories'])) {
+            foreach ($validated['categories'] as $categoryId) {
+                StaffProfile::firstOrCreate([
+                    'user_id' => $user->id,
+                    'category_id' => $categoryId,
+                ]);
+            }
+        }
+
         return Redirect::route('admin.users.index')
             ->with('success', 'Staf baru berhasil dibuat.');
     }
 
     public function edit(User $user): View
     {
-        return view('admin.users.edit', ['user' => $user->loadCount('articles')]);
+        $categories = Category::orderBy('name')->get();
+        $assignedCategoryIds = $user->staffProfiles()->pluck('category_id')->toArray();
+        return view('admin.users.edit', [
+            'user' => $user->loadCount('articles'),
+            'categories' => $categories,
+            'assignedCategoryIds' => $assignedCategoryIds,
+        ]);
     }
 
     public function update(Request $request, User $user): RedirectResponse
@@ -88,9 +108,30 @@ class UserController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'role' => ['required', Rule::in(['admin', 'staff'])],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+            'categories' => ['nullable', 'array'],
+            'categories.*' => ['exists:categories,id'],
         ]);
 
-        $user->update($validated);
+        $user->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role' => $validated['role'],
+            'status' => $validated['status'],
+        ]);
+
+        // Sync kategori melalui StaffProfile
+        if ($validated['role'] === 'staff') {
+            // Hapus semua profil lama, buat ulang sesuai pilihan baru
+            $user->staffProfiles()->delete();
+            if (! empty($validated['categories'])) {
+                foreach ($validated['categories'] as $categoryId) {
+                    StaffProfile::create([
+                        'user_id' => $user->id,
+                        'category_id' => $categoryId,
+                    ]);
+                }
+            }
+        }
 
         return Redirect::route('admin.users.index')
             ->with('success', 'Data staf berhasil diperbarui.');

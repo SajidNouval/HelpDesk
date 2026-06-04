@@ -128,11 +128,12 @@ export function showInlineAlert(container, message, type = 'info') {
     const typeClasses = {
         success: 'bg-green-50 border-green-200 text-green-900',
         error: 'bg-red-50 border-red-200 text-red-900',
-        info: 'bg-red-50 border-red-200 text-red-900',
+        info: 'bg-blue-50 border-blue-200 text-blue-900',
     };
 
+    const classes = (typeClasses[type] || typeClasses.info).split(' ');
     el.classList.remove('hidden');
-    el.classList.add(typeClasses[type] || typeClasses.info);
+    el.classList.add(...classes);
 }
 
 /**

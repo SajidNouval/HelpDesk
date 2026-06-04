@@ -50,9 +50,12 @@ Route::middleware(['web'])->get('/tickets/{ticketId}/status', function($ticketId
                 'description' => 'Tiket ditutup otomatis karena staff tidak merespons dalam 20 menit setelah assignment. Guest diminta mengisi ulang formulir.'
             ]);
 
+            broadcast(new \App\Events\TicketClosed($ticket));
+
             return response()->json([
                 'status' => 'closed',
                 'assigned_staff' => $ticket->assignedStaff ? true : false,
+                'staff_name' => $ticket->assignedStaff ? $ticket->assignedStaff->name : null,
                 'auto_closed' => true,
                 'reason' => 'Staff tidak merespons dalam 20 menit'
             ]);
@@ -62,6 +65,7 @@ Route::middleware(['web'])->get('/tickets/{ticketId}/status', function($ticketId
     return response()->json([
         'status' => $ticket->status,
         'assigned_staff' => $ticket->assignedStaff ? true : false,
+        'staff_name' => $ticket->assignedStaff ? $ticket->assignedStaff->name : null,
         'auto_closed' => false
     ]);
 })->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class]);
@@ -86,7 +90,7 @@ Route::middleware(['web'])->get('/articles/active-ticket', function(Request $req
 
     if ($ticketId) {
         $ticket = \App\Models\Ticket::find($ticketId);
-            if ($ticket && in_array($ticket->status, ['open', 'assigned', 'progress'])) {
+        if ($ticket && (in_array($ticket->status, ['open', 'assigned', 'progress']) || ($ticket->status === 'waiting' && !$ticket->staff_id))) {
             return response()->json(['ticket_id' => $ticket->id, 'status' => $ticket->status]);
         }
     }
@@ -142,6 +146,8 @@ Route::middleware(['web'])->post('/tickets/{ticketId}/close', function($ticketId
             'action' => 'auto_closed',
             'description' => 'Tiket ditutup otomatis karena tidak ada staff tersedia dalam 20 menit. Guest diminta mengisi ulang formulir.'
         ]);
+
+        broadcast(new \App\Events\TicketClosed($ticket));
 
         return response()->json(['success' => true, 'message' => 'Ticket closed successfully']);
     }

@@ -3,7 +3,7 @@
  * Handles OTP request and verification for report functionality
  */
 
-import { getCsrfToken, showInlineAlert, hideInlineAlert, closeModalById, showSuccessToast } from './dom';
+import { getCsrfToken, showInlineAlert, hideInlineAlert, closeModalById, openModalById, showSuccessToast } from './dom';
 import { safeFetch } from '../utils/http';
 
 /**
@@ -126,6 +126,12 @@ export function initReportModal() {
             }
 
             showInlineAlert(reportAlert, 'Laporan berhasil dikirim. Link tracking telah dikirimkan ke email Anda.', 'success');
+            
+            // Extract ticket details from response data
+            const ticketId = response.data?.ticket_id;
+            const trackingUrl = response.data?.tracking_url;
+
+            // Reset form
             reportForm.reset();
 
             if (reportVerificationToken instanceof HTMLInputElement) {
@@ -144,8 +150,35 @@ export function initReportModal() {
                 submitText.textContent = 'Minta OTP';
             }
 
+            // Close the form modal
             closeModalById('reportModal');
-            showSuccessToast('Laporan berhasil dibuat!');
+
+            // Populate and show the success modal
+            const successTicketNo = document.getElementById('successTicketNo');
+            const successTicketNoContainer = document.getElementById('successTicketNoContainer');
+            const successTrackLink = document.getElementById('successTrackLink');
+
+            if (ticketId && successTicketNo) {
+                successTicketNo.textContent = ticketId;
+                if (successTicketNoContainer) {
+                    successTicketNoContainer.classList.remove('hidden');
+                }
+            } else {
+                if (successTicketNoContainer) {
+                    successTicketNoContainer.classList.add('hidden');
+                }
+            }
+
+            if (trackingUrl && successTrackLink) {
+                successTrackLink.href = trackingUrl;
+                successTrackLink.classList.remove('hidden');
+            } else {
+                if (successTrackLink) {
+                    successTrackLink.classList.add('hidden');
+                }
+            }
+
+            openModalById('reportSuccessModal');
         } catch (error) {
             showInlineAlert(reportAlert, error.message || 'Terjadi kesalahan.', 'error');
         } finally {

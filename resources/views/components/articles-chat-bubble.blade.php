@@ -562,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <ul class="space-y-1">
                                 ${data.articles.map(article => `
                                     <li>
-                                        <a href="/articles/${article.slug}" target="_blank" class="text-red-600 hover:text-red-800 text-xs underline">
+                                        <a href="/articles/${article.slug}" target="_blank" class="text-red-600 hover:text-red-800 text-xs underline block truncate max-w-[200px]">
                                             ${article.title}
                                         </a>
                                     </li>

@@ -115,6 +115,8 @@ class TicketController extends Controller
                 'description' => 'Tiket di-claim dan dimulai oleh staff: ' . $user->name,
             ]);
 
+            broadcast(new \App\Events\StaffConnected($ticket, $user))->toOthers();
+
             return back()->with('success', 'Tiket berhasil di-claim dan mulai dikerjakan');
         }
 
@@ -131,6 +133,8 @@ class TicketController extends Controller
             'action' => 'progress_started',
             'description' => 'Staff mulai mengerjakan tiket',
         ]);
+
+        broadcast(new \App\Events\StaffConnected($ticket, $user))->toOthers();
 
         return back()->with('success', 'Mulai mengerjakan tiket');
     }
@@ -176,6 +180,8 @@ class TicketController extends Controller
         } catch (\Exception $e) {
             \Log::error('Failed to send rejection email: ' . $e->getMessage());
         }
+
+        broadcast(new \App\Events\TicketClosed($ticket));
 
         return redirect()->route('staff.tickets.index')->with('success', 'Tiket berhasil ditolak. Guest telah menerima notifikasi.');
     }
@@ -266,6 +272,8 @@ class TicketController extends Controller
             }
         }
 
+        broadcast(new \App\Events\TicketClosed($ticket));
+
         return redirect()->route('staff.tickets.index')->with('success', 'Tiket berhasil ditandai selesai!');
     }
 
@@ -343,6 +351,8 @@ class TicketController extends Controller
                 }
             }
         }
+
+        broadcast(new \App\Events\TicketClosed($ticket));
 
         return back()->with('success', 'Tiket berhasil ditangguhkan. Anda dapat melanjutkannya nanti.');
     }
