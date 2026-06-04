@@ -238,6 +238,7 @@ class ChatbotRetrievalService
                 'id' => $article->id,
                 'title' => $article->title,
                 'excerpt' => $article->excerpt,
+                'content' => $article->content,
                 'slug' => $article->slug,
                 'category_id' => $article->category_id,
                 'category_name' => $article->category->name ?? null,
@@ -391,6 +392,7 @@ class ChatbotRetrievalService
                 'id' => $article->id,
                 'title' => $article->title,
                 'excerpt' => $article->excerpt,
+                'content' => $article->content,
                 'slug' => $article->slug,
                 'category_id' => $article->category_id,
                 'category_name' => $article->category->name ?? null,
@@ -593,34 +595,127 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Generate natural response text
+     * Generate natural response text using article excerpt
      */
     private function generateResponseText(array $topArticle, int $totalResults, string $confidence): string
     {
         $title = $topArticle['title'];
+        $excerpt = $topArticle['excerpt'] ?? '';
+        $content = $topArticle['content'] ?? '';
 
-        if ($confidence === 'high') {
-            $templates = [
-                "Saya menemukan artikel yang sangat relevan: **{$title}** 😊",
-                "Artikel ini sepertinya tepat untuk Anda: **{$title}**",
-                "Saya yakin ini yang Anda cari: **{$title}** ✓",
-            ];
-        } elseif ($confidence === 'medium') {
-            $templates = [
-                "Berdasarkan pencarian saya, **{$title}** mungkin dapat membantu Anda.",
-                "Saya menemukan informasi yang relevan: **{$title}**.",
-            ];
+        // Generate short summary from excerpt or content
+        $summary = $this->generateSummaryFromExcerpt($excerpt, $content, $title);
+
+        // Build response with summary + "Artikel Terkait" label
+        $response = $summary . "\n\nArtikel berikut mungkin dapat membantu Anda:";
+
+        return $response;
+    }
+
+    /**
+     * Generate short summary from excerpt or content (2-4 sentences)
+     */
+    private function generateSummaryFromExcerpt(string $excerpt, string $content = '', string $title = ''): string
+    {
+        // Check if excerpt is informative enough (not just a description)
+        $excerptText = $this->stripHtmlTags($excerpt);
+        $excerptSentences = preg_split('/(?<=[.!?])\s+/', $excerptText, -1, PREG_SPLIT_NO_EMPTY);
+
+        // Use excerpt if it has at least 2 sentences and is not too similar to title
+        $useExcerpt = count($excerptSentences) >= 2 && !$this->isTooSimilarToTitle($excerptText, $title);
+
+        if ($useExcerpt) {
+            $summary = $this->extractSentences($excerptText, 2, 4);
+        } elseif (!empty($content)) {
+            // Use first paragraph from content if excerpt is not informative
+            $contentText = $this->stripHtmlTags($content);
+            $firstParagraph = $this->extractFirstParagraph($contentText);
+            $summary = $this->extractSentences($firstParagraph, 2, 4);
         } else {
-            $templates = [
-                "Saya menemukan artikel yang mungkin membantu: **{$title}**.",
-                "Coba lihat artikel ini: **{$title}**.",
-            ];
+            // Fallback
+            return 'Saya menemukan beberapa informasi yang relevan dengan pertanyaan Anda.';
         }
 
-        $hash = md5($title . $confidence . $totalResults);
-        $index = hexdec(substr($hash, 0, 4)) % count($templates);
-        
-        return $templates[$index];
+        // Ensure it ends with proper punctuation
+        if (!in_array(substr($summary, -1), ['.', '!', '?'])) {
+            $summary .= '.';
+        }
+
+        return $summary;
+    }
+
+    /**
+     * Strip HTML tags from text
+     */
+    private function stripHtmlTags(string $html): string
+    {
+        // Remove HTML tags
+        $text = strip_tags($html);
+        // Decode HTML entities
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        // Normalize whitespace
+        $text = preg_replace('/\s+/', ' ', $text);
+        return trim($text);
+    }
+
+    /**
+     * Check if text is too similar to title (likely just a description)
+     */
+    private function isTooSimilarToTitle(string $text, string $title): bool
+    {
+        if (empty($title)) {
+            return false;
+        }
+
+        $textLower = mb_strtolower($text);
+        $titleLower = mb_strtolower($title);
+
+        // Check if text contains title or title contains text
+        if (str_contains($textLower, $titleLower) || str_contains($titleLower, $textLower)) {
+            return true;
+        }
+
+        // Check if text is very short (less than 50 chars)
+        if (mb_strlen($text) < 50) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Extract first paragraph from text
+     */
+    private function extractFirstParagraph(string $text): string
+    {
+        // Split by double newline or multiple newlines
+        $paragraphs = preg_split('/\n\s*\n/', $text, -1, PREG_SPLIT_NO_EMPTY);
+
+        if (empty($paragraphs)) {
+            return $text;
+        }
+
+        // Return first paragraph, cleaned
+        return trim($paragraphs[0]);
+    }
+
+    /**
+     * Extract N to M sentences from text
+     */
+    private function extractSentences(string $text, int $min, int $max): string
+    {
+        // Split into sentences
+        $sentences = preg_split('/(?<=[.!?])\s+/', $text, -1, PREG_SPLIT_NO_EMPTY);
+
+        if (empty($sentences)) {
+            return $text;
+        }
+
+        // Take min to max sentences
+        $count = min($max, max($min, count($sentences)));
+        $selectedSentences = array_slice($sentences, 0, $count);
+
+        return implode(' ', $selectedSentences);
     }
 
     /**
