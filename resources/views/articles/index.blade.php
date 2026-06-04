@@ -30,7 +30,7 @@
         <!-- Sidebar -->
         <div class="col-span-12 md:col-span-3 min-w-0">
             <div class="border-r border-gray-200 pr-4">
-                <h3 class="text-xs uppercase text-gray-400 mb-4 font-semibold tracking-wider">
+                <h3 class="text-sm uppercase text-gray-400 mb-4 font-medium tracking-wider">
                     Kategori Artikel
                 </h3>
 
