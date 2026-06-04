@@ -57,6 +57,7 @@ class ConfirmDialogManager {
 
         if (submitBtn) {
             submitBtn.onclick = () => {
+                console.log('CONFIRM YES CLICKED', { dialogId: this.currentDialog?.id });
                 this.currentDialog.onConfirm();
                 this.close();
             };
@@ -91,7 +92,12 @@ class ConfirmDialogManager {
 class ToastManager {
     constructor(containerId = 'toast-container') {
         this.containerId = containerId;
-        this.ensureContainer();
+
+        if (document.readyState !== 'loading') {
+            this.ensureContainer();
+        } else {
+            document.addEventListener('DOMContentLoaded', () => this.ensureContainer(), { once: true });
+        }
     }
 
     ensureContainer() {

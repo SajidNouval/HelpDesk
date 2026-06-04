@@ -1989,8 +1989,8 @@ class AdvancedRetrievalService
         // Generate short summary from excerpt or content
         $summary = $this->generateSummaryFromExcerpt($excerpt, $content, $title);
 
-        // Build response with summary + "Artikel Terkait" label
-        $response = $summary . "\n\nArtikel berikut mungkin dapat membantu Anda:";
+        // Build response with summary + a more assistant-style label
+        $response = $summary . "\n\nUntuk panduan lebih lengkap, silakan lihat artikel berikut:";
 
         return $response;
     }
@@ -2008,16 +2008,19 @@ class AdvancedRetrievalService
         $useExcerpt = count($excerptSentences) >= 2 && !$this->isTooSimilarToTitle($excerptText, $title);
 
         if ($useExcerpt) {
-            $summary = $this->extractSentences($excerptText, 2, 4);
+            $summary = $this->extractSentences($excerptText, 1, 2);
         } elseif (!empty($content)) {
             // Use first paragraph from content if excerpt is not informative
             $contentText = $this->stripHtmlTags($content);
             $firstParagraph = $this->extractFirstParagraph($contentText);
-            $summary = $this->extractSentences($firstParagraph, 2, 4);
+            $summary = $this->extractSentences($firstParagraph, 1, 2);
         } else {
             // Fallback
             return 'Saya menemukan beberapa informasi yang relevan dengan pertanyaan Anda.';
         }
+
+        // Shorten the summary to a concise assistant-style response
+        $summary = $this->shortenSummary($summary, 280, 2);
 
         // Ensure it ends with proper punctuation
         if (!in_array(substr($summary, -1), ['.', '!', '?'])) {
@@ -2099,6 +2102,42 @@ class AdvancedRetrievalService
         $selectedSentences = array_slice($sentences, 0, $count);
 
         return implode(' ', $selectedSentences);
+    }
+
+    private function shortenSummary(string $summary, int $maxChars = 320, int $maxSentences = 3): string
+    {
+        $sentences = preg_split('/(?<=[.!?])\s+/', trim($summary), -1, PREG_SPLIT_NO_EMPTY);
+        if (empty($sentences)) {
+            return trim($summary);
+        }
+
+        $selected = [];
+        foreach ($sentences as $sentence) {
+            $selected[] = $sentence;
+            if (count($selected) >= $maxSentences) {
+                break;
+            }
+            if (mb_strlen(implode(' ', $selected)) >= $maxChars) {
+                break;
+            }
+        }
+
+        $summary = trim(implode(' ', $selected));
+
+        // Remove long numbered list details to keep the summary concise.
+        $summary = preg_replace('/\s+(?:\d+\)|\d+\.)[\s\S]*$/u', '', $summary);
+        $summary = preg_replace('/\s*Solusi:\s*[\s\S]*$/iu', '', $summary);
+        $summary = rtrim($summary, ' ,;:');
+
+        if (mb_strlen($summary) > $maxChars) {
+            $summary = mb_substr($summary, 0, $maxChars);
+            $summary = rtrim($summary);
+            $summary = preg_replace('/[^\s]+$/u', '', $summary);
+            $summary = rtrim($summary, ',.;:');
+            $summary .= '...';
+        }
+
+        return trim($summary);
     }
     
     public function getDebugInfo(): array

@@ -316,6 +316,7 @@ function initGlobalHandlers() {
 
         const confirmMessage = form.dataset.confirm;
         if (confirmMessage) {
+            console.log('CLICK -> submit intercepted', { formId: form.id, confirmMessage });
             event.preventDefault();
             
             // Get or create a hidden dialog for this form
@@ -350,8 +351,11 @@ function initGlobalHandlers() {
             }
 
             if (typeof window.confirmDialog !== 'undefined') {
+                console.log('CONFIRM OPEN', { dialogId, formId: form.id });
                 window.confirmDialog.open(dialogId, {
                     onConfirm: () => {
+                        console.log('CONFIRM YES', { dialogId, formId: form.id });
+                        console.log('FORM SUBMIT');
                         form.submit();
                     }
                 });

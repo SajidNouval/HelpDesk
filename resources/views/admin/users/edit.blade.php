@@ -114,13 +114,18 @@
 
                                     <div>
                                         <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role <span class="text-red-500">*</span></label>
-                                        <select id="role" name="role" required
-                                                class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
-                                            <option value="">Pilih role</option>
-                                            <option value="staff" {{ old('role', $user->role) === 'staff' ? 'selected' : '' }}>Staff</option>
-                                            <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Admin</option>
-                                        </select>
+                                        <input id="role" type="text" value="{{ ucfirst(old('role', $user->role)) }}" disabled
+                                               class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 bg-gray-100 cursor-not-allowed"
+                                        >
+                                        <input type="hidden" name="role" value="{{ old('role', $user->role) }}">
                                     </div>
+
+                                    @if($user->role === 'admin' || $user->email === 'admin@gmail.com')
+                                        <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
+                                            <p class="font-semibold">Administrator Utama</p>
+                                            <p class="mt-1">Role tidak dapat diubah.</p>
+                                        </div>
+                                    @endif
 
                                     <div>
                                         <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status Akun <span class="text-red-500">*</span></label>
@@ -144,7 +149,7 @@
                                         @else
                                             <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                                                 @foreach($categories as $category)
-                                                    <label for="category_{{ $category->id }}" class="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-red-50 hover:border-red-300 transition has-[:checked]:bg-red-50 has-[:checked]:border-red-400">
+                                                    <label for="category_{{ $category->id }}" class="flex min-w-0 items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-red-50 hover:border-red-300 transition has-[:checked]:bg-red-50 has-[:checked]:border-red-400">
                                                         <input
                                                             type="checkbox"
                                                             id="category_{{ $category->id }}"
@@ -153,7 +158,7 @@
                                                             {{ in_array($category->id, old('categories', $assignedCategoryIds)) ? 'checked' : '' }}
                                                             class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
                                                         >
-                                                        <span class="text-sm text-gray-700 font-medium">{{ $category->name }}</span>
+                                                        <span class="text-sm text-gray-700 font-medium truncate" title="{{ $category->name }}">{{ $category->name }}</span>
                                                     </label>
                                                 @endforeach
                                             </div>
@@ -177,24 +182,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        (function () {
-            const roleSelect = document.getElementById('role');
-            const categorySection = document.getElementById('category-section');
-
-            function toggleCategories() {
-                if (roleSelect.value === 'staff') {
-                    categorySection.classList.remove('hidden');
-                } else {
-                    categorySection.classList.add('hidden');
-                    categorySection.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-                }
-            }
-
-            roleSelect.addEventListener('change', toggleCategories);
-            toggleCategories();
-        })();
-    </script>
 
 </x-app-layout>

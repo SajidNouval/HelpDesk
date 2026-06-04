@@ -61,7 +61,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'role' => ['required', Rule::in(['admin', 'staff'])],
+            'role' => ['required', Rule::in(['staff'])],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'categories' => ['nullable', 'array'],
@@ -71,7 +71,7 @@ class UserController extends Controller
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'role' => $validated['role'],
+            'role' => 'staff',
             'status' => $validated['status'],
             'password' => Hash::make($validated['password']),
         ]);
@@ -112,16 +112,17 @@ class UserController extends Controller
             'categories.*' => ['exists:categories,id'],
         ]);
 
+        $role = $user->role === 'admin' ? 'admin' : 'staff';
+
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'role' => $validated['role'],
+            'role' => $role,
             'status' => $validated['status'],
         ]);
 
-        // Sync kategori melalui StaffProfile
-        if ($validated['role'] === 'staff') {
-            // Hapus semua profil lama, buat ulang sesuai pilihan baru
+        // Sync kategori melalui StaffProfile hanya jika tetap staff
+        if ($role === 'staff') {
             $user->staffProfiles()->delete();
             if (! empty($validated['categories'])) {
                 foreach ($validated['categories'] as $categoryId) {

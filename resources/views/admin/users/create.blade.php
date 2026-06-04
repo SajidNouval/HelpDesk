@@ -93,6 +93,7 @@
                     <div class="p-6">
                         <form id="staff-form" action="{{ route('admin.users.store') }}" method="POST" class="space-y-6">
                             @csrf
+                            <input type="hidden" name="role" value="staff">
                             <input type="hidden" name="status" value="active">
 
                             <div class="space-y-4">
@@ -117,18 +118,6 @@
                                 </div>
 
                                 <div>
-                                    <label for="role" class="block text-sm font-medium text-gray-700 mb-2">
-                                        Role <span class="text-red-500">*</span>
-                                    </label>
-                                    <select id="role" name="role" required
-                                            class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
-                                        <option value="">Pilih role</option>
-                                        <option value="staff" {{ old('role') === 'staff' ? 'selected' : '' }}>Staff</option>
-                                        <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
-                                    </select>
-                                </div>
-
-                                <div>
                                     <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
                                         Password <span class="text-red-500">*</span>
                                     </label>
@@ -148,7 +137,7 @@
                             </div>
 
                             <!-- Kategori Assignment (hanya untuk role staff) -->
-                            <div id="category-section" class="hidden">
+                            <div id="category-section">
                                 <div class="pt-4 border-t border-gray-100">
                                     <label class="block text-sm font-medium text-gray-700 mb-3">
                                         Kategori yang Ditangani
@@ -159,7 +148,7 @@
                                     @else
                                         <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                                             @foreach($categories as $category)
-                                                <label for="category_{{ $category->id }}" class="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-red-50 hover:border-red-300 transition has-[:checked]:bg-red-50 has-[:checked]:border-red-400">
+                                                <label for="category_{{ $category->id }}" class="flex min-w-0 items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-red-50 hover:border-red-300 transition has-[:checked]:bg-red-50 has-[:checked]:border-red-400">
                                                     <input
                                                         type="checkbox"
                                                         id="category_{{ $category->id }}"
@@ -168,7 +157,7 @@
                                                         {{ in_array($category->id, old('categories', [])) ? 'checked' : '' }}
                                                         class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
                                                     >
-                                                    <span class="text-sm text-gray-700 font-medium">{{ $category->name }}</span>
+                                                    <span class="text-sm text-gray-700 font-medium truncate" title="{{ $category->name }}">{{ $category->name }}</span>
                                                 </label>
                                             @endforeach
                                         </div>
@@ -193,24 +182,4 @@
         </div>
     </div>
 
-    <script>
-        (function () {
-            const roleSelect = document.getElementById('role');
-            const categorySection = document.getElementById('category-section');
-
-            function toggleCategories() {
-                if (roleSelect.value === 'staff') {
-                    categorySection.classList.remove('hidden');
-                } else {
-                    categorySection.classList.add('hidden');
-                    // Uncheck all when role is not staff
-                    categorySection.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-                }
-            }
-
-            roleSelect.addEventListener('change', toggleCategories);
-            // Trigger on load (e.g. old() values retained after validation error)
-            toggleCategories();
-        })();
-    </script>
 </x-app-layout>
