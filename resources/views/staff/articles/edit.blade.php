@@ -138,13 +138,6 @@
                                 </div>
                             </div>
 
-                            <div class="flex items-center">
-                                <input type="checkbox" name="is_published" id="is_published" value="1" {{ old('is_published', $article->is_published) ? 'checked' : '' }} class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
-                                <label for="is_published" class="ml-3 block text-sm font-semibold text-gray-900">
-                                    Publikasikan artikel ini
-                                </label>
-                            </div>
-
                             <div class="pt-6 border-t border-gray-200 flex justify-end gap-3">
                                 <a href="{{ route('staff.articles.index') }}">
                                     <button type="button" class="h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
