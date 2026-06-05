@@ -6,9 +6,6 @@
             <h1 class="text-3xl font-semibold text-gray-900">
                 Dashboard Admin
             </h1>
-            <p class="mt-1 text-sm text-gray-500">
-                Pantau aktivitas helpdesk, artikel, staf, dan performa sistem.
-            </p>
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
@@ -64,37 +61,61 @@
                     </div>
                 @endif
 
-                <!-- Statistics Overview Grid -->
-                <div class="mb-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <!-- Total Staff -->
-                    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Total Staff</p>
-                        <h3 class="text-2xl font-bold mt-2 text-gray-900">{{ $staffCount }}</h3>
-                    </div>
-                    <!-- Total Artikel -->
-                    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Total Artikel</p>
-                        <h3 class="text-2xl font-bold mt-2 text-gray-900">{{ $articleCount }}</h3>
-                    </div>
-                    <!-- Total Tiket -->
-                    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Total Tiket</p>
-                        <h3 class="text-2xl font-bold mt-2 text-gray-900">{{ $totalTickets }}</h3>
-                    </div>
-                    <!-- Tiket Waiting -->
-                    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Tiket Waiting</p>
-                        <h3 class="text-2xl font-bold mt-2 text-gray-900">{{ $ticketsWaiting }}</h3>
-                    </div>
-                    <!-- Tiket Diproses -->
-                    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Tiket Diproses</p>
-                        <h3 class="text-2xl font-bold mt-2 text-gray-900">{{ $ticketsProcessing }}</h3>
-                    </div>
-                    <!-- Tiket Selesai -->
-                    <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Tiket Selesai</p>
-                        <h3 class="text-2xl font-bold mt-2 text-gray-900">{{ $ticketsDone }}</h3>
+                <!-- Statistics Overview -->
+                <div class="mb-6 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-6">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Ringkasan Statistik</h3>
+                        
+                        <!-- Main Stats Row -->
+                        <div class="flex flex-wrap items-center gap-6 mb-5 pb-5 border-b border-gray-100">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium">Total Staff</p>
+                                    <p class="text-xl font-bold text-gray-900">{{ $staffCount }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium">Total Artikel</p>
+                                    <p class="text-xl font-bold text-gray-900">{{ $articleCount }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium">Total Tiket</p>
+                                    <p class="text-xl font-bold text-gray-900">{{ $totalTickets }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ticket Status Row -->
+                        <div class="flex flex-wrap items-center gap-6">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+                                <span class="text-sm text-gray-600">Total Tiket Diproses: <strong class="text-gray-900">{{ $ticketsWaiting }}</strong></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-green-400"></span>
+                                <span class="text-sm text-gray-600">Total Tiket Selesai: <strong class="text-gray-900">{{ $ticketsDone }}</strong></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -122,81 +143,77 @@
                     </div>
                 </div>
 
-                <!-- Top Artikel Terpopuler -->
-                <div class="mb-6 bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Top Artikel Terpopuler</h3>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-gray-100">
-                                    <th class="text-left pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Judul</th>
-                                    <th class="text-right pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Views</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-50">
-                                @foreach($topArticles as $ta)
-                                    <tr>
-                                        <td class="py-2.5 text-gray-700 pr-2">
-                                            <x-truncate-text :value="$ta->title" :limit="80" class="text-xs font-medium text-gray-900 block" />
-                                        </td>
-                                        <td class="py-2.5 text-right font-semibold text-gray-900 text-xs whitespace-nowrap">
-                                            {{ $ta->views }} Views
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                
 
                 <!-- Pending Articles Review Section -->
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h2 class="text-xl font-semibold text-gray-900">Artikel Menunggu Persetujuan</h2>
-                            <p class="text-sm text-gray-500">Daftar usulan artikel baru dari staf yang perlu Anda tinjau.</p>
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">Artikel Menunggu Persetujuan</h3>
+                                <p class="text-sm text-gray-500">Daftar usulan artikel baru dari staf yang perlu Anda tinjau.</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="px-2.5 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+                                    {{ $pendingArticles->count() }} artikel
+                                </span>
+                                <a href="{{ route('admin.articles.index') }}" class="text-xs font-semibold text-red-500 hover:text-red-600 transition flex items-center gap-1">
+                                    Tinjau di Kelola Artikel →
+                                </a>
+                            </div>
                         </div>
-                        <span class="px-2.5 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
-                            {{ $pendingArticles->count() }} artikel
-                        </span>
-                    </div>
 
-                    @if ($pendingArticles->count() > 0)
-                        <div class="grid grid-cols-1 gap-4">
-                            @foreach ($pendingArticles as $article)
-                                <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 hover:shadow-md transition">
-                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                        <div class="space-y-1">
-                                            <div class="flex items-center gap-2">
-                                                <h3 class="font-semibold text-gray-900 text-sm">{{ $article->title }}</h3>
-                                                <span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-[10px] font-semibold rounded-full">Pending</span>
-                                            </div>
-                                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
-                                                <span>Penulis: <strong class="text-gray-700 font-medium">{{ $article->staff?->name ?? 'Tidak ada' }}</strong></span>
-                                                <span>•</span>
-                                                <span>Kategori: <strong class="text-gray-700 font-medium">{{ $article->category->name ?? 'Tanpa kategori' }}</strong></span>
-                                                <span>•</span>
-                                                <span>{{ $article->created_at->format('d M Y, H:i') }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="shrink-0">
-                                            <a href="{{ route('admin.articles.index') }}" class="inline-flex items-center justify-center h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-xs font-medium transition">
-                                                Tinjau di Kelola Artikel
-                                            </a>
-                                        </div>
-                                    </div>
+                        @if ($pendingArticles->count() > 0)
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Judul Artikel</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Penulis</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Kategori</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Tanggal</th>
+                                            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        @foreach ($pendingArticles as $article)
+                                            <tr class="hover:bg-gray-50 transition">
+                                                <td class="px-6 py-4 text-gray-900 font-medium">
+                                                    <x-truncate-text :value="$article->title" class="block text-gray-700" />
+                                                </td>
+                                                <td class="px-6 py-4 text-gray-600">{{ $article->staff?->name ?? 'Tidak ada' }}</td>
+                                                <td class="px-6 py-4 text-gray-600">{{ $article->category->name ?? 'Tanpa kategori' }}</td>
+                                                <td class="px-6 py-4 text-gray-600">{{ $article->created_at->format('d M Y, H:i') }}</td>
+                                                <td class="px-6 py-4 text-center">
+                                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Pending</span>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            @if($pendingArticles->hasPages())
+                                <div class="mt-6 flex items-center justify-center gap-1">
+                                    <a href="{{ $pendingArticles->previousPageUrl() }}" class="relative inline-flex items-center px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-transparent hover:border-gray-200 rounded-md hover:text-red-600 transition-colors {{ $pendingArticles->onFirstPage() ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' }}" {{ $pendingArticles->onFirstPage() ? 'aria-disabled=true tabindex=-1' : '' }}>
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                                    </a>
+                                    <span class="text-sm text-gray-600 font-medium px-2 font-semibold">Halaman {{ $pendingArticles->currentPage() }} dari {{ $pendingArticles->lastPage() }}</span>
+                                    <a href="{{ $pendingArticles->nextPageUrl() }}" class="relative inline-flex items-center px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-transparent hover:border-gray-200 rounded-md hover:text-red-600 transition-colors {{ $pendingArticles->currentPage() === $pendingArticles->lastPage() ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' }}" {{ $pendingArticles->currentPage() === $pendingArticles->lastPage() ? 'aria-disabled=true tabindex=-1' : '' }}>
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                                    </a>
                                 </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-12 bg-white border border-gray-200 rounded-xl shadow-sm">
-                            <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            <h3 class="text-sm font-semibold text-gray-900 mb-1">Tidak Ada Artikel Menunggu</h3>
-                            <p class="text-xs text-gray-500">Semua pengajuan artikel telah diproses.</p>
-                        </div>
-                    @endif
+                            @endif
+                        @else
+                            <div class="text-center py-12">
+                                <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <h3 class="text-sm font-semibold text-gray-900 mb-1">Tidak Ada Artikel Menunggu</h3>
+                                <p class="text-xs text-gray-500">Semua pengajuan artikel telah diproses.</p>
+                            </div>
+                        @endif
+                    </div>
                 </div>
 
                 <!-- Per-Article Statistics -->

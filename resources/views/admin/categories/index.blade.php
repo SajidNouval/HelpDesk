@@ -5,9 +5,6 @@
             <h1 class="text-3xl font-semibold text-gray-900">
                 Kelola Kategori
             </h1>
-            <p class="mt-1 text-sm text-gray-500">
-                Manajemen kategori untuk artikel Knowledge Base.
-            </p>
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
@@ -58,34 +55,85 @@
 
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
-                    <div>
-                        <h2 class="text-xl font-semibold text-gray-900">Daftar Kategori</h2>
-                        <p class="text-sm text-gray-500">Kelola kategori Knowledge Base.</p>
-                    </div>
-                    <div class="flex items-center">
-                        
-                        <a href="{{ route('admin.categories.create') }}" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                            Tambah Kategori
-                        </a>
-                    </div>
-                </div>
-
                 @if(session('success'))
                     <x-alert type="success" class="mb-6">
                         {{ session('success') }}
                     </x-alert>
                 @endif
 
-                <!-- Statistics -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                    <div class="bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
-                        <div>
-                            <div class="text-sm text-gray-500">Total Kategori</div>
-                            <div class="text-xl font-semibold text-gray-900">{{ $totalCategories ?? $categories->total() ?? $categories->count() }}</div>
+                <!-- Header Section with Statistics -->
+                <div class="mb-6 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-6">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-900">Daftar Kategori</h2>
+                                <p class="text-sm text-gray-500">Kelola kategori Knowledge Base.</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <!-- Search Input -->
+                                <form action="{{ route('admin.categories.index') }}" method="GET" class="flex items-center">
+                                    @if(request('sort'))
+                                        <input type="hidden" name="sort" value="{{ request('sort') }}">
+                                    @endif
+                                    <div class="relative">
+                                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari kategori..." class="w-48 h-10 pl-9 pr-4 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                                        <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                    </div>
+                                </form>
+                                
+                                <!-- Sort Dropdown -->
+                                <div class="relative">
+                                    <select id="sortSelect"
+        onchange="window.location.href=this.value"
+        class="h-10 pl-4 pr-8 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none cursor-pointer">
+
+    <option value="{{ route('admin.categories.index', ['sort' => 'updated_desc', 'q' => request('q')]) }}"
+        {{ request('sort') == 'updated_desc' || !request('sort') ? 'selected' : '' }}>
+        Terbaru - Terlama
+    </option>
+
+    <option value="{{ route('admin.categories.index', ['sort' => 'updated_asc', 'q' => request('q')]) }}"
+        {{ request('sort') == 'updated_asc' ? 'selected' : '' }}>
+        Terlama - Terbaru
+    </option>
+
+    <option value="{{ route('admin.categories.index', ['sort' => 'name_asc', 'q' => request('q')]) }}"
+        {{ request('sort') == 'name_asc' ? 'selected' : '' }}>
+        A - Z
+    </option>
+
+    <option value="{{ route('admin.categories.index', ['sort' => 'name_desc', 'q' => request('q')]) }}"
+        {{ request('sort') == 'name_desc' ? 'selected' : '' }}>
+        Z - A
+    </option>
+
+</select>
+                                    <svg class="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                                
+                                <a href="{{ route('admin.categories.create') }}" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Tambah Kategori
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 pt-4 border-t border-gray-100">
+                            <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-medium">Total Kategori</p>
+                                <p class="text-xl font-bold text-gray-900">{{ $totalCategories ?? $categories->total() ?? $categories->count() }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>

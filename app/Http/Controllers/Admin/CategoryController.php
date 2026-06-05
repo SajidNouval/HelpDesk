@@ -17,12 +17,32 @@ class CategoryController extends Controller
     {
         $query = Category::withCount('articles');
 
+        // Search by keyword
         if (request('q')) {
             $query->where('name', 'like', '%' . request('q') . '%')
                   ->orWhere('description', 'like', '%' . request('q') . '%');
         }
 
-        $categories = $query->orderBy('name')->paginate(10);
+        // Sorting
+        $sort = request('sort', 'updated_desc'); // Default: newest first
+        
+        switch ($sort) {
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            case 'updated_asc':
+                $query->orderBy('updated_at', 'asc');
+                break;
+            case 'updated_desc':
+            default:
+                $query->orderBy('updated_at', 'desc');
+                break;
+        }
+
+        $categories = $query->paginate(10);
 
         return view('admin.categories.index', compact('categories'));
     }

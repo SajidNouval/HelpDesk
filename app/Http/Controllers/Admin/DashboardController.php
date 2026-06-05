@@ -23,8 +23,8 @@ class DashboardController extends Controller
         // Artikel yang menunggu persetujuan
         $pendingArticles = Article::with('category', 'staff')
             ->where('publish_status', 'pending')
-            ->latest()
-            ->get();
+            ->oldest()
+            ->paginate(10);
 
         // Artikel dengan detail feedback dan views
         $articles = Article::with('category', 'staff')

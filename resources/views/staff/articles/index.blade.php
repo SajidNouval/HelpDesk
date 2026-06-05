@@ -137,9 +137,11 @@
                     </div>
 
                     <!-- Pagination -->
-                    <div class="mt-6">
-                        {{ $articles->links() }}
-                    </div>
+                    @if($articles->hasPages())
+                        <div class="mt-6">
+                            <x-pagination :paginator="$articles" :elements="$articles->links()->elements" />
+                        </div>
+                    @endif
                 @else
                     <x-empty-state 
                         icon="document"
