@@ -50,8 +50,12 @@ class MessageController extends Controller
         $senderType = 'guest'; // Default to guest
         $senderId = null;
 
-        // Check if user is authenticated staff
-        if (Auth::check() && Auth::user()->role === 'staff') {
+        // Check if sender_type is explicitly provided in request (for guest messages)
+        if ($request->has('sender_type') && in_array($request->sender_type, ['guest', 'customer'])) {
+            $senderType = $request->sender_type;
+        }
+        // Otherwise, check if user is authenticated staff
+        elseif (Auth::check() && Auth::user()->role === 'staff') {
             $senderType = 'staff';
             $senderId = Auth::id();
         }

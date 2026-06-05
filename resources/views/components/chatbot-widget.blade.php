@@ -778,6 +778,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     /* ------------------------------------------------------------------ */
+    /* KEYDOWN HANDLER - Prevent auto-submit on Enter                     */
+    /* ------------------------------------------------------------------ */
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // Prevent default form submission
+            form.dispatchEvent(new Event('submit')); // Manually trigger submit
+        }
+    });
+
+    /* ------------------------------------------------------------------ */
     /* GREETING UTILS                                                      */
     /* ------------------------------------------------------------------ */
     function isGreetingQuery(message) {
