@@ -157,4 +157,70 @@
         @apply bg-red-600 text-white hover:bg-red-700;
     }
 
+    /* CKEditor 5 List Styling Fix */
+    div.ck-editor__editable ul,
+    div.ck-content ul {
+        list-style: disc !important;
+        padding-left: 2.5rem !important;
+        margin: 1rem 0 !important;
+    }
+
+    div.ck-editor__editable ol,
+    div.ck-content ol {
+        list-style: decimal !important;
+        padding-left: 2.5rem !important;
+        margin: 1rem 0 !important;
+    }
+
+    div.ck-editor__editable li,
+    div.ck-content li {
+        display: list-item !important;
+        margin: 0.5rem 0 !important;
+    }
+
+    div.ck-editor__editable ul ul,
+    div.ck-content ul ul {
+        list-style: circle !important;
+        padding-left: 2rem !important;
+    }
+
+    div.ck-editor__editable ul ul ul,
+    div.ck-content ul ul ul {
+        list-style: square !important;
+        padding-left: 2rem !important;
+    }
+
+    div.ck-editor__editable ol ol,
+    div.ck-content ol ol {
+        padding-left: 2rem !important;
+    }
+
+    /* CKEditor 5 Heading Styling Fix */
+    div.ck-editor__editable h1,
+    div.ck-content h1 {
+        font-size: 2.25rem !important;
+        font-weight: 700 !important;
+        line-height: 2.5rem !important;
+        margin: 1.5rem 0 1rem 0 !important;
+        color: #111827 !important;
+    }
+
+    div.ck-editor__editable h2,
+    div.ck-content h2 {
+        font-size: 1.875rem !important;
+        font-weight: 600 !important;
+        line-height: 2.25rem !important;
+        margin: 1.25rem 0 0.75rem 0 !important;
+        color: #111827 !important;
+    }
+
+    div.ck-editor__editable h3,
+    div.ck-content h3 {
+        font-size: 1.5rem !important;
+        font-weight: 600 !important;
+        line-height: 2rem !important;
+        margin: 1rem 0 0.5rem 0 !important;
+        color: #111827 !important;
+    }
+
 }

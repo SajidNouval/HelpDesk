@@ -122,7 +122,7 @@
 
                                 <div>
                                     <label for="content" class="block text-sm font-medium text-gray-700 mb-2">Konten Artikel <span class="text-red-500">*</span></label>
-                                    <textarea name="content" id="content" rows="12" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" placeholder="Tulis konten artikel di sini..." required>{{ old('content') }}</textarea>
+                                    <textarea name="content" id="content" rows="12" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" placeholder="Tulis konten artikel di sini...">{{ old('content') }}</textarea>
                                     @error('content')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
@@ -162,5 +162,90 @@
         </div>
     </div>
 
-    
+    <!-- CKEditor 5 Script -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            ClassicEditor
+                .create(document.querySelector('#content'), {
+                    toolbar: [
+                        'heading', '|',
+                        'bold', 'italic', '|',
+                        'bulletedList', 'numberedList', '|',
+                        'blockQuote', 'link', '|',
+                        'undo', 'redo'
+                    ],
+                    heading: {
+                        options: [
+                            { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+                            { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+                            { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+                        ]
+                    },
+                    contentStyles: `
+                        .ck-editor__editable h1 {
+                            font-size: 2.25rem;
+                            font-weight: 700;
+                            line-height: 2.5rem;
+                            margin: 1.5rem 0 1rem 0;
+                            color: #111827;
+                        }
+                        .ck-editor__editable h2 {
+                            font-size: 1.875rem;
+                            font-weight: 600;
+                            line-height: 2.25rem;
+                            margin: 1.25rem 0 0.75rem 0;
+                            color: #111827;
+                        }
+                        .ck-editor__editable h3 {
+                            font-size: 1.5rem;
+                            font-weight: 600;
+                            line-height: 2rem;
+                            margin: 1rem 0 0.5rem 0;
+                            color: #111827;
+                        }
+                        .ck-editor__editable ul {
+                            list-style-type: disc;
+                            padding-left: 2.5rem;
+                            margin: 1rem 0;
+                        }
+                        .ck-editor__editable ol {
+                            list-style-type: decimal;
+                            padding-left: 2.5rem;
+                            margin: 1rem 0;
+                        }
+                        .ck-editor__editable li {
+                            display: list-item;
+                            margin: 0.5rem 0;
+                        }
+                        .ck-editor__editable ul ul {
+                            list-style-type: circle;
+                            padding-left: 2rem;
+                        }
+                        .ck-editor__editable ul ul ul {
+                            list-style-type: square;
+                            padding-left: 2rem;
+                        }
+                        .ck-editor__editable ol ol {
+                            padding-left: 2rem;
+                        }
+                    `
+                })
+                .then(editor => {
+                    // Add validation on form submit
+                    const form = document.getElementById('article-form');
+                    form.addEventListener('submit', function(e) {
+                        const content = editor.getData();
+                        if (!content || content.trim() === '') {
+                            e.preventDefault();
+                            alert('Konten Artikel wajib diisi');
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        });
+    </script>
+
 </x-app-layout>
