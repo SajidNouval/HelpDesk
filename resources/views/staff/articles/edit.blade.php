@@ -6,9 +6,6 @@
             <h1 class="text-3xl font-semibold text-gray-900">
                 Edit Artikel
             </h1>
-            <p class="mt-1 text-sm text-gray-500">
-                Perbarui konten dan informasi artikel.
-            </p>
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
@@ -85,7 +82,7 @@
                             </div>
                             <div>
                                 <h2 class="text-lg font-semibold text-gray-900">Form Edit Artikel</h2>
-                                <p class="text-sm text-gray-500">Perbarui informasi artikel {{ $article->title }}.</p>
+                                <p class="text-sm text-gray-500">Perbarui artikel {{ $article->title }}.</p>
                             </div>
                         </div>
 
@@ -141,7 +138,7 @@
                             </div>
 
                             <div class="pt-4 border-t border-gray-200 flex justify-end gap-3">
-                                <a href="{{ route('staff.articles.index') }}">
+                                <a href="{{ route('staff.articles.show', $article) }}">
                                     <button type="button" class="h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
                                         Batal
                                     </button>

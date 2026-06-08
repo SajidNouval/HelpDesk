@@ -60,74 +60,129 @@
                     </x-alert>
                 @endif
 
-                <!-- Article Header Card -->
-                <div class="bg-white border border-gray-200 rounded-xl shadow-sm mb-4">
+                <!-- Single Article Card -->
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
                     <div class="p-6">
 
-                        <!-- Title & Status -->
+                        <!-- Title -->
                         <div class="mb-3">
-                            <h2 class="text-2xl font-semibold text-gray-900 mb-2">{{ $article->title }}</h2>
-                            <div class="flex flex-wrap gap-3 text-sm text-gray-600">
-                                <span>Kategori: <span class="font-medium text-gray-900">{{ $article->category->name }}</span></span>
-                                <span class="text-gray-300">|</span>
-                                <span>Penulis: <span class="font-medium text-gray-900">{{ $article->staff->name }}</span></span>
-                                <span class="text-gray-300">|</span>
-                                <span>Dibuat: <span class="font-medium text-gray-900">{{ $article->created_at->format('d M Y') }}</span></span>
-                            </div>
+                            <h1 class="text-3xl font-semibold text-gray-900">{{ $article->title }}</h1>
                         </div>
 
-                        <!-- Status Badge + Excerpt -->
+                        <!-- Status Badges -->
                         <div class="flex flex-wrap items-center gap-2 mb-4">
                             @if($article->publish_status === 'pending')
-                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Menunggu Persetujuan</span>
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">Menunggu Persetujuan</span>
                             @elseif($article->publish_status === 'approved')
-                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Disetujui &amp; Dipublikasi</span>
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">Disetujui</span>
                             @elseif($article->publish_status === 'rejected')
-                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Ditolak</span>
-                            @endif
-                            @if($article->excerpt)
-                                <span class="text-sm text-gray-500 italic">{{ $article->excerpt }}</span>
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">Ditolak</span>
                             @endif
                         </div>
 
-                        <!-- Statistics Row -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-                            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 text-center">
-                                <div class="text-sm text-gray-500 mb-1">Views</div>
-                                <div class="text-2xl font-semibold text-gray-900">{{ $article->views }}</div>
+                        <!-- Meta Info -->
+                        <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-4">
+                            <div class="flex items-center gap-1">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                <span>{{ $article->staff?->name ?? 'Tidak ada' }}</span>
                             </div>
-                            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 text-center">
-                                <div class="text-sm text-gray-500 mb-1">Bantu</div>
-                                <div class="text-2xl font-semibold text-green-600">{{ $article->helpful_count }}</div>
-                            </div>
-                            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 text-center">
-                                <div class="text-sm text-gray-500 mb-1">Tidak Bantu</div>
-                                <div class="text-2xl font-semibold text-red-600">{{ $article->not_helpful_count }}</div>
+                            <div class="flex items-center gap-1">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span>{{ $article->created_at->format('d M Y') }}</span>
                             </div>
                         </div>
 
-                        @if($article->publish_status === 'rejected' && $article->rejection_note)
-                            <div class="mb-5 p-4 bg-red-50 border border-red-200 rounded-lg">
-                                <h4 class="font-semibold text-red-900 mb-2">Alasan Penolakan</h4>
-                                <p class="text-red-800">{{ $article->rejection_note }}</p>
-                                <p class="text-sm text-red-700 mt-3">Anda dapat mengedit artikel ini dan mengirimkan kembali untuk disetujui.</p>
+                        @if($article->rejection_note)
+                            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                                <svg class="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                <div>
+                                    <h4 class="font-semibold text-red-900 mb-1 text-sm">Catatan Penolakan</h4>
+                                    <p class="text-red-800 text-sm">{{ $article->rejection_note }}</p>
+                                </div>
                             </div>
                         @endif
 
+                        <!-- Summary -->
+                        @if($article->excerpt)
+                            <div class="mb-4">
+                                <p class="text-sm text-gray-700 leading-relaxed">{{ $article->excerpt }}</p>
+                            </div>
+                        @endif
+
+                        <!-- Article Content -->
+                        <div class="mb-4">
+                            <div class="prose prose-gray max-w-none">
+                                {!! $article->content !!}
+                            </div>
+                        </div>
+
+                        <!-- Keywords -->
+                        @if($article->keywords)
+                            <div class="mb-4">
+                                <p class="text-sm text-gray-600 mb-2">Kata kunci: {{ implode(', ', array_map('trim', explode(',', $article->keywords))) }}</p>
+                            </div>
+                        @endif
+
+                        <!-- Category -->
+                        <div class="mb-6">
+                            <p class="text-sm text-gray-600">Kategori: {{ $article->category?->name ?? 'Tanpa kategori' }}</p>
+                        </div>
+
+                        <!-- Compact Statistics -->
+                        <div class="flex flex-wrap items-center justify-end gap-4 mb-6 text-sm text-gray-600">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                <span><span class="font-semibold text-gray-900">{{ $article->views }}</span> Views</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
+                                </svg>
+                                <span><span class="font-semibold text-green-600">{{ $article->helpful_count }}</span> Membantu</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c-.5 0-.905-.405-.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"></path>
+                                </svg>
+                                <span><span class="font-semibold text-red-600">{{ $article->not_helpful_count }}</span> Tidak Membantu</span>
+                            </div>
+                        </div>
+
                         <!-- Action Buttons -->
-                        <div class="pt-4 border-t border-gray-200 flex flex-wrap items-center gap-2">
+                        <div class="pt-4 border-t border-gray-200 flex flex-wrap items-center justify-end gap-3">
                             @if($article->staff_id === auth()->id())
                                 <a href="{{ route('staff.articles.edit', $article) }}"
-                                   class="inline-flex items-center h-10 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition gap-2">
+                                   class="inline-flex items-center h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
-                                    Edit Artikel
+                                    Edit
                                 </a>
+
+                                <form id="delete-article-form-{{ $article->id }}" method="POST" action="{{ route('staff.articles.destroy', $article) }}" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button" data-delete-article="delete-article-form-{{ $article->id }}"
+                                            class="inline-flex items-center h-10 px-5 rounded-xl border border-red-600 text-red-600 hover:bg-red-50 text-sm font-medium transition gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        Hapus
+                                    </button>
+                                </form>
 
                                 <form method="POST" action="{{ route('staff.articles.reset-views', $article) }}" class="inline" data-confirm="Reset jumlah view artikel?">
                                     @csrf
-                                    <button type="submit" class="inline-flex items-center h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition gap-2">
+                                    <button type="submit" class="inline-flex items-center h-10 px-5 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition gap-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                         </svg>
@@ -137,7 +192,7 @@
 
                                 <form method="POST" action="{{ route('staff.articles.reset-feedback', $article) }}" class="inline" data-confirm="Reset semua review artikel?">
                                     @csrf
-                                    <button type="submit" class="inline-flex items-center h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition gap-2">
+                                    <button type="submit" class="inline-flex items-center h-10 px-5 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition gap-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                         </svg>
@@ -147,36 +202,12 @@
                             @endif
 
                             <a href="{{ route('staff.articles.index') }}"
-                               class="inline-flex items-center h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition gap-2">
+                               class="inline-flex items-center h-10 px-5 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                                 </svg>
                                 Kembali
                             </a>
-
-                            @if($article->staff_id === auth()->id())
-                                <form id="delete-article-form-{{ $article->id }}" method="POST" action="{{ route('staff.articles.destroy', $article) }}" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" data-delete-article="delete-article-form-{{ $article->id }}"
-                                            class="inline-flex items-center h-10 px-4 rounded-xl border border-red-600 text-red-600 hover:bg-red-50 text-sm font-medium transition gap-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                        </svg>
-                                        Hapus
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Article Content Card -->
-                <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
-                    <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Konten Artikel</h3>
-                        <div class="prose prose-gray max-w-none">
-                            {!! $article->content !!}
                         </div>
                     </div>
                 </div>

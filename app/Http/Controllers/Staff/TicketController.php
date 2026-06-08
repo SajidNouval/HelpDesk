@@ -16,15 +16,20 @@ class TicketController extends Controller
     /**
      * 📋 Tampilkan tiket yang ditugaskan ke staff
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $user = auth()->user();
-        
+
         // Get tiket yang ditugaskan ke staff ini
-        $tickets = Ticket::where('staff_id', $user->id)
-            ->with(['category', 'user'])
-            ->latest()
-            ->get();
+        $ticketsQuery = Ticket::where('staff_id', $user->id)
+            ->with(['category', 'user']);
+
+        // Filter by priority if provided
+        if ($request->has('priority') && $request->priority) {
+            $ticketsQuery->where('priority', $request->priority);
+        }
+
+        $tickets = $ticketsQuery->latest()->get();
 
         // Pisahkan berdasarkan status
         $activeTicket = Ticket::where('staff_id', $user->id)
@@ -32,17 +37,27 @@ class TicketController extends Controller
             ->with(['category', 'user'])
             ->first();
 
-        $completedTickets = Ticket::where('staff_id', $user->id)
+        $completedTicketsQuery = Ticket::where('staff_id', $user->id)
             ->where('status', 'closed')
-            ->with(['category', 'user'])
-            ->latest()
-            ->get();
+            ->with(['category', 'user']);
 
-        $waitingTickets = Ticket::where('staff_id', $user->id)
+        // Filter by priority if provided
+        if ($request->has('priority') && $request->priority) {
+            $completedTicketsQuery->where('priority', $request->priority);
+        }
+
+        $completedTickets = $completedTicketsQuery->latest()->get();
+
+        $waitingTicketsQuery = Ticket::where('staff_id', $user->id)
             ->where('status', 'waiting')
-            ->with(['category', 'user'])
-            ->oldest()
-            ->get();
+            ->with(['category', 'user']);
+
+        // Filter by priority if provided
+        if ($request->has('priority') && $request->priority) {
+            $waitingTicketsQuery->where('priority', $request->priority);
+        }
+
+        $waitingTickets = $waitingTicketsQuery->oldest()->get();
 
         return view('staff.tickets.index', compact('user', 'tickets', 'activeTicket', 'completedTickets', 'waitingTickets'));
     }
