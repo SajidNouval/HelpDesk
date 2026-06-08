@@ -5,36 +5,61 @@ namespace App\Services\Chatbot;
 use Illuminate\Support\Facades\Log;
 
 /**
- * ImportantPhraseService - Phrase-level intent boosting for improved retrieval accuracy
+ * =========================================================================
+ * SERVICE IMPORTANT PHRASE - PENINGKATAN PERINGKAT BERDASARKAN FRASA PENTING
+ * =========================================================================
  * 
- * This service implements IMPORTANT PHRASE BOOSTING to solve the problem where
- * short contextual queries retrieve wrong articles due to token-based ranking.
+ * Layanan ini menerapkan BOOSTING FRASA PENTING untuk mengatasi masalah
+ * di mana query kontekstual pendek mengembalikan artikel yang salah karena
+ * ranking berbasis token individual.
  * 
- * Problem: "wifi tidak terhubung" returns "Internet lambat" article instead of "Wifi tidak terhubung" article
- * Root Cause: Individual tokens (wifi, internet, lambat) dominate ranking while important phrases
- *             like "tidak terhubung" are not weighted strongly enough.
+ * Masalah yang Diatasi:
+ * Query seperti "wifi tidak terhubung" mengembalikan artikel "Internet lambat"
+ * alih-alih artikel "Wifi tidak terhubung" karena token individual mendominasi.
  * 
- * Solution: Detect and boost important phrases that represent true user intent:
- * - tidak terhubung (not connected)
- * - putus nyambung (intermittent connection)
- * - gagal login (login failed)
- * - tidak terbaca (not detected/read)
- * - tidak muncul (not appearing)
- * - tidak merespon (not responding)
- * - koneksi gagal (connection failed)
+ * Solusi:
+ * Mendeteksi dan memberikan boost pada frasa penting yang mewakili intent
+ * pengguna sebenarnya, seperti:
+ * - tidak terhubung
+ * - putus nyambung
+ * - gagal login
+ * - tidak terbaca
+ * - tidak muncul
+ * - tidak merespon
+ * - koneksi gagal
  * 
- * These phrases should have HIGHER ranking influence than isolated token matches.
+ * Digunakan oleh:
+ * - AdvancedRetrievalService (untuk boosting skor retrieval)
  */
 class ImportantPhraseService
 {
-    // ============================================================
-    // IMPORTANT PHRASES - TRUE INTENT INDICATORS
-    // ============================================================
-    // These phrases represent REAL user intent and should DOMINATE ranking
-    // When these phrases appear in a query, articles containing these phrases
-    // should rank MUCH higher than articles matching only individual tokens
+    // =========================================================================
+    // KONSTANTA BOOSTING
+    // =========================================================================
+    // Bonus dasar untuk pencocokan frasa di konten
+    private const PHRASE_MATCH_BONUS = 0.4;
+    
+    // Bonus kuat untuk pencocokan frasa di judul
+    private const TITLE_PHRASE_BONUS = 0.6;
+    
+    // Bonus maksimum untuk frasa exact query di judul
+    private const EXACT_QUERY_PHRASE_BONUS = 0.8;
+    
+    // Bonus tambahan untuk frasa yang sejalan dengan kategori
+    private const PHRASE_CATEGORY_BOOST = 0.15;
+    
+    // Panjang frasa minimum yang dipertimbangkan
+    private const MIN_PHRASE_LENGTH = 2;
+
+    // =========================================================================
+    // DAFTAR FRASA PENTING - INDIKATOR INTENT SEBENARNYA
+    // =========================================================================
+    // Frasa-frasa ini mewakili intent PENGGUNA SEBENARNYA dan harus
+    // MENDOMINASI ranking. Ketika frasa ini muncul dalam query, artikel
+    // yang mengandung frasa ini harus mendapat peringkat LEBIH TINGGI
+    // daripada artikel yang hanya cocok dengan token individual.
     private array $importantPhrases = [
-        // Connection issues
+        // Masalah koneksi
         'tidak terhubung',
         'tidak connect',
         'tidak konek',
@@ -46,14 +71,14 @@ class ImportantPhraseService
         'tidak bisa connect',
         'tidak bisa terhubung',
         
-        // Detection issues
+        // Masalah deteksi
         'tidak terbaca',
         'tidak terdeteksi',
         'tidak muncul',
         'tidak kedetect',
         'tidak dikenali',
         
-        // Login/Access issues
+        // Masalah login/akses
         'gagal login',
         'tidak bisa login',
         'gagal masuk',
@@ -61,14 +86,14 @@ class ImportantPhraseService
         'terkunci',
         'akun terkunci',
         
-        // Response issues
+        // Masalah respons
         'tidak merespon',
         'tidak respon',
         'tidak responsif',
         'tidak bereaksi',
         'diam saja',
         
-        // Functionality issues
+        // Masalah fungsionalitas
         'tidak berfungsi',
         'tidak bisa digunakan',
         'tidak bisa dipakai',
@@ -76,7 +101,7 @@ class ImportantPhraseService
         'tidak bisa',
         'gagal berfungsi',
         
-        // Display issues
+        // Masalah tampilan
         'tidak muncul',
         'hilang tiba-tiba',
         'menghilang',
@@ -84,7 +109,7 @@ class ImportantPhraseService
         'layar hitam',
         'layar biru',
         
-        // Performance issues
+        // Masalah performa
         'sangat lambat',
         'lemot parah',
         'macet total',
@@ -92,7 +117,7 @@ class ImportantPhraseService
         'freeze',
         'not responding',
         
-        // Error issues
+        // Masalah error
         'error terus',
         'muncul error',
         'pesan error',
@@ -100,9 +125,9 @@ class ImportantPhraseService
         'notifikasi error',
     ];
 
-    // ============================================================
-    // PHRASE CATEGORIES - For domain-specific boosting
-    // ============================================================
+    // =========================================================================
+    // KATEGORI FRASA - Untuk boosting spesifik domain
+    // =========================================================================
     private array $phraseCategories = [
         'connection' => [
             'tidak terhubung', 'tidak connect', 'tidak konek', 'koneksi gagal',
@@ -139,29 +164,35 @@ class ImportantPhraseService
         ],
     ];
 
-    // ============================================================
-    // BOOSTING WEIGHTS
-    // ============================================================
-    private const PHRASE_MATCH_BONUS = 0.4;        // Base bonus for phrase match in content
-    private const TITLE_PHRASE_BONUS = 0.6;        // Strong bonus for phrase match in title
-    private const EXACT_QUERY_PHRASE_BONUS = 0.8;  // Maximum bonus for exact query phrase in title
-    private const PHRASE_CATEGORY_BOOST = 0.15;    // Additional boost for category-aligned phrases
-    
-    // Minimum phrase length to consider (filter out too common short phrases)
-    private const MIN_PHRASE_LENGTH = 2;
-
     private array $debugInfo = [];
 
     /**
-     * Detect important phrases in the query
-     * Returns array of detected phrases with their positions
+     * =========================================================================
+     * 1. METODE DETECT PHRASES - DETEKSI FRASA PENTING
+     * =========================================================================
+     * 
+     * Fungsi: Mendeteksi frasa penting dalam query pengguna.
+     * 
+     * Alur Proses:
+     * 1. Normalisasi query ke lowercase
+     * 2. Urutkan frasa penting berdasarkan panjang (terpanjang dulu)
+     * 3. Cek setiap frasa apakah ada dalam query
+     * 4. Simpan posisi dan kategori setiap frasa yang ditemukan
+     * 5. Hapus frasa yang overlap (pertahankan yang lebih panjang)
+     * 6. Kembalikan array frasa yang terdeteksi
+     * 
+     * Parameter:
+     * - string $query: Query pengguna
+     * 
+     * Output:
+     * - array: Daftar frasa terdeteksi dengan posisi dan kategori
      */
     public function detectPhrases(string $query): array
     {
         $queryLower = strtolower(trim($query));
         $detectedPhrases = [];
 
-        // Sort phrases by length (longest first) to match multi-word phrases first
+        // Urutkan frasa berdasarkan panjang (terpanjang dulu) untuk pencocokan multi-kata
         $sortedPhrases = $this->importantPhrases;
         usort($sortedPhrases, fn($a, $b) => mb_strlen($b) - mb_strlen($a));
 
@@ -181,7 +212,7 @@ class ImportantPhraseService
             }
         }
 
-        // Remove overlapping phrases (keep longer ones)
+        // Hapus frasa yang overlap (pertahankan yang lebih panjang)
         $detectedPhrases = $this->removeOverlappingPhrases($detectedPhrases);
 
         $this->debugInfo['detected_phrases'] = $detectedPhrases;
@@ -190,7 +221,22 @@ class ImportantPhraseService
     }
 
     /**
-     * Remove overlapping phrases, keeping the longer ones
+     * =========================================================================
+     * 2. METODE REMOVE OVERLAPPING PHRASES - HAPUS FRASA OVERLAP (PRIVATE)
+     * =========================================================================
+     * 
+     * Fungsi: Menghapus frasa yang overlap, mempertahankan yang lebih panjang.
+     * 
+     * Alur Proses:
+     * 1. Jika hanya 0-1 frasa, kembalikan langsung
+     * 2. Urutkan frasa berdasarkan posisi
+     * 3. Iterasi dan pertahankan hanya frasa yang tidak overlap
+     * 
+     * Parameter:
+     * - array $frasa: Daftar frasa yang mungkin overlap
+     * 
+     * Output:
+     * - array: Daftar frasa tanpa overlap
      */
     private function removeOverlappingPhrases(array $phrases): array
     {
@@ -198,7 +244,7 @@ class ImportantPhraseService
             return $phrases;
         }
 
-        // Sort by position
+        // Urutkan berdasarkan posisi
         usort($phrases, fn($a, $b) => $a['position'] <=> $b['position']);
 
         $result = [];
@@ -215,7 +261,23 @@ class ImportantPhraseService
     }
 
     /**
-     * Get the category of a phrase
+     * =========================================================================
+     * 3. METODE GET PHRASE CATEGORY - DAPATKAN KATEGORI FRASA (PRIVATE)
+     * =========================================================================
+     * 
+     * Fungsi: Mendapatkan kategori dari sebuah frasa.
+     * 
+     * Alur Proses:
+     * 1. Iterasi setiap kategori di phraseCategories
+     * 2. Cek apakah frasa ada di kategori tersebut
+     * 3. Kembalikan nama kategori jika ditemukan
+     * 4. Kembalikan null jika tidak ditemukan
+     * 
+     * Parameter:
+     * - string $frasa: Frasa yang dicari kategorinya
+     * 
+     * Output:
+     * - string|null: Nama kategori atau null
      */
     private function getPhraseCategory(string $phrase): ?string
     {
@@ -228,8 +290,29 @@ class ImportantPhraseService
     }
 
     /**
-     * Calculate phrase match score for a document
-     * This is the main scoring method that should be integrated into hybrid ranking
+     * =========================================================================
+     * 4. METODE CALCULATE PHRASE SCORE - HITUNG SKOR FRASA
+     * =========================================================================
+     * 
+     * Fungsi: Menghitung skor pencocokan frasa untuk sebuah dokumen.
+     * Ini adalah metode scoring utama yang diintegrasikan ke hybrid ranking.
+     * 
+     * Alur Proses:
+     * 1. Normalisasi judul, konten, dan excerpt ke lowercase
+     * 2. Untuk setiap frasa terdeteksi:
+     *    a. Cek di judul (prioritas tertinggi, bonus 0.6)
+     *    b. Cek di excerpt (bonus 0.32)
+     *    c. Cek di konten (bonus 0.4)
+     * 3. Cek apakah full query ada di judul (bonus tambahan 0.8)
+     * 4. Jumlahkan semua bonus (max 1.0)
+     * 
+     * Parameter:
+     * - string $query: Query asli
+     * - array $detectedPhrases: Frasa yang terdeteksi
+     * - array $dokumen: Data dokumen (judul, teks, excerpt)
+     * 
+     * Output:
+     * - array: Skor detail termasuk phrase_matches, total_bonus, dll.
      */
     public function calculatePhraseScore(
         string $query,
@@ -258,12 +341,12 @@ class ImportantPhraseService
                 'bonus' => 0.0,
             ];
 
-            // Check title first (highest priority)
+            // Cek judul dulu (prioritas tertinggi)
             if (str_contains($title, $phrase)) {
                 $matchInfo['in_title'] = true;
                 $bonus = self::TITLE_PHRASE_BONUS;
                 
-                // Extra bonus if phrase is at the beginning of title
+                // Bonus tambahan jika frasa di awal judul
                 if (mb_strpos($title, $phrase) === 0) {
                     $bonus += 0.1;
                 }
@@ -271,12 +354,12 @@ class ImportantPhraseService
                 $matchInfo['bonus'] = $bonus;
                 $titlePhraseMatches[] = $phrase;
             }
-            // Check excerpt
+            // Cek excerpt
             elseif (str_contains($excerpt, $phrase)) {
                 $matchInfo['in_excerpt'] = true;
                 $matchInfo['bonus'] = self::PHRASE_MATCH_BONUS * 0.8;
             }
-            // Check content
+            // Cek konten
             elseif (str_contains($content, $phrase)) {
                 $matchInfo['in_content'] = true;
                 $matchInfo['bonus'] = self::PHRASE_MATCH_BONUS;
@@ -287,7 +370,7 @@ class ImportantPhraseService
             $maxBonus = max($maxBonus, $matchInfo['bonus']);
         }
 
-        // Check if the full query (or important part) appears in title
+        // Cek apakah full query (atau bagian penting) ada di judul
         $queryLower = strtolower(trim($query));
         $queryWords = explode(' ', $queryLower);
         $importantQueryWords = array_filter($queryWords, fn($w) => mb_strlen($w) > 2);
@@ -300,7 +383,7 @@ class ImportantPhraseService
             }
         }
 
-        // Cap the total bonus
+        // Batasi total bonus
         $totalBonus = min($totalBonus, 1.0);
 
         $result = [
@@ -318,8 +401,26 @@ class ImportantPhraseService
     }
 
     /**
-     * Calculate n-gram overlap between query and document
-     * Supports bigram and trigram matching
+     * =========================================================================
+     * 5. METODE CALCULATE NGRAM OVERLAP - HITUNG OVERLAP N-GRAM
+     * =========================================================================
+     * 
+     * Fungsi: Menghitung overlap n-gram antara query dan dokumen.
+     * Mendukung pencocokan bigram (2-kata) dan trigram (3-kata).
+     * 
+     * Alur Proses:
+     * 1. Ekstrak kata dari query
+     * 2. Buat bigram dari query, cek apakah ada di dokumen
+     * 3. Buat trigram dari query, cek apakah ada di dokumen
+     * 4. Hitung skor untuk setiap kecocokan
+     * 5. Batasi skor (max 0.5 untuk bigram, 0.5 untuk trigram)
+     * 
+     * Parameter:
+     * - string $query: Query pengguna
+     * - array $dokumen: Data dokumen
+     * 
+     * Output:
+     * - array: bigram_matches, trigram_matches, skor masing-masing
      */
     public function calculateNgramOverlap(string $query, array $document): array
     {
@@ -335,16 +436,16 @@ class ImportantPhraseService
         $bigramScore = 0.0;
         $trigramScore = 0.0;
 
-        // Generate bigrams from query
+        // Buat bigram dari query
         if (count($queryWords) >= 2) {
             for ($i = 0; $i < count($queryWords) - 1; $i++) {
                 $bigram = $queryWords[$i] . ' ' . $queryWords[$i + 1];
                 
                 if (str_contains($fullText, $bigram)) {
                     $bigramMatches[] = $bigram;
-                    $bigramScore += 0.15; // Each bigram match adds 0.15
+                    $bigramScore += 0.15; // Setiap bigram cocok menambah 0.15
                     
-                    // Extra bonus if bigram is in title
+                    // Bonus tambahan jika bigram ada di judul
                     if (str_contains($title, $bigram)) {
                         $bigramScore += 0.1;
                     }
@@ -352,16 +453,16 @@ class ImportantPhraseService
             }
         }
 
-        // Generate trigrams from query
+        // Buat trigram dari query
         if (count($queryWords) >= 3) {
             for ($i = 0; $i < count($queryWords) - 2; $i++) {
                 $trigram = $queryWords[$i] . ' ' . $queryWords[$i + 1] . ' ' . $queryWords[$i + 2];
                 
                 if (str_contains($fullText, $trigram)) {
                     $trigramMatches[] = $trigram;
-                    $trigramScore += 0.25; // Each trigram match adds 0.25 (stronger signal)
+                    $trigramScore += 0.25; // Setiap trigram cocok menambah 0.25 (sinyal lebih kuat)
                     
-                    // Extra bonus if trigram is in title
+                    // Bonus tambahan jika trigram ada di judul
                     if (str_contains($title, $trigram)) {
                         $trigramScore += 0.15;
                     }
@@ -369,7 +470,7 @@ class ImportantPhraseService
             }
         }
 
-        // Cap scores
+        // Batasi skor
         $bigramScore = min($bigramScore, 0.5);
         $trigramScore = min($trigramScore, 0.5);
 
@@ -390,30 +491,48 @@ class ImportantPhraseService
     }
 
     /**
-     * Get combined phrase and n-gram boosting score
-     * This is the main method to call for phrase-based ranking enhancement
+     * =========================================================================
+     * 6. METODE GET PHRASE BOOST SCORE - DAPATKAN SKOR BOOST FRASA
+     * =========================================================================
+     * 
+     * Fungsi: Mendapatkan skor boosting gabungan dari frasa dan n-gram.
+     * Ini adalah metode utama yang dipanggil untuk frasa-based ranking enhancement.
+     * 
+     * Alur Proses:
+     * 1. Deteksi frasa penting dalam query
+     * 2. Hitung skor pencocokan frasa (jika ada frasa terdeteksi)
+     * 3. Hitung overlap n-gram
+     * 4. Gabungkan skor (phrase_boost + ngram_boost)
+     * 5. Batasi total boost (max 1.0)
+     * 
+     * Parameter:
+     * - string $query: Query pengguna
+     * - array $dokumen: Data dokumen
+     * 
+     * Output:
+     * - array: phrase_boost, ngram_boost, total_boost, detected_phrases, dll.
      */
     public function getPhraseBoostScore(string $query, array $document): array
     {
-        // Step 1: Detect important phrases in query
+        // Langkah 1: Deteksi frasa penting dalam query
         $detectedPhrases = $this->detectPhrases($query);
 
-        // Step 2: Calculate phrase match score
+        // Langkah 2: Hitung skor pencocokan frasa
         $phraseScore = [];
         if (!empty($detectedPhrases)) {
             $phraseScore = $this->calculatePhraseScore($query, $detectedPhrases, $document);
         }
 
-        // Step 3: Calculate n-gram overlap
+        // Langkah 3: Hitung overlap n-gram
         $ngramResult = $this->calculateNgramOverlap($query, $document);
 
-        // Step 4: Combine scores
+        // Langkah 4: Gabungkan skor
         $phraseBoost = $phraseScore['total_bonus'] ?? 0;
         $ngramBoost = $ngramResult['total_ngram_score'] ?? 0;
         
-        // Total boost (with diminishing returns)
+        // Total boost (dengan diminishing mengembalikan)
         $totalBoost = $phraseBoost + $ngramBoost;
-        $totalBoost = min($totalBoost, 1.0); // Cap at 1.0
+        $totalBoost = min($totalBoost, 1.0); // Batasi max 1.0
 
         return [
             'phrase_boost' => $phraseBoost,
@@ -430,7 +549,21 @@ class ImportantPhraseService
     }
 
     /**
-     * Check if query contains any important phrase
+     * =========================================================================
+     * 7. METODE HAS IMPORTANT PHRASE - CEK ADANYA FRASA PENTING
+     * =========================================================================
+     * 
+     * Fungsi: Memeriksa apakah query mengandung frasa penting apa pun.
+     * 
+     * Alur Proses:
+     * 1. Deteksi frasa dalam query
+     * 2. Kembalikan true jika ada frasa terdeteksi
+     * 
+     * Parameter:
+     * - string $query: Query pengguna
+     * 
+     * Output:
+     * - bool: Benar jika ada frasa penting
      */
     public function hasImportantPhrase(string $query): bool
     {
@@ -439,7 +572,14 @@ class ImportantPhraseService
     }
 
     /**
-     * Get all important phrases (for debugging/testing)
+     * =========================================================================
+     * 8. METODE GET ALL PHRASES - DAPATKAN SEMUA FRASA
+     * =========================================================================
+     * 
+     * Fungsi: Mendapatkan semua frasa penting (untuk debugging/testing).
+     * 
+     * Output:
+     * - array: Daftar semua frasa penting
      */
     public function getAllPhrases(): array
     {
@@ -447,7 +587,17 @@ class ImportantPhraseService
     }
 
     /**
-     * Get phrases by category
+     * =========================================================================
+     * 9. METODE GET PHRASES BY CATEGORY - DAPATKAN FRASA PER KATEGORI
+     * =========================================================================
+     * 
+     * Fungsi: Mendapatkan frasa berdasarkan kategori tertentu.
+     * 
+     * Parameter:
+     * - string $kategori: Nama kategori
+     * 
+     * Output:
+     * - array: Daftar frasa untuk kategori tersebut
      */
     public function getPhrasesByCategory(string $category): array
     {
@@ -455,7 +605,23 @@ class ImportantPhraseService
     }
 
     /**
-     * Add custom phrase (useful for domain-specific customization)
+     * =========================================================================
+     * 10. METODE ADD PHRASE - TAMBAHKAN FRASA BARU
+     * =========================================================================
+     * 
+     * Fungsi: Menambahkan frasa kustom baru (berguna untuk domain-specific customization).
+     * 
+     * Alur Proses:
+     * 1. Cek apakah frasa belum ada di importantPhrases
+     * 2. Tambahkan ke importantPhrases
+     * 3. Jika ada kategori, tambahkan juga ke phraseCategories
+     * 
+     * Parameter:
+     * - string $frasa: Frasa yang ditambahkan
+     * - string|null $kategori: Kategori frasa (opsional)
+     * 
+     * Output:
+     * - void
      */
     public function addPhrase(string $phrase, ?string $category = null): void
     {
@@ -474,7 +640,14 @@ class ImportantPhraseService
     }
 
     /**
-     * Get debug information
+     * =========================================================================
+     * 11. METODE GET DEBUG INFO - DAPATKAN INFO DEBUG
+     * =========================================================================
+     * 
+     * Fungsi: Mendapatkan informasi debugging.
+     * 
+     * Output:
+     * - array: Informasi debug
      */
     public function getDebugInfo(): array
     {
@@ -482,7 +655,14 @@ class ImportantPhraseService
     }
 
     /**
-     * Clear debug information
+     * =========================================================================
+     * 12. METODE CLEAR DEBUG INFO - BERSIHKAN INFO DEBUG
+     * =========================================================================
+     * 
+     * Fungsi: Membersihkan informasi debugging.
+     * 
+     * Output:
+     * - void
      */
     public function clearDebugInfo(): void
     {

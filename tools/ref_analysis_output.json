@@ -1,0 +1,2849 @@
+{
+  "root": "C:\\laragon\\www\\helpdeskta",
+  "summary": {
+    "controllers": 21,
+    "services": 10,
+    "middleware": 12,
+    "events": 4,
+    "commands": 3,
+    "models": 12,
+    "seeders": 5,
+    "migrations": 17,
+    "views": 76,
+    "js": 21,
+    "css": 1,
+    "routes": 5
+  },
+  "details": {
+    "controllers": [
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+        "class": "App\\Http\\Controllers\\Admin\\ArticleController",
+        "name": "ArticleController",
+        "refs": 3,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\routes\\web.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+        "class": "App\\Http\\Controllers\\Admin\\CategoryController",
+        "name": "CategoryController",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\web.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+        "class": "App\\Http\\Controllers\\Admin\\DashboardController",
+        "name": "DashboardController",
+        "refs": 3,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\routes\\web.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+        "class": "App\\Http\\Controllers\\Admin\\UserController",
+        "name": "UserController",
+        "refs": 3,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\auth.php",
+          "C:\\laragon\\www\\helpdeskta\\routes\\web.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+        "class": "App\\Http\\Controllers\\ArticleController",
+        "name": "ArticleController",
+        "refs": 3,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\routes\\web.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+        "class": "App\\Http\\Controllers\\Auth\\AuthenticatedSessionController",
+        "name": "AuthenticatedSessionController",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\auth.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php",
+        "class": "App\\Http\\Controllers\\Auth\\ConfirmablePasswordController",
+        "name": "ConfirmablePasswordController",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\auth.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\EmailVerificationNotificationController.php",
+        "class": "App\\Http\\Controllers\\Auth\\EmailVerificationNotificationController",
+        "name": "EmailVerificationNotificationController",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\auth.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\EmailVerificationPromptController.php",
+        "class": "App\\Http\\Controllers\\Auth\\EmailVerificationPromptController",
+        "name": "EmailVerificationPromptController",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\auth.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\NewPasswordController.php",
+        "class": "App\\Http\\Controllers\\Auth\\NewPasswordController",
+        "name": "NewPasswordController",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\auth.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\PasswordController.php",
+        "class": "App\\Http\\Controllers\\Auth\\PasswordController",
+        "name": "PasswordController",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\auth.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\PasswordResetLinkController.php",
+        "class": "App\\Http\\Controllers\\Auth\\PasswordResetLinkController",
+        "name": "PasswordResetLinkController",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\auth.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\RegisteredUserController.php",
+        "class": "App\\Http\\Controllers\\Auth\\RegisteredUserController",
+        "name": "RegisteredUserController",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\auth.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\VerifyEmailController.php",
+        "class": "App\\Http\\Controllers\\Auth\\VerifyEmailController",
+        "name": "VerifyEmailController",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\auth.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+        "class": "App\\Http\\Controllers\\ChatbotController",
+        "name": "ChatbotController",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\web.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Controller.php",
+        "class": "App\\Http\\Controllers\\Controller",
+        "name": "Controller",
+        "refs": 24,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\EmailVerificationNotificationController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\EmailVerificationPromptController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\NewPasswordController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\PasswordController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\PasswordResetLinkController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\MessageController.php",
+        "class": "App\\Http\\Controllers\\MessageController",
+        "name": "MessageController",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\api.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ProfileController.php",
+        "class": "App\\Http\\Controllers\\ProfileController",
+        "name": "ProfileController",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\web.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\DashboardController.php",
+        "class": "App\\Http\\Controllers\\Staff\\DashboardController",
+        "name": "DashboardController",
+        "refs": 3,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\routes\\web.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\TicketController.php",
+        "class": "App\\Http\\Controllers\\Staff\\TicketController",
+        "name": "TicketController",
+        "refs": 3,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\routes\\web.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+        "class": "App\\Http\\Controllers\\TicketController",
+        "name": "TicketController",
+        "refs": 3,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\routes\\web.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      }
+    ],
+    "services": [
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\AdvancedRetrievalService.php",
+        "class": "App\\Services\\Chatbot\\AdvancedRetrievalService",
+        "name": "AdvancedRetrievalService",
+        "refs": 10,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_domain_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_illit.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\simulate_official_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\test_noit_fallback.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\trace_chatbot_content.php",
+          "C:\\laragon\\www\\helpdeskta\\test_advanced_retrieval_validation.php",
+          "C:\\laragon\\www\\helpdeskta\\test_hybrid_reranking.php",
+          "C:\\laragon\\www\\helpdeskta\\test_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ChatbotRetrievalService.php",
+        "class": "App\\Services\\Chatbot\\ChatbotRetrievalService",
+        "name": "ChatbotRetrievalService",
+        "refs": 18,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Observers\\ArticleObserver.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Providers\\AppServiceProvider.php",
+          "C:\\laragon\\www\\helpdeskta\\debug_retrieval_bug.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\inspect_chatbot_runtime.php",
+          "C:\\laragon\\www\\helpdeskta\\test_chatbot_validation.php",
+          "C:\\laragon\\www\\helpdeskta\\test_hard_domain_filtering.php",
+          "C:\\laragon\\www\\helpdeskta\\test_important_keyword_boosting.php",
+          "C:\\laragon\\www\\helpdeskta\\test_preprocessing_audit.php",
+          "C:\\laragon\\www\\helpdeskta\\test_ranking_fix.php",
+          "C:\\laragon\\www\\helpdeskta\\test_semantic_validation.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ConversationFlowService.php",
+        "class": "App\\Services\\Chatbot\\ConversationFlowService",
+        "name": "ConversationFlowService",
+        "refs": 4,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\test_chatbot_validation.php",
+          "C:\\laragon\\www\\helpdeskta\\test_semantic_validation.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\CosineSimilarityService.php",
+        "class": "App\\Services\\Chatbot\\CosineSimilarityService",
+        "name": "CosineSimilarityService",
+        "refs": 17,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Providers\\AppServiceProvider.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\AdvancedRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ChatbotRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\debug_retrieval_bug.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_domain_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_illit.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\inspect_chatbot_runtime.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\simulate_official_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\test_noit_fallback.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\trace_chatbot_content.php",
+          "C:\\laragon\\www\\helpdeskta\\test_advanced_retrieval_validation.php",
+          "C:\\laragon\\www\\helpdeskta\\test_hard_domain_filtering.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\DomainDetectionService.php",
+        "class": "App\\Services\\Chatbot\\DomainDetectionService",
+        "name": "DomainDetectionService",
+        "refs": 19,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\AdvancedRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ChatbotRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_domain_detection.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_domain_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_illit.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\inspect_chatbot_runtime.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\simulate_official_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\test_noit_fallback.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\trace_chatbot_content.php",
+          "C:\\laragon\\www\\helpdeskta\\test_advanced_retrieval_validation.php",
+          "C:\\laragon\\www\\helpdeskta\\test_chatbot_validation.php",
+          "C:\\laragon\\www\\helpdeskta\\test_hard_domain_filtering.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ImportantPhraseService.php",
+        "class": "App\\Services\\Chatbot\\ImportantPhraseService",
+        "name": "ImportantPhraseService",
+        "refs": 8,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\AdvancedRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_domain_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_illit.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\simulate_official_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\test_noit_fallback.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\trace_chatbot_content.php",
+          "C:\\laragon\\www\\helpdeskta\\test_important_phrase_boosting.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\PreprocessingService.php",
+        "class": "App\\Services\\Chatbot\\PreprocessingService",
+        "name": "PreprocessingService",
+        "refs": 28,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Providers\\AppServiceProvider.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\AdvancedRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ChatbotRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\DomainDetectionService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\TfidfService.php",
+          "C:\\laragon\\www\\helpdeskta\\debug_retrieval_bug.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_domain_detection.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_domain_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_illit.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\inspect_chatbot_runtime.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\simulate_official_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\test_noit_fallback.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\TfidfService.php",
+        "class": "App\\Services\\Chatbot\\TfidfService",
+        "name": "TfidfService",
+        "refs": 20,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Providers\\AppServiceProvider.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\AdvancedRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ChatbotRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\debug_retrieval_bug.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_domain_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_illit.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\inspect_chatbot_runtime.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\simulate_official_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\test_noit_fallback.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\trace_chatbot_content.php",
+          "C:\\laragon\\www\\helpdeskta\\test_advanced_retrieval_validation.php",
+          "C:\\laragon\\www\\helpdeskta\\test_generic_term_downweighting.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\TypesenseService.php",
+        "class": "App\\Services\\Chatbot\\TypesenseService",
+        "name": "TypesenseService",
+        "refs": 13,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Observers\\ArticleObserver.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Providers\\AppServiceProvider.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ChatbotRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\inspect_chatbot_runtime.php",
+          "C:\\laragon\\www\\helpdeskta\\test_important_keyword_boosting.php",
+          "C:\\laragon\\www\\helpdeskta\\test_query_by_weights.php",
+          "C:\\laragon\\www\\helpdeskta\\test_synonyms.php",
+          "C:\\laragon\\www\\helpdeskta\\test_typesense.php",
+          "C:\\laragon\\www\\helpdeskta\\test_typesense_hybrid_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\test_typesense_security_ranking.php",
+          "C:\\laragon\\www\\helpdeskta\\test_typo_fallback_fix.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\VocabularyService.php",
+        "class": "App\\Services\\Chatbot\\VocabularyService",
+        "name": "VocabularyService",
+        "refs": 11,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\AdvancedRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_domain_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_illit.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\simulate_official_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\test_noit_fallback.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\trace_chatbot_content.php",
+          "C:\\laragon\\www\\helpdeskta\\test_repeated_char_typo_fix.php",
+          "C:\\laragon\\www\\helpdeskta\\test_vocab.php",
+          "C:\\laragon\\www\\helpdeskta\\test_vocabulary_null_fix.php",
+          "C:\\laragon\\www\\helpdeskta\\test_vocabulary_typo_correction.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      }
+    ],
+    "middleware": [
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Middleware\\AdminMiddleware.php",
+        "class": "App\\Http\\Middleware\\AdminMiddleware",
+        "name": "AdminMiddleware",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Middleware\\Authenticate.php",
+        "class": "App\\Http\\Middleware\\Authenticate",
+        "name": "Authenticate",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Middleware\\CheckTicketAccess.php",
+        "class": "App\\Http\\Middleware\\CheckTicketAccess",
+        "name": "CheckTicketAccess",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Middleware\\EncryptCookies.php",
+        "class": "App\\Http\\Middleware\\EncryptCookies",
+        "name": "EncryptCookies",
+        "refs": 3,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\sanctum.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Middleware\\PreventRequestsDuringMaintenance.php",
+        "class": "App\\Http\\Middleware\\PreventRequestsDuringMaintenance",
+        "name": "PreventRequestsDuringMaintenance",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Middleware\\RedirectIfAuthenticated.php",
+        "class": "App\\Http\\Middleware\\RedirectIfAuthenticated",
+        "name": "RedirectIfAuthenticated",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Middleware\\StaffMiddleware.php",
+        "class": "App\\Http\\Middleware\\StaffMiddleware",
+        "name": "StaffMiddleware",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Middleware\\TrimStrings.php",
+        "class": "App\\Http\\Middleware\\TrimStrings",
+        "name": "TrimStrings",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Middleware\\TrustHosts.php",
+        "class": "App\\Http\\Middleware\\TrustHosts",
+        "name": "TrustHosts",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Middleware\\TrustProxies.php",
+        "class": "App\\Http\\Middleware\\TrustProxies",
+        "name": "TrustProxies",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Middleware\\ValidateSignature.php",
+        "class": "App\\Http\\Middleware\\ValidateSignature",
+        "name": "ValidateSignature",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Middleware\\VerifyCsrfToken.php",
+        "class": "App\\Http\\Middleware\\VerifyCsrfToken",
+        "name": "VerifyCsrfToken",
+        "refs": 6,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\sanctum.php",
+          "C:\\laragon\\www\\helpdeskta\\routes\\api.php",
+          "C:\\laragon\\www\\helpdeskta\\tests\\Feature\\ArticleApprovalTest.php",
+          "C:\\laragon\\www\\helpdeskta\\tests\\Feature\\Auth\\AuthenticationTest.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      }
+    ],
+    "events": [
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Events\\MessageSent.php",
+        "class": "App\\Events\\MessageSent",
+        "name": "MessageSent",
+        "refs": 7,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\MessageController.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\staff\\ticketChat.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\articles-chat-bubble.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\chatbot-widget.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\routes\\web.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Events\\StaffConnected.php",
+        "class": "App\\Events\\StaffConnected",
+        "name": "StaffConnected",
+        "refs": 3,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\chatbot-widget.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Events\\TestWebSocketEvent.php",
+        "class": "App\\Events\\TestWebSocketEvent",
+        "name": "TestWebSocketEvent",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\routes\\web.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Events\\TicketClosed.php",
+        "class": "App\\Events\\TicketClosed",
+        "name": "TicketClosed",
+        "refs": 4,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\chatbot-widget.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\routes\\api.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+        "class": "App\\Console\\Commands\\ReindexChatbotArticles",
+        "name": "ReindexChatbotArticles",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+        "class": "App\\Console\\Commands\\SetupSearchCommand",
+        "name": "SetupSearchCommand",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+        "class": "App\\Console\\Commands\\SetupTypesense",
+        "name": "SetupTypesense",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      }
+    ],
+    "models": [
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Models\\Article.php",
+        "class": "App\\Models\\Article",
+        "name": "Article",
+        "refs": 40,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\ArticleFeedback.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\ArticleKeywordIndex.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Category.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\User.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Observers\\ArticleObserver.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Models\\ArticleFeedback.php",
+        "class": "App\\Models\\ArticleFeedback",
+        "name": "ArticleFeedback",
+        "refs": 5,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Article.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\dashboard.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Models\\ArticleKeywordIndex.php",
+        "class": "App\\Models\\ArticleKeywordIndex",
+        "name": "ArticleKeywordIndex",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Models\\Category.php",
+        "class": "App\\Models\\Category",
+        "name": "Category",
+        "refs": 38,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Article.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Chatbot.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\StaffProfile.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Ticket.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\TicketOtp.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\AdvancedRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ChatbotRetrievalService.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Models\\Chatbot.php",
+        "class": "App\\Models\\Chatbot",
+        "name": "Chatbot",
+        "refs": 60,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Observers\\ArticleObserver.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Providers\\AppServiceProvider.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\AdvancedRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ChatbotRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ConversationFlowService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\CosineSimilarityService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\DomainDetectionService.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Models\\Message.php",
+        "class": "App\\Models\\Message",
+        "name": "Message",
+        "refs": 13,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Events\\MessageSent.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\MessageController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Ticket.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\articles\\index.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\articles\\show.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\ticket-card.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\layouts\\app.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\reports\\create.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\routes\\api.php",
+          "C:\\laragon\\www\\helpdeskta\\routes\\web.php",
+          "C:\\laragon\\www\\helpdeskta\\test_semantic_validation.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Models\\Setting.php",
+        "class": "App\\Models\\Setting",
+        "name": "Setting",
+        "refs": 14,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\PreprocessingService.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\session.php",
+          "C:\\laragon\\www\\helpdeskta\\database\\seeders\\ArticleSeeder.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\articles\\show.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\articles-chat-bubble.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\chatbot-widget.blade.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Models\\StaffProfile.php",
+        "class": "App\\Models\\StaffProfile",
+        "name": "StaffProfile",
+        "refs": 8,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Category.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\User.php",
+          "C:\\laragon\\www\\helpdeskta\\debug_staff_load.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Models\\Ticket.php",
+        "class": "App\\Models\\Ticket",
+        "name": "Ticket",
+        "refs": 30,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Events\\StaffConnected.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Events\\TicketClosed.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\MessageController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Middleware\\CheckTicketAccess.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Mail\\TicketRejectionMail.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Mail\\TicketTrackingMail.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Models\\TicketLog.php",
+        "class": "App\\Models\\TicketLog",
+        "name": "TicketLog",
+        "refs": 5,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Ticket.php",
+          "C:\\laragon\\www\\helpdeskta\\routes\\api.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Models\\TicketOtp.php",
+        "class": "App\\Models\\TicketOtp",
+        "name": "TicketOtp",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\app\\Models\\User.php",
+        "class": "App\\Models\\User",
+        "name": "User",
+        "refs": 32,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Events\\StaffConnected.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\RegisteredUserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Requests\\ProfileUpdateRequest.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Article.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Message.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\StaffProfile.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Ticket.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\auth.php"
+        ]
+      }
+    ],
+    "seeders": [
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\seeders\\ArticleSeeder.php",
+        "class": "Database\\Seeders\\ArticleSeeder",
+        "name": "ArticleSeeder",
+        "refs": 3,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\database\\seeders\\DatabaseSeeder.php",
+          "C:\\laragon\\www\\helpdeskta\\test_chatbot_validation.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\seeders\\CategorySeeder.php",
+        "class": "Database\\Seeders\\CategorySeeder",
+        "name": "CategorySeeder",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\database\\seeders\\DatabaseSeeder.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\seeders\\ChatbotSeeder.php",
+        "class": "Database\\Seeders\\ChatbotSeeder",
+        "name": "ChatbotSeeder",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\seeders\\DatabaseSeeder.php",
+        "class": "Database\\Seeders\\DatabaseSeeder",
+        "name": "DatabaseSeeder",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\seeders\\UserSeeder.php",
+        "class": "Database\\Seeders\\UserSeeder",
+        "name": "UserSeeder",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\database\\seeders\\DatabaseSeeder.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      }
+    ],
+    "migrations": [
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2014_10_12_000000_create_users_table.php",
+        "class": "extends",
+        "name": "2014_10_12_000000_create_users_table",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2014_10_12_100000_create_password_reset_tokens_table.php",
+        "class": "extends",
+        "name": "2014_10_12_100000_create_password_reset_tokens_table",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2019_08_19_000000_create_failed_jobs_table.php",
+        "class": "extends",
+        "name": "2019_08_19_000000_create_failed_jobs_table",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2019_12_14_000001_create_personal_access_tokens_table.php",
+        "class": "extends",
+        "name": "2019_12_14_000001_create_personal_access_tokens_table",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_06_131118_categories.php",
+        "class": "extends",
+        "name": "2026_04_06_131118_categories",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_06_132153_articlecontent.php",
+        "class": "extends",
+        "name": "2026_04_06_132153_articlecontent",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_06_132235_articlefeed.php",
+        "class": "extends",
+        "name": "2026_04_06_132235_articlefeed",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_06_132330_staff.php",
+        "class": "extends",
+        "name": "2026_04_06_132330_staff",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_06_132355_ticket.php",
+        "class": "extends",
+        "name": "2026_04_06_132355_ticket",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_06_132425_messages.php",
+        "class": "extends",
+        "name": "2026_04_06_132425_messages",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_06_132456_ticketlogs.php",
+        "class": "extends",
+        "name": "2026_04_06_132456_ticketlogs",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_06_132641_notifications.php",
+        "class": "extends",
+        "name": "2026_04_06_132641_notifications",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_19_162604_chatbot.php",
+        "class": "extends",
+        "name": "2026_04_19_162604_chatbot",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_21_100000_create_article_keyword_index_table.php",
+        "class": "extends",
+        "name": "2026_04_21_100000_create_article_keyword_index_table",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_05_06_000000_create_ticket_otps_table.php",
+        "class": "extends",
+        "name": "2026_05_06_000000_create_ticket_otps_table",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_05_12_000000_create_settings_table.php",
+        "class": "extends",
+        "name": "2026_05_12_000000_create_settings_table",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_06_02_100000_add_status_to_users_table.php",
+        "class": "extends",
+        "name": "2026_06_02_100000_add_status_to_users_table",
+        "refs": 93,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Exceptions\\Handler.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php"
+        ]
+      }
+    ],
+    "views": [
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\articles\\index.blade.php",
+        "class": null,
+        "name": "index.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\articles\\show.blade.php",
+        "class": null,
+        "name": "show.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\categories\\create.blade.php",
+        "class": null,
+        "name": "create.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\categories\\edit.blade.php",
+        "class": null,
+        "name": "edit.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\categories\\index.blade.php",
+        "class": null,
+        "name": "index.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\dashboard.blade.php",
+        "class": null,
+        "name": "dashboard.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\users\\create.blade.php",
+        "class": null,
+        "name": "create.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\users\\edit.blade.php",
+        "class": null,
+        "name": "edit.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\users\\index.blade.php",
+        "class": null,
+        "name": "index.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\articles\\index.blade.php",
+        "class": null,
+        "name": "index.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\articles\\show.blade.php",
+        "class": null,
+        "name": "show.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\auth\\confirm-password.blade.php",
+        "class": null,
+        "name": "confirm-password.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\auth\\forgot-password.blade.php",
+        "class": null,
+        "name": "forgot-password.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\auth\\login.blade.php",
+        "class": null,
+        "name": "login.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\auth\\register.blade.php",
+        "class": null,
+        "name": "register.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\auth\\reset-password.blade.php",
+        "class": null,
+        "name": "reset-password.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\auth\\verify-email.blade.php",
+        "class": null,
+        "name": "verify-email.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\alert.blade.php",
+        "class": null,
+        "name": "alert.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\application-logo.blade.php",
+        "class": null,
+        "name": "application-logo.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\article-card.blade.php",
+        "class": null,
+        "name": "article-card.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\articles-chat-bubble.blade.php",
+        "class": null,
+        "name": "articles-chat-bubble.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\auth-session-status.blade.php",
+        "class": null,
+        "name": "auth-session-status.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\chatbot-widget.blade.php",
+        "class": null,
+        "name": "chatbot-widget.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\confirm-dialog.blade.php",
+        "class": null,
+        "name": "confirm-dialog.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\danger-button.blade.php",
+        "class": null,
+        "name": "danger-button.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\dropdown-link.blade.php",
+        "class": null,
+        "name": "dropdown-link.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\dropdown.blade.php",
+        "class": null,
+        "name": "dropdown.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\empty-state.blade.php",
+        "class": null,
+        "name": "empty-state.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\input-error.blade.php",
+        "class": null,
+        "name": "input-error.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\input-label.blade.php",
+        "class": null,
+        "name": "input-label.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\loading-button.blade.php",
+        "class": null,
+        "name": "loading-button.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\modal.blade.php",
+        "class": null,
+        "name": "modal.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\nav-link.blade.php",
+        "class": null,
+        "name": "nav-link.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\pagination.blade.php",
+        "class": null,
+        "name": "pagination.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\primary-button.blade.php",
+        "class": null,
+        "name": "primary-button.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\priority-badge.blade.php",
+        "class": null,
+        "name": "priority-badge.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\responsive-nav-link.blade.php",
+        "class": null,
+        "name": "responsive-nav-link.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\secondary-button.blade.php",
+        "class": null,
+        "name": "secondary-button.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\skeleton.blade.php",
+        "class": null,
+        "name": "skeleton.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\spinner.blade.php",
+        "class": null,
+        "name": "spinner.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\status-badge.blade.php",
+        "class": null,
+        "name": "status-badge.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\text-input.blade.php",
+        "class": null,
+        "name": "text-input.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\ticket-card.blade.php",
+        "class": null,
+        "name": "ticket-card.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\toast.blade.php",
+        "class": null,
+        "name": "toast.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\truncate-text.blade.php",
+        "class": null,
+        "name": "truncate-text.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\typing-indicator.blade.php",
+        "class": null,
+        "name": "typing-indicator.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\dashboard.blade.php",
+        "class": null,
+        "name": "dashboard.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\emails\\ticket-otp.blade.php",
+        "class": null,
+        "name": "ticket-otp.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\emails\\ticket-rejection.blade.php",
+        "class": null,
+        "name": "ticket-rejection.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\emails\\ticket-tracking.blade.php",
+        "class": null,
+        "name": "ticket-tracking.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\guest\\help.blade.php",
+        "class": null,
+        "name": "help.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\guest\\tickets\\track.blade.php",
+        "class": null,
+        "name": "track.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\layouts\\app.blade.php",
+        "class": null,
+        "name": "app.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\layouts\\guest.blade.php",
+        "class": null,
+        "name": "guest.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\layouts\\navigation.blade.php",
+        "class": null,
+        "name": "navigation.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\profile\\edit.blade.php",
+        "class": null,
+        "name": "edit.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\profile\\partials\\delete-user-form.blade.php",
+        "class": null,
+        "name": "delete-user-form.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\profile\\partials\\update-password-form.blade.php",
+        "class": null,
+        "name": "update-password-form.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\profile\\partials\\update-profile-information-form.blade.php",
+        "class": null,
+        "name": "update-profile-information-form.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\reports\\create.blade.php",
+        "class": null,
+        "name": "create.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\articles\\create.blade.php",
+        "class": null,
+        "name": "create.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\articles\\edit.blade.php",
+        "class": null,
+        "name": "edit.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\articles\\index.blade.php",
+        "class": null,
+        "name": "index.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\articles\\show.blade.php",
+        "class": null,
+        "name": "show.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\dashboard.blade.php",
+        "class": null,
+        "name": "dashboard.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\tickets\\index.blade.php",
+        "class": null,
+        "name": "index.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\tickets\\show.blade.php",
+        "class": null,
+        "name": "show.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\vendor\\pagination\\bootstrap-4.blade.php",
+        "class": null,
+        "name": "bootstrap-4.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\vendor\\pagination\\bootstrap-5.blade.php",
+        "class": null,
+        "name": "bootstrap-5.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\vendor\\pagination\\default.blade.php",
+        "class": null,
+        "name": "default.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\vendor\\pagination\\semantic-ui.blade.php",
+        "class": null,
+        "name": "semantic-ui.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\vendor\\pagination\\simple-bootstrap-4.blade.php",
+        "class": null,
+        "name": "simple-bootstrap-4.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\vendor\\pagination\\simple-bootstrap-5.blade.php",
+        "class": null,
+        "name": "simple-bootstrap-5.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\vendor\\pagination\\simple-default.blade.php",
+        "class": null,
+        "name": "simple-default.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\vendor\\pagination\\simple-tailwind.blade.php",
+        "class": null,
+        "name": "simple-tailwind.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\views\\vendor\\pagination\\tailwind.blade.php",
+        "class": null,
+        "name": "tailwind.blade",
+        "refs": 1,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      }
+    ],
+    "js": [
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\admin\\articles.js",
+        "class": null,
+        "name": "articles",
+        "refs": 77,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\SEMANTIC_VALIDATION_REPORT_2026-05-24_090534.json",
+          "C:\\laragon\\www\\helpdeskta\\SEMANTIC_VALIDATION_REPORT_2026-05-24_090636.json",
+          "C:\\laragon\\www\\helpdeskta\\SEMANTIC_VALIDATION_REPORT_2026-05-24_090732.json",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Article.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\admin\\categories.js",
+        "class": null,
+        "name": "categories",
+        "refs": 44,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Category.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\AdvancedRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ChatbotRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ConversationFlowService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\DomainDetectionService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\VocabularyService.php",
+          "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_06_131118_categories.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\admin\\users.js",
+        "class": null,
+        "name": "users",
+        "refs": 33,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\MessageController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\User.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Providers\\RouteServiceProvider.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\DomainDetectionService.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\auth.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\scout.php",
+          "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2014_10_12_000000_create_users_table.php",
+          "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_06_132153_articlecontent.php",
+          "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_06_132355_ticket.php",
+          "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_06_132425_messages.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\app.js",
+        "class": null,
+        "name": "app",
+        "refs": 77,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Observers\\ArticleObserver.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Providers\\AppServiceProvider.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\AdvancedRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ChatbotRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\DomainDetectionService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\PreprocessingService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\View\\Components\\AppLayout.php",
+          "C:\\laragon\\www\\helpdeskta\\bootstrap\\app.php",
+          "C:\\laragon\\www\\helpdeskta\\composer.json",
+          "C:\\laragon\\www\\helpdeskta\\config\\filesystems.php",
+          "C:\\laragon\\www\\helpdeskta\\database\\seeders\\ArticleSeeder.php",
+          "C:\\laragon\\www\\helpdeskta\\debug_retrieval_bug.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\bootstrap.js",
+        "class": null,
+        "name": "bootstrap",
+        "refs": 40,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\debug_retrieval_bug.php",
+          "C:\\laragon\\www\\helpdeskta\\debug_staff_load.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\index.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\app.js",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_domain_detection.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_domain_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\debug_illit.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\inspect_chatbot_runtime.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\simulate_official_retrieval.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\test_noit_fallback.php",
+          "C:\\laragon\\www\\helpdeskta\\scripts\\trace_chatbot_content.php",
+          "C:\\laragon\\www\\helpdeskta\\test_advanced_retrieval_validation.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\confirm.js",
+        "class": null,
+        "name": "confirm",
+        "refs": 22,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\public\\js\\confirm-dialog.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\admin\\users.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\ui.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\articles\\index.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\articles\\show.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\categories\\create.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\categories\\edit.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\categories\\index.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\users\\index.blade.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\dom.js",
+        "class": null,
+        "name": "dom",
+        "refs": 5,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\report.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\ui.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\staff\\ticketChat.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\index.js",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\livechat.js",
+        "class": null,
+        "name": "livechat",
+        "refs": 10,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_05_06_000000_create_ticket_otps_table.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\ui.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\notification.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\articles\\index.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\articles\\show.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\articles-chat-bubble.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\guest\\help.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\report.js",
+        "class": null,
+        "name": "report",
+        "refs": 11,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Mail\\TicketOtpMail.php",
+          "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_05_06_000000_create_ticket_otps_table.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\ui.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\notification.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\emails\\ticket-otp.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\guest\\help.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\reports\\create.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\test_semantic_validation.php",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\reverb.js",
+        "class": null,
+        "name": "reverb",
+        "refs": 9,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\bootstrap\\cache\\packages.php",
+          "C:\\laragon\\www\\helpdeskta\\composer.json",
+          "C:\\laragon\\www\\helpdeskta\\config\\broadcasting.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\reverb.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\echo-ca05b188.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\bootstrap.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\staff\\ticketChat.js",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\ui.js",
+        "class": null,
+        "name": "ui",
+        "refs": 8,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-d7596377.css",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\admin\\articles.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\admin\\users.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\app.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\ui.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\modal.js",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\staff\\dashboard.js",
+        "class": null,
+        "name": "dashboard",
+        "refs": 28,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Providers\\RouteServiceProvider.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\app.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\articles\\index.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\articles\\show.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\categories\\create.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\categories\\edit.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\categories\\index.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\dashboard.blade.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\staff\\ticketChat.js",
+        "class": null,
+        "name": "ticketChat",
+        "refs": 2,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\app.js",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\staff\\tickets.js",
+        "class": null,
+        "name": "tickets",
+        "refs": 31,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\MessageController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Category.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\Ticket.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Models\\User.php",
+          "C:\\laragon\\www\\helpdeskta\\database\\migrations\\2026_04_06_132355_ticket.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\app.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\livechat.js"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\ui.js",
+        "class": null,
+        "name": "ui",
+        "refs": 7,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-d7596377.css",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\admin\\articles.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\admin\\users.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\app.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\modal.js",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\dom.js",
+        "class": null,
+        "name": "dom",
+        "refs": 6,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\dom.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\report.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\ui.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\staff\\ticketChat.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\index.js",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\http.js",
+        "class": null,
+        "name": "http",
+        "refs": 25,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\PreprocessingService.php",
+          "C:\\laragon\\www\\helpdeskta\\composer.json",
+          "C:\\laragon\\www\\helpdeskta\\config\\app.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\broadcasting.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\meilisearch.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\scout.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\typesense.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\echo-ca05b188.js",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\pusher-8a84afae.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\app.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\bootstrap.js"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\index.js",
+        "class": null,
+        "name": "index",
+        "refs": 51,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\ReindexChatbotArticles.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\MessageController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\TicketController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\loading.js",
+        "class": null,
+        "name": "loading",
+        "refs": 18,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\database\\seeders\\ArticleSeeder.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\pusher-8a84afae.js",
+          "C:\\laragon\\www\\helpdeskta\\public\\js\\confirm-dialog.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\dom.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\livechat.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\report.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\staff\\ticketChat.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\dom.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\index.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\articles\\index.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\articles\\show.blade.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\modal.js",
+        "class": null,
+        "name": "modal",
+        "refs": 16,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\admin\\articles.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\dom.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\report.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\ui.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\index.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\articles\\index.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\articles\\show.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\articles\\index.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\articles\\show.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\articles-chat-bubble.blade.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\notification.js",
+        "class": null,
+        "name": "notification",
+        "refs": 13,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\EmailVerificationNotificationController.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\app.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\echo-ca05b188.js",
+          "C:\\laragon\\www\\helpdeskta\\public\\js\\confirm-dialog.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\dom.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\livechat.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\ui.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\staff\\ticketChat.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\index.js",
+          "C:\\laragon\\www\\helpdeskta\\routes\\auth.php",
+          "C:\\laragon\\www\\helpdeskta\\tests\\Feature\\Auth\\PasswordResetTest.php"
+        ]
+      }
+    ],
+    "css": [
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\resources\\css\\app.css",
+        "class": null,
+        "name": "app",
+        "refs": 77,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Observers\\ArticleObserver.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Providers\\AppServiceProvider.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\AdvancedRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\ChatbotRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\DomainDetectionService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\PreprocessingService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\View\\Components\\AppLayout.php",
+          "C:\\laragon\\www\\helpdeskta\\bootstrap\\app.php",
+          "C:\\laragon\\www\\helpdeskta\\composer.json",
+          "C:\\laragon\\www\\helpdeskta\\config\\filesystems.php",
+          "C:\\laragon\\www\\helpdeskta\\database\\seeders\\ArticleSeeder.php",
+          "C:\\laragon\\www\\helpdeskta\\debug_retrieval_bug.php"
+        ]
+      }
+    ],
+    "routes": [
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\routes\\api.php",
+        "class": null,
+        "name": "api",
+        "refs": 14,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Providers\\RouteServiceProvider.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\DomainDetectionService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\PreprocessingService.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\broadcasting.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\cors.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\services.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\livechat.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\staff\\ticketChat.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\articles-chat-bubble.blade.php",
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\components\\chatbot-widget.blade.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\routes\\auth.php",
+        "class": null,
+        "name": "auth",
+        "refs": 31,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\EmailVerificationPromptController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\NewPasswordController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\PasswordResetLinkController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\RegisteredUserController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ChatbotController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\DashboardController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\TicketController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\routes\\channels.php",
+        "class": null,
+        "name": "channels",
+        "refs": 7,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Events\\StaffConnected.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Events\\TicketClosed.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Providers\\BroadcastServiceProvider.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\logging.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\echo-ca05b188.js",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\pusher-8a84afae.js",
+          "C:\\laragon\\www\\helpdeskta\\tools\\ref_analysis_output.json"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\routes\\console.php",
+        "class": null,
+        "name": "console",
+        "refs": 19,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupSearchCommand.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Commands\\SetupTypesense.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Console\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\app.php",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\app-c9e385c7.js",
+          "C:\\laragon\\www\\helpdeskta\\public\\build\\assets\\pusher-8a84afae.js",
+          "C:\\laragon\\www\\helpdeskta\\public\\js\\confirm-dialog.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\bootstrap.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\reverb.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\ui.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\staff\\ticketChat.js",
+          "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\http.js"
+        ]
+      },
+      {
+        "path": "C:\\laragon\\www\\helpdeskta\\routes\\web.php",
+        "class": null,
+        "name": "web",
+        "refs": 14,
+        "sample_refs": [
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Http\\Kernel.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Providers\\RouteServiceProvider.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\AdvancedRetrievalService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\DomainDetectionService.php",
+          "C:\\laragon\\www\\helpdeskta\\app\\Services\\Chatbot\\PreprocessingService.php",
+          "C:\\laragon\\www\\helpdeskta\\bootstrap\\app.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\auth.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\cors.php",
+          "C:\\laragon\\www\\helpdeskta\\config\\sanctum.php",
+          "C:\\laragon\\www\\helpdeskta\\database\\seeders\\ArticleSeeder.php"
+        ]
+      }
+    ]
+  },
+  "routes_controllers": {
+    "C:\\laragon\\www\\helpdeskta\\routes\\api.php": [
+      "App\\Http\\Middleware\\VerifyCsrfToken",
+      "Illuminate\\Routing\\Middleware\\ThrottleRequests",
+      "MessageController"
+    ],
+    "C:\\laragon\\www\\helpdeskta\\routes\\auth.php": [
+      "AuthenticatedSessionController",
+      "ConfirmablePasswordController",
+      "EmailVerificationNotificationController",
+      "EmailVerificationPromptController",
+      "NewPasswordController",
+      "PasswordController",
+      "PasswordResetLinkController",
+      "RegisteredUserController",
+      "VerifyEmailController"
+    ],
+    "C:\\laragon\\www\\helpdeskta\\routes\\channels.php": [],
+    "C:\\laragon\\www\\helpdeskta\\routes\\console.php": [],
+    "C:\\laragon\\www\\helpdeskta\\routes\\web.php": [
+      "AdminCategoryController",
+      "AdminDashboardController",
+      "AdminUserController",
+      "App\\Http\\Controllers\\Admin\\ArticleController",
+      "ArticleController",
+      "ChatbotController",
+      "ProfileController",
+      "StaffDashboardController",
+      "StaffTicketController",
+      "TicketController"
+    ]
+  },
+  "kernel_middleware": {
+    "auth": "\\App\\Http\\Middleware\\Authenticate",
+    "can": "\\Illuminate\\Auth\\Middleware\\Authorize",
+    "guest": "\\App\\Http\\Middleware\\RedirectIfAuthenticated",
+    "signed": "\\App\\Http\\Middleware\\ValidateSignature",
+    "throttle": "\\Illuminate\\Routing\\Middleware\\ThrottleRequests",
+    "verified": "\\Illuminate\\Auth\\Middleware\\EnsureEmailIsVerified",
+    "admin": "\\App\\Http\\Middleware\\AdminMiddleware",
+    "staff": "\\App\\Http\\Middleware\\StaffMiddleware"
+  },
+  "js_imports": {
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\admin\\articles.js": {
+      "imports": [],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\admin\\categories.js": {
+      "imports": [],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\admin\\users.js": {
+      "imports": [],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\app.js": {
+      "imports": [
+        "./utils/http",
+        "alpinejs"
+      ],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\bootstrap.js": {
+      "imports": [
+        "axios",
+        "./utils/http"
+      ],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\confirm.js": {
+      "imports": [],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\dom.js": {
+      "imports": [
+        "../utils/dom"
+      ],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\livechat.js": {
+      "imports": [
+        "../utils/notification",
+        "../utils/http"
+      ],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\report.js": {
+      "imports": [
+        "./dom",
+        "../utils/http"
+      ],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\reverb.js": {
+      "imports": [],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\shared\\ui.js": {
+      "imports": [
+        "./dom",
+        "../utils/http",
+        "../utils/modal",
+        "./report",
+        "./livechat"
+      ],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\staff\\dashboard.js": {
+      "imports": [],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\staff\\ticketChat.js": {
+      "imports": [
+        "../shared/dom",
+        "../utils/http",
+        "../shared/reverb"
+      ],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\staff\\tickets.js": {
+      "imports": [],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\ui.js": {
+      "imports": [],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\dom.js": {
+      "imports": [],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\http.js": {
+      "imports": [],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\index.js": {
+      "imports": [],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\loading.js": {
+      "imports": [],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\modal.js": {
+      "imports": [],
+      "requires": []
+    },
+    "C:\\laragon\\www\\helpdeskta\\resources\\js\\utils\\notification.js": {
+      "imports": [],
+      "requires": []
+    }
+  },
+  "view_calls": {
+    "staff.articles.index": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\articles\\index.blade.php"
+        ]
+      }
+    ],
+    "staff.articles.create": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\articles\\create.blade.php"
+        ]
+      }
+    ],
+    "staff.articles.show": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\articles\\show.blade.php"
+        ]
+      }
+    ],
+    "staff.articles.edit": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\articles\\edit.blade.php"
+        ]
+      }
+    ],
+    "articles.index": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\articles\\index.blade.php"
+        ]
+      }
+    ],
+    "articles.show": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ArticleController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\articles\\show.blade.php"
+        ]
+      }
+    ],
+    "profile.edit": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\ProfileController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\profile\\edit.blade.php"
+        ]
+      }
+    ],
+    "guest.help": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\guest\\help.blade.php"
+        ]
+      }
+    ],
+    "guest.tickets.track": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\guest\\tickets\\track.blade.php"
+        ]
+      }
+    ],
+    "tickets.index": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+        "resolved": []
+      }
+    ],
+    "tickets.show": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\TicketController.php",
+        "resolved": []
+      }
+    ],
+    "admin.articles.index": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\articles\\index.blade.php"
+        ]
+      }
+    ],
+    "admin.articles.show": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\ArticleController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\articles\\show.blade.php"
+        ]
+      }
+    ],
+    "admin.categories.index": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\categories\\index.blade.php"
+        ]
+      }
+    ],
+    "admin.categories.create": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\categories\\create.blade.php"
+        ]
+      }
+    ],
+    "admin.categories.edit": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\CategoryController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\categories\\edit.blade.php"
+        ]
+      }
+    ],
+    "admin.dashboard": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\dashboard.blade.php"
+        ]
+      }
+    ],
+    "admin.users.index": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\users\\index.blade.php"
+        ]
+      }
+    ],
+    "admin.users.create": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\users\\create.blade.php"
+        ]
+      }
+    ],
+    "admin.users.edit": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Admin\\UserController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\admin\\users\\edit.blade.php"
+        ]
+      }
+    ],
+    "auth.login": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\AuthenticatedSessionController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\auth\\login.blade.php"
+        ]
+      }
+    ],
+    "auth.confirm-password": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\ConfirmablePasswordController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\auth\\confirm-password.blade.php"
+        ]
+      }
+    ],
+    "auth.verify-email": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\EmailVerificationPromptController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\auth\\verify-email.blade.php"
+        ]
+      }
+    ],
+    "auth.reset-password": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\NewPasswordController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\auth\\reset-password.blade.php"
+        ]
+      }
+    ],
+    "auth.forgot-password": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\PasswordResetLinkController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\auth\\forgot-password.blade.php"
+        ]
+      }
+    ],
+    "auth.register": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Auth\\RegisteredUserController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\auth\\register.blade.php"
+        ]
+      }
+    ],
+    "staff.dashboard": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\DashboardController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\dashboard.blade.php"
+        ]
+      }
+    ],
+    "staff.tickets.index": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\TicketController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\tickets\\index.blade.php"
+        ]
+      }
+    ],
+    "staff.tickets.show": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Http\\Controllers\\Staff\\TicketController.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\staff\\tickets\\show.blade.php"
+        ]
+      }
+    ],
+    "emails.ticket-otp": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Mail\\TicketOtpMail.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\emails\\ticket-otp.blade.php"
+        ]
+      }
+    ],
+    "emails.ticket-rejection": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Mail\\TicketRejectionMail.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\emails\\ticket-rejection.blade.php"
+        ]
+      }
+    ],
+    "emails.ticket-tracking": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\Mail\\TicketTrackingMail.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\emails\\ticket-tracking.blade.php"
+        ]
+      }
+    ],
+    "layouts.app": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\View\\Components\\AppLayout.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\layouts\\app.blade.php"
+        ]
+      }
+    ],
+    "layouts.guest": [
+      {
+        "from": "C:\\laragon\\www\\helpdeskta\\app\\View\\Components\\GuestLayout.php",
+        "resolved": [
+          "C:\\laragon\\www\\helpdeskta\\resources\\views\\layouts\\guest.blade.php"
+        ]
+      }
+    ]
+  }
+}

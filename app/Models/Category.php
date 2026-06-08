@@ -21,11 +21,6 @@ class Category extends Model
         return $this->hasMany(Article::class);
     }
 
-    public function tickets()
-    {
-        return $this->hasMany(Ticket::class);
-    }
-
     public function staffProfiles()
     {
         return $this->hasMany(StaffProfile::class);

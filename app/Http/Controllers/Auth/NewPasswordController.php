@@ -12,20 +12,67 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
+/**
+ * =============================================================================
+ * NEW PASSWORD CONTROLLER - RESET KATA SANDI BARU
+ * =============================================================================
+ * 
+ * Controller ini menangani proses reset password menggunakan token.
+ * 
+ * Fitur Utama:
+ * - Tampilan form reset password
+ * - Validasi token reset
+ * - Update password baru
+ */
 class NewPasswordController extends Controller
 {
     /**
-     * Display the password reset view.
+     * =========================================================================
+     * 1. METODE CREATE - TAMPILKAN FORM RESET PASSWORD
+     * =========================================================================
+     * 
+     * Fungsi: Menampilkan halaman reset password dengan token.
+     * 
+     * Alur Proses:
+     * 1. Ambil token dan email dari request
+     * 2. Kembalikan view reset-password dengan data token dan email
+     * 
+     * Output:
+     * - View 'auth.reset-password'
      */
     public function create(Request $request): View
     {
-        return view('auth.reset-password', ['request' => $request]);
+        return view('auth.reset-password', [
+            'email' => $request->email,
+            'token' => $request->route('token'),
+        ]);
     }
 
     /**
-     * Handle an incoming new password request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
+     * =========================================================================
+     * 2. METODE STORE - PROSES RESET PASSWORD
+     * =========================================================================
+     * 
+     * Fungsi: Memproses reset password dengan token.
+     * 
+     * Alur Proses:
+     * 1. Validasi input (token, email, password)
+     * 2. Reset password menggunakan Password::reset
+     * 3. Jika berhasil:
+     *    - Fire event PasswordReset
+     *    - Redirect ke login dengan pesan sukses
+     * 4. Jika gagal:
+     *    - Redirect back with error
+     * 
+     * Query yang Digunakan:
+     * - Password::reset([...], function($user) {...}): Reset password
+     * - $user->forceFill([...]): Update password tanpa validasi
+     * - $user->setRememberToken(...): Set remember token baru
+     * - $user->save(): Simpan perubahan
+     * 
+     * Output:
+     * - Redirect ke login dengan status jika berhasil
+     * - Redirect back withErrors jika gagal
      */
     public function store(Request $request): RedirectResponse
     {
@@ -35,9 +82,6 @@ class NewPasswordController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        // Here we will attempt to reset the user's password. If it is successful we
-        // will update the password on an actual user model and persist it to the
-        // database. Otherwise we will parse the error and return the response.
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user) use ($request) {
@@ -50,9 +94,6 @@ class NewPasswordController extends Controller
             }
         );
 
-        // If the password was successfully reset, we will redirect the user back to
-        // the application's home authenticated view. If there is an error we can
-        // redirect them back to where they came from with their error message.
         return $status == Password::PASSWORD_RESET
                     ? redirect()->route('login')->with('status', __($status))
                     : back()->withInput($request->only('email'))

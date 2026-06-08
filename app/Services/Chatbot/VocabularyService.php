@@ -8,113 +8,66 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
- * VocabularyService - Dynamic vocabulary-based query normalization
+ * =========================================================================
+ * SERVICE VOCABULARY - KOREKSI TYPO BERBASIS KOSAKATA DINAMIS
+ * =========================================================================
  * 
- * This service extracts vocabulary from articles (titles, keywords, content, categories)
- * and uses it for intelligent typo correction using Levenshtein distance.
+ * Layanan ini mengekstrak kosakata dari artikel (judul, kata kunci, konten,
+ * kategori) dan menggunakannya untuk koreksi typo cerdas menggunakan
+ * Levenshtein distance.
  * 
- * Features:
- * - Automatic vocabulary extraction from article database
- * - Adaptive Levenshtein distance-based typo correction (threshold based on word length)
- * - Repeated character normalization (e.g., virusssss -> virus)
- * - Configurable similarity thresholds (lower for long technical terms)
- * - Hybrid mode combining curated and dynamic corrections
- * - Comprehensive debug logging
- * - Caching for performance
+ * Masalah yang Diatasi:
+ * Query seperti "virusssss" atau "wifii" tidak dikenali karena typo,
+ * sehingga pencarian gagal menemukan artikel yang relevan.
+ * 
+ * Solusi:
+ * - Ekstraksi kosakata otomatis dari database artikel
+ * - Koreksi typo berbasis Levenshtein distance yang adaptif
+ *   (ambang berdasarkan panjang kata)
+ * - Normalisasi karakter berulang (misalnya virusssss -> virus)
+ * - Threshold kesamaan yang dapat dikonfigurasi (lebih rendah untuk
+ *   istilah teknis panjang)
+ * - Mode hybrid yang menggabungkan koreksi kurasi dan dinamis
+ * - Logging debug yang komprehensif
+ * - Caching untuk performa
+ * 
+ * Digunakan oleh:
+ * - PreprocessingService (untuk normalisasi query)
+ * - ChatbotController (untuk koreksi typo)
  */
 class VocabularyService
 {
+    // =========================================================================
+    // KONFIGURASI CACHE
+    // =========================================================================
+    // Key cache untuk menyimpan kosakata
     private const CACHE_KEY = 'chatbot_vocabulary';
-    private const CACHE_TTL = 3600; // 1 hour
     
-    // Minimum similarity threshold (0.0 to 1.0)
-    // Only correct if similarity >= this threshold
+    // TTL cache dalam detik (1 jam)
+    private const CACHE_TTL = 3600;
+
+    // =========================================================================
+    // AMBANG BATAS KOREKSI TYPO
+    // =========================================================================
+    // Threshold kesamaan minimum (0.0 hingga 1.0)
+    // Hanya koreksi jika kesamaan >= ambang ini
     private const MIN_SIMILARITY = 0.70;
     
-    // Minimum similarity threshold for long technical terms (>8 chars)
+    // Threshold kesamaan minimum untuk istilah teknis panjang (>8 karakter)
     private const MIN_SIMILARITY_LONG_WORDS = 0.65;
     
-    // Minimum word length to consider for correction
+    // Panjang kata minimum yang akan dipertimbangkan untuk koreksi
     private const MIN_WORD_LENGTH = 3;
     
-    // Maximum repeated character occurrences (anything above gets compressed to 1)
-    // Example: virusssss -> virus (not viruss)
+    // Maksimal kemunculan karakter berulang (apa pun di atas akan dikompresi ke 1)
+    // Contoh: virusssss -> virus (bukan viruss)
     private const MAX_REPEATED_CHARS = 1;
-    
-    /**
-     * Get adaptive Levenshtein distance threshold based on word length
-     * 
-     * Short words (<=5): max distance = 1 (stricter)
-     * Medium words (6-8): max distance = 2
-     * Long words (>8): max distance = 3 (more tolerant)
-     * 
-     * @param string $word The word to check
-     * @return int Maximum allowed Levenshtein distance
-     */
-    private function getAdaptiveMaxDistance(string $word): int
-    {
-        $length = mb_strlen($word);
-        
-        if ($length <= 5) {
-            return 1;  // Stricter for short words
-        } elseif ($length <= 8) {
-            return 2;  // Standard for medium words
-        } else {
-            return 3;  // More tolerant for long technical terms
-        }
-    }
-    
-    /**
-     * Get minimum similarity threshold based on word length
-     * 
-     * Long technical terms (>8 chars) get a lower threshold (70%)
-     * to allow for more flexible matching
-     * 
-     * @param string $word The word to check
-     * @return float Minimum similarity threshold (0.0 to 1.0)
-     */
-    private function getAdaptiveMinSimilarity(string $word): float
-    {
-        $length = mb_strlen($word);
-        
-        if ($length > 8) {
-            return self::MIN_SIMILARITY_LONG_WORDS;  // 0.65 for long words
-        }
-        
-        return self::MIN_SIMILARITY;  // 0.70 for others
-    }
-    
-    /**
-     * Normalize repeated characters in a token
-     * 
-     * Compresses repeated characters above MAX_REPEATED_CHARS occurrences.
-     * Examples:
-     *   virusssss -> virus
-     *   wifiii -> wifi
-     *   lemottt -> lemot
-     *   errorrrr -> error
-     * 
-     * @param string $token The token to normalize
-     * @return string The normalized token with compressed repeated characters
-     */
-    public function normalizeRepeatedChars(string $token): string
-    {
-        // Use regex to find repeated characters and compress them
-        // Pattern: matches any character followed by the same character 2+ more times
-        // Replacement: keeps only MAX_REPEATED_CHARS occurrences
-        $pattern = '/(.)\1{2,}/';
-        
-        $result = preg_replace_callback($pattern, function ($matches) {
-            $char = $matches[1];
-            // Keep only MAX_REPEATED_CHARS occurrences
-            return str_repeat($char, self::MAX_REPEATED_CHARS);
-        }, $token);
-        
-        return $result ?? $token;
-    }
-    
-    // Curated typo map for high-priority domain-specific terms
-    // These are manually maintained for critical IT terms
+
+    // =========================================================================
+    // PETA TYPO KURASI - Istilah Domain Spesifik Prioritas Tinggi
+    // =========================================================================
+    // Peta typo kurasi untuk istilah spesifik domain dengan prioritas tinggi.
+    // Ini dipelihara secara manual untuk istilah IT yang kritis.
     private array $curatedTypoMap = [
         // Ransomware/Malware
         'ransomwre' => 'ransomware',
@@ -170,25 +123,145 @@ class VocabularyService
         'emal' => 'email',
         'e-mail' => 'email',
     ];
-    
-    // Dynamic vocabulary extracted from articles
+
+    // =========================================================================
+    // KOSAKATA DINAMIS
+    // =========================================================================
+    // Kosakata dinamis yang diekstrak dari artikel
     private ?array $vocabulary = null;
-    
+
     /**
-     * Load vocabulary from cache or build if not exists
+     * =========================================================================
+     * 1. METODE GET ADAPTIVE MAX DISTANCE - AMBIL JARAK MAKSIMUM ADAPTIF (PRIVATE)
+     * =========================================================================
      * 
-     * NEVER returns null - always returns an array (empty if no data available)
+     * Fungsi: Mendapatkan ambang Levenshtein distance yang adaptif berdasarkan
+     * panjang kata.
      * 
-     * @return array Array of unique normalized words
+     * Alur Proses:
+     * 1. Hitung panjang kata
+     * 2. Tentukan max distance berdasarkan kategori panjang:
+     *    - Kata pendek (<=5): max distance = 1 (lebih ketat)
+     *    - Kata sedang (6-8): max distance = 2
+     *    - Kata panjang (>8): max distance = 3 (lebih toleran)
+     * 3. Kembalikan max distance
+     * 
+     * Parameter:
+     * - string $word: Kata yang akan diperiksa
+     * 
+     * Output:
+     * - int: Maximum Levenshtein distance yang diizinkan
+     */
+    private function getAdaptiveMaxDistance(string $word): int
+    {
+        $length = mb_strlen($word);
+        
+        if ($length <= 5) {
+            return 1;  // Lebih ketat untuk kata pendek
+        } elseif ($length <= 8) {
+            return 2;  // Standar untuk kata sedang
+        } else {
+            return 3;  // Lebih toleran untuk istilah teknis panjang
+        }
+    }
+
+    /**
+     * =========================================================================
+     * 2. METODE GET ADAPTIVE MIN SIMILARITY - AMBIL KESEIMBANGAN MINIMUM ADAPTIF (PRIVATE)
+     * =========================================================================
+     * 
+     * Fungsi: Mendapatkan ambang kesamaan minimum berdasarkan panjang kata.
+     * 
+     * Alur Proses:
+     * 1. Hitung panjang kata
+     * 2. Jika kata panjang (>8), gunakan ambang lebih rendah (65%)
+     * 3. Jika tidak, gunakan ambang standar (70%)
+     * 
+     * Parameter:
+     * - string $word: Kata yang akan diperiksa
+     * 
+     * Output:
+     * - float: Threshold kesamaan minimum (0.0 hingga 1.0)
+     */
+    private function getAdaptiveMinSimilarity(string $word): float
+    {
+        $length = mb_strlen($word);
+        
+        if ($length > 8) {
+            return self::MIN_SIMILARITY_LONG_WORDS;  // 0.65 untuk kata panjang
+        }
+        
+        return self::MIN_SIMILARITY;  // 0.70 untuk lainnya
+    }
+
+    /**
+     * =========================================================================
+     * 3. METODE NORMALIZE REPEATED CHARS - NORMALISASI KARAKTER BERULANG
+     * =========================================================================
+     * 
+     * Fungsi: Menormalisasi karakter berulang dalam sebuah token.
+     * 
+     * Alur Proses:
+     * 1. Gunakan regex untuk menemukan karakter berulang
+     * 2. Kompresi karakter berulang di atas MAX_REPEATED_CHARS kemunculan
+     * 3. Kembalikan token yang sudah dinormalisasi
+     * 
+     * Contoh:
+     *   virusssss -> virus
+     *   wifiii -> wifi
+     *   lemottt -> lemot
+     *   errorrrr -> error
+     * 
+     * Parameter:
+     * - string $token: Token yang akan dinormalisasi
+     * 
+     * Output:
+     * - string: Token yang sudah dinormalisasi
+     */
+    public function normalizeRepeatedChars(string $token): string
+    {
+        // Gunakan regex untuk menemukan karakter berulang dan mengompresinya
+        // Pattern: mencocokkan karakter apa pun diikuti oleh karakter yang sama 2+ kali
+        // Replacement: hanya menyimpan MAX_REPEATED_CHARS kemunculan
+        $pattern = '/(.)\1{2,}/';
+        
+        $result = preg_replace_callback($pattern, function ($matches) {
+            $char = $matches[1];
+            // Hanya simpan MAX_REPEATED_CHARS kemunculan
+            return str_repeat($char, self::MAX_REPEATED_CHARS);
+        }, $token);
+        
+        return $result ?? $token;
+    }
+
+    /**
+     * =========================================================================
+     * 4. METODE LOAD VOCABULARY - MUAT KOSAKATA
+     * =========================================================================
+     * 
+     * Fungsi: Memuat kosakata dari cache atau bangun jika tidak exists.
+     * 
+     * Alur Proses:
+     * 1. Cek apakah sudah dimuat di memori, kembalikan jika ada
+     * 2. Coba muat dari cache
+     * 3. Jika cache miss atau kosong, bangun ulang kosakata
+     * 4. Kembalikan kosakata (tidak pernah null)
+     * 
+     * Output:
+     * - array: Array kata unik yang sudah dinormalisasi
+     * 
+     * Catatan Penting:
+     * Metode ini TIDAK PERNAH mengembalikan null - selalu mengembalikan array
+     * (kosong jika tidak ada data yang tersedia)
      */
     public function loadVocabulary(): array
     {
-        // If already loaded in memory, return it
+        // Jika sudah dimuat di memori, kembalikan
         if (is_array($this->vocabulary)) {
             return $this->vocabulary;
         }
         
-        // Try to load from cache
+        // Coba muat dari cache
         $cached = Cache::get(self::CACHE_KEY);
         if (is_array($cached) && !empty($cached)) {
             $this->vocabulary = $cached;
@@ -196,51 +269,62 @@ class VocabularyService
             return $this->vocabulary;
         }
         
-        // Cache miss or empty - rebuild vocabulary
+        // Cache miss atau kosong - bangun ulang kosakata
         Log::info('Vocabulary cache miss or empty, rebuilding...');
         return $this->rebuildVocabulary();
     }
-    
+
     /**
-     * Rebuild vocabulary from articles database
+     * =========================================================================
+     * 5. METODE REBUILD VOCABULARY - BANGUN ULANG KOSAKATA (PRIVATE)
+     * =========================================================================
      * 
-     * Extracts words from:
-     * - Article titles
-     * - Article keywords
-     * - Article content (first 500 words for performance)
-     * - Category names
+     * Fungsi: Membangun ulang kosakata dari database artikel.
      * 
-     * @return array Array of unique normalized words (never null)
+     * Alur Proses:
+     * 1. Ambil semua artikel dipublikasikan dengan status approved
+     * 2. Ekstrak kata dari:
+     *    - Judul artikel
+     *    - Kata kunci artikel
+     *    - Konten artikel (500 kata pertama untuk performa)
+     *    - Nama kategori
+     * 3. Normalisasi dan deduplikasi
+     * 4. Urutkan berdasarkan panjang kata
+     * 5. Simpan ke cache
+     * 6. Kembalikan kosakata
+     * 
+     * Output:
+     * - array: Array kata unik yang sudah dinormalisasi (tidak pernah null)
      */
     private function rebuildVocabulary(): array
     {
         $vocabulary = [];
         
         try {
-            // Extract from article titles
+            // Ekstrak dari judul artikel
             $articles = Article::where('is_published', true)
                 ->where('publish_status', 'approved')
                 ->get(['title', 'keywords', 'content']);
             
             foreach ($articles as $article) {
-                // Extract from title
+                // Ekstrak dari judul
                 $titleWords = $this->extractWords($article->title);
                 $vocabulary = array_merge($vocabulary, $titleWords);
                 
-                // Extract from keywords
+                // Ekstrak dari kata kunci
                 if ($article->keywords) {
                     $keywordWords = $this->extractWords($article->keywords);
                     $vocabulary = array_merge($vocabulary, $keywordWords);
                 }
                 
-                // Extract from content (limit to first 500 words for performance)
+                // Ekstrak dari konten (batasi 500 kata pertama untuk performa)
                 if ($article->content) {
                     $contentWords = $this->extractWords($article->content, 500);
                     $vocabulary = array_merge($vocabulary, $contentWords);
                 }
             }
             
-            // Extract from category names
+            // Ekstrak dari nama kategori
             $categories = Category::all(['name']);
             foreach ($categories as $category) {
                 $categoryWords = $this->extractWords($category->name);
@@ -253,14 +337,14 @@ class VocabularyService
             ]);
         }
         
-        // Normalize and deduplicate
+        // Normalisasi dan deduplikasi
         $vocabulary = array_unique($vocabulary);
         $vocabulary = array_filter($vocabulary, fn($word) => mb_strlen($word) >= self::MIN_WORD_LENGTH);
         
-        // Sort by word length (shorter words first for better matching)
+        // Urutkan berdasarkan panjang kata (kata pendek dulu untuk pencocokan lebih baik)
         usort($vocabulary, fn($a, $b) => mb_strlen($a) <=> mb_strlen($b));
         
-        // Cache the vocabulary (even if empty, to avoid repeated rebuilds)
+        // Cache kosakata (bahkan jika kosong, untuk menghindari rebuild berulang)
         Cache::put(self::CACHE_KEY, $vocabulary, self::CACHE_TTL);
         
         $this->vocabulary = $vocabulary;
@@ -276,62 +360,93 @@ class VocabularyService
         
         return $vocabulary;
     }
-    
+
     /**
-     * Build vocabulary from articles database (alias for rebuildVocabulary for backward compatibility)
+     * =========================================================================
+     * 6. METODE BUILD VOCABULARY - BANGUN KOSAKATA
+     * =========================================================================
      * 
-     * @return array Array of unique normalized words
+     * Fungsi: Membangun kosakata dari database artikel (alias untuk rebuildVocabulary
+     * untuk backward compatibility).
+     * 
+     * Output:
+     * - array: Array kata unik yang sudah dinormalisasi
      */
     public function buildVocabulary(): array
     {
         return $this->rebuildVocabulary();
     }
-    
+
     /**
-     * Extract words from text
+     * =========================================================================
+     * 7. METODE EXTRACT WORDS - EKSTRAK KATA (PRIVATE)
+     * =========================================================================
      * 
-     * @param string $text The text to extract words from
-     * @param int $maxWords Maximum number of words to extract (0 = unlimited)
-     * @return array Array of normalized words
+     * Fungsi: Mengekstrak kata dari teks.
+     * 
+     * Alur Proses:
+     * 1. Konversi ke lowercase
+     * 2. Hapus tanda baca dan karakter khusus
+     * 3. Pisahkan menjadi kata-kata
+     * 4. Batasi jumlah kata jika diperlukan
+     * 
+     * Parameter:
+     * - string $teks: Teks yang akan diekstrak kata-katanya
+     * - int $maxWords: Maksimal jumlah kata yang akan diekstrak (0 = tidak terbatas)
+     * 
+     * Output:
+     * - array: Array kata yang sudah dinormalisasi
      */
     private function extractWords(string $text, int $maxWords = 0): array
     {
-        // Convert to lowercase
+        // Konversi ke lowercase
         $text = mb_strtolower($text);
         
-        // Remove punctuation and special characters
+        // Hapus tanda baca dan karakter khusus
         $text = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $text);
         
-        // Split into words
+        // Pisahkan menjadi kata-kata
         $words = preg_split('/\s+/', $text, -1, PREG_SPLIT_NO_EMPTY);
         
-        // Limit words if needed
+        // Batasi kata jika diperlukan
         if ($maxWords > 0 && count($words) > $maxWords) {
             $words = array_slice($words, 0, $maxWords);
         }
         
         return $words;
     }
-    
+
     /**
-     * Normalize a query by correcting typos using dynamic vocabulary
+     * =========================================================================
+     * 8. METODE NORMALIZE QUERY - NORMALISASI QUERY
+     * =========================================================================
      * 
-     * Pipeline:
-     * 1. Raw query tokens
-     * 2. Repeated-character normalization (virusssss -> virus)
-     * 3. Curated typo map lookup
-     * 4. Dynamic vocabulary correction (adaptive Levenshtein)
+     * Fungsi: Menormalisasi query dengan mengoreksi typo menggunakan kosakata dinamis.
      * 
-     * @param string $query The input query
-     * @return array ['original' => string, 'normalized' => string, 'corrections' => array]
+     * Alur Proses:
+     * 1. Muat kosakata menggunakan metode safe yang tidak pernah mengembalikan null
+     * 2. Cek safety - pastikan kosakata selalu array
+     * 3. Tokenisasi query
+     * 4. Untuk setiap token:
+     *    a. Normalisasi karakter berulang (virusssss -> virus)
+     *    b. Lookup peta typo kurasi
+     *    c. Koreksi kosakata dinamis (Levenshtein adaptif)
+     * 5. Gabungkan token yang sudah dikoreksi
+     * 6. Log hasil normalisasi
+     * 
+     * Parameter:
+     * - string $query: Query input
+     * 
+     * Output:
+     * - array: ['original' => string, 'normalized' => string, 'corrections' => array]
      */
     public function normalizeQuery(string $query): array
     {
-        // Load vocabulary using safe method that never returns null
+        // Muat kosakata menggunakan metode safe yang tidak pernah mengembalikan null
         $this->loadVocabulary();
         
-        // SAFETY CHECK: Ensure vocabulary is always an array
-        // This prevents in_array() crashes when vocabulary is null
+        // CEK KEAMANAN: Pastikan kosakata selalu array
+        // Ini mencegah crash in_array() ketika kosakata null
         if (!is_array($this->vocabulary) || empty($this->vocabulary)) {
             Log::warning('Vocabulary empty - skipping typo normalization', [
                 'query' => $query,
@@ -339,7 +454,7 @@ class VocabularyService
                 'vocabulary_count' => is_array($this->vocabulary) ? count($this->vocabulary) : 'null'
             ]);
             
-            // Return original query without normalization
+            // Kembalikan query asli tanpa normalisasi
             return [
                 'original' => $query,
                 'normalized' => $query,
@@ -355,17 +470,17 @@ class VocabularyService
             $originalToken = $token;
             $lowerToken = mb_strtolower($token);
             
-            // Skip very short tokens
+            // Lewati token yang sangat pendek
             if (mb_strlen($lowerToken) < self::MIN_WORD_LENGTH) {
                 $correctedTokens[] = $token;
                 continue;
             }
             
-            // STEP 1: Normalize repeated characters BEFORE any other correction
-            // Example: virusssss -> virus, wifiii -> wifi, lemottt -> lemot
+            // LANGKAH 1: Normalisasi karakter berulang SEBELUM koreksi lainnya
+            // Contoh: virusssss -> virus, wifiii -> wifi, lemottt -> lemot
             $compressedToken = $this->normalizeRepeatedChars($lowerToken);
             
-            // Log the compression for debugging
+            // Log kompresi untuk debugging
             if ($compressedToken !== $lowerToken) {
                 Log::debug('Repeated character normalization', [
                     'original_token' => $lowerToken,
@@ -373,7 +488,7 @@ class VocabularyService
                 ]);
             }
             
-            // Check if compressed token is already in vocabulary
+            // Cek apakah token yang dikompresi sudah ada di kosakata
             if (in_array($compressedToken, $this->vocabulary)) {
                 if ($compressedToken !== $lowerToken) {
                     $corrections[] = [
@@ -390,7 +505,7 @@ class VocabularyService
                 continue;
             }
             
-            // STEP 2: Try curated typo map (on compressed token)
+            // LANGKAH 2: Coba peta typo kurasi (pada token yang dikompresi)
             if (isset($this->curatedTypoMap[$compressedToken])) {
                 $corrected = $this->curatedTypoMap[$compressedToken];
                 $corrections[] = [
@@ -404,7 +519,7 @@ class VocabularyService
                 continue;
             }
             
-            // STEP 3: Dynamic vocabulary correction using adaptive Levenshtein
+            // LANGKAH 3: Koreksi kosakata dinamis menggunakan Levenshtein adaptif
             $bestMatch = $this->findBestMatch($compressedToken);
             
             if ($bestMatch !== null) {
@@ -438,31 +553,43 @@ class VocabularyService
             'corrections' => $corrections
         ];
     }
-    
+
     /**
-     * Find the best matching word from vocabulary using Levenshtein distance
+     * =========================================================================
+     * 9. METODE FIND BEST MATCH - CARI KECOCOKAN TERBAIK (PRIVATE)
+     * =========================================================================
      * 
-     * Uses adaptive thresholds based on word length:
-     * - Short words (<=5): stricter threshold (max distance = 1)
-     * - Medium words (6-8): standard threshold (max distance = 2)
-     * - Long words (>8): more tolerant (max distance = 3, lower similarity threshold)
+     * Fungsi: Menemukan kata yang paling cocok dari kosakata menggunakan
+     * Levenshtein distance.
      * 
-     * @param string $token The token to match (should already be compressed/normalized)
-     * @return array|null ['word' => string, 'distance' => int, 'similarity' => float, 'maxDistance' => int] or null
+     * Alur Proses:
+     * 1. Cek keamanan - pastikan kosakata array
+     * 2. Dapatkan ambang adaptif berdasarkan panjang token
+     * 3. Hitung max length difference untuk filtering awal
+     * 4. Iterasi kosakata, hitung Levenshtein distance
+     * 5. Gunakan ambang adaptif untuk filter
+     * 6. Hitung similarity untuk kandidat terbaik
+     * 7. Kembalikan kecocokan terbaik atau null
+     * 
+     * Parameter:
+     * - string $token: Token yang akan dicocokkan (harus sudah compressed/normalized)
+     * 
+     * Output:
+     * - array|null: ['word' => string, 'distance' => int, 'similarity' => float, 'maxDistance' => int] atau null
      */
     private function findBestMatch(string $token): ?array
     {
-        // SAFETY: Ensure vocabulary is an array before iterating
+        // KEAMANAN: Pastikan kosakata array sebelum iterasi
         if (!is_array($this->vocabulary) || empty($this->vocabulary)) {
             return null;
         }
         
-        // Get adaptive thresholds based on token length
+        // Dapatkan ambang adaptif berdasarkan panjang token
         $maxDistance = $this->getAdaptiveMaxDistance($token);
         $minSimilarity = $this->getAdaptiveMinSimilarity($token);
         
-        // Calculate max length difference for early filtering
-        // For adaptive distance, we use a slightly larger window to avoid missing candidates
+        // Hitung max length difference untuk filtering awal
+        // Untuk adaptive distance, kita gunakan window sedikit lebih besar untuk menghindari missing candidates
         $lengthFilterWindow = max($maxDistance + 1, 3);
         
         $bestMatch = null;
@@ -470,24 +597,24 @@ class VocabularyService
         $bestSimilarity = 0.0;
         
         foreach ($this->vocabulary as $word) {
-            // Skip if word length difference is too large (unlikely match)
+            // Lewati jika perbedaan panjang kata terlalu besar (kemungkinan kecil cocok)
             if (abs(mb_strlen($word) - mb_strlen($token)) > $lengthFilterWindow) {
                 continue;
             }
             
             $distance = levenshtein($token, $word);
             
-            // Use adaptive max distance threshold
+            // Gunakan ambang max distance adaptif
             if ($distance <= $maxDistance && $distance < $bestDistance) {
                 $similarity = $this->calculateSimilarity($token, $word, $distance);
                 
-                // Use adaptive minimum similarity threshold
+                // Gunakan ambang minimum similarity adaptif
                 if ($similarity >= $minSimilarity) {
                     $bestMatch = $word;
                     $bestDistance = $distance;
                     $bestSimilarity = $similarity;
                     
-                    // If we found a very close match, we can stop early
+                    // Jika menemukan kecocokan yang sangat dekat, bisa berhenti lebih awal
                     if ($distance <= 1 && $similarity >= 0.90) {
                         break;
                     }
@@ -521,14 +648,21 @@ class VocabularyService
         
         return null;
     }
-    
+
     /**
-     * Calculate similarity between two strings
+     * =========================================================================
+     * 10. METODE CALCULATE SIMILARITY - HITUNG KESEIMBANGAN (PRIVATE)
+     * =========================================================================
      * 
-     * @param string $str1 First string
-     * @param string $str2 Second string
-     * @param int $distance Levenshtein distance
-     * @return float Similarity score (0.0 to 1.0)
+     * Fungsi: Menghitung kesamaan antara dua string.
+     * 
+     * Parameter:
+     * - string $str1: String pertama
+     * - string $str2: String kedua
+     * - int $distance: Levenshtein distance
+     * 
+     * Output:
+     * - float: Skor kesamaan (0.0 hingga 1.0)
      */
     private function calculateSimilarity(string $str1, string $str2, int $distance): float
     {
@@ -540,18 +674,23 @@ class VocabularyService
         
         return 1.0 - ($distance / $maxLen);
     }
-    
+
     /**
-     * Get vocabulary statistics
+     * =========================================================================
+     * 11. METODE GET STATS - DAPATKAN STATISTIK
+     * =========================================================================
      * 
-     * @return array
+     * Fungsi: Mendapatkan statistik kosakata.
+     * 
+     * Output:
+     * - array: Statistik kosakata (total_words, domain_terms, curated_typos, dll.)
      */
     public function getStats(): array
     {
-        // Use loadVocabulary() which never returns null
+        // Gunakan loadVocabulary() yang tidak pernah mengembalikan null
         $this->loadVocabulary();
         
-        // SAFETY: Ensure vocabulary is an array
+        // KEAMANAN: Pastikan kosakata array
         $vocabulary = is_array($this->vocabulary) ? $this->vocabulary : [];
         
         $domainTerms = [
@@ -575,11 +714,18 @@ class VocabularyService
             'cache_ttl' => self::CACHE_TTL,
         ];
     }
-    
+
     /**
-     * Clear vocabulary cache
+     * =========================================================================
+     * 12. METODE CLEAR CACHE - BERSIHKAN CACHE
+     * =========================================================================
      * 
-     * Useful when articles are updated
+     * Fungsi: Membersihkan cache kosakata.
+     * 
+     * Digunakan ketika artikel diperbarui.
+     * 
+     * Output:
+     * - void
      */
     public function clearCache(): void
     {
@@ -588,55 +734,81 @@ class VocabularyService
         
         Log::info('Vocabulary cache cleared');
     }
-    
+
     /**
-     * Get the curated typo map
+     * =========================================================================
+     * 13. METODE GET CURATED TYPO MAP - DAPATKAN PETA TYPO KURASI
+     * =========================================================================
      * 
-     * @return array
+     * Fungsi: Mendapatkan peta typo kurasi.
+     * 
+     * Output:
+     * - array: Peta typo kurasi
      */
     public function getCuratedTypoMap(): array
     {
         return $this->curatedTypoMap;
     }
-    
+
     /**
-     * Add a new curated typo mapping
+     * =========================================================================
+     * 14. METODE ADD CURATED TYPO - TAMBAHKAN TYPO KURASI
+     * =========================================================================
      * 
-     * @param string $typo The typo
-     * @param string $correct The correct spelling
+     * Fungsi: Menambahkan pemetaan typo kurasi baru.
+     * 
+     * Parameter:
+     * - string $typo: Typo
+     * - string $correct: Ejaan yang benar
+     * 
+     * Output:
+     * - void
      */
     public function addCuratedTypo(string $typo, string $correct): void
     {
         $this->curatedTypoMap[mb_strtolower($typo)] = mb_strtolower($correct);
     }
-    
+
     /**
-     * Check if a word needs correction
+     * =========================================================================
+     * 15. METODE NEEDS CORRECTION - PERIKSA KEBUTUHAN KOREKSI
+     * =========================================================================
      * 
-     * @param string $word The word to check
-     * @return bool
+     * Fungsi: Memeriksa apakah sebuah kata memerlukan koreksi.
+     * 
+     * Alur Proses:
+     * 1. Muat kosakata
+     * 2. Cek apakah kata sudah ada di kosakata (tidak perlu koreksi)
+     * 3. Cek di peta kurasi (perlu koreksi jika ada)
+     * 4. Cek apakah dekat dengan kata kosakata apa pun
+     * 
+     * Parameter:
+     * - string $word: Kata yang akan diperiksa
+     * 
+     * Output:
+     * - bool: Benar jika perlu koreksi, false jika tidak
      */
     public function needsCorrection(string $word): bool
     {
-        // Use loadVocabulary() which never returns null
+        // Gunakan loadVocabulary() yang tidak pernah mengembalikan null
         $this->loadVocabulary();
         
-        // SAFETY: Ensure vocabulary is an array
+        // KEAMANAN: Pastikan kosakata array
         $vocabulary = is_array($this->vocabulary) ? $this->vocabulary : [];
         
         $lowerWord = mb_strtolower($word);
         
-        // Check if already in vocabulary (safe - vocabulary is guaranteed to be an array)
+        // Cek apakah sudah ada di kosakata (aman - kosakata dijamin array)
         if (in_array($lowerWord, $vocabulary)) {
             return false;
         }
         
-        // Check curated map
+        // Cek peta kurasi
         if (isset($this->curatedTypoMap[$lowerWord])) {
             return true;
         }
         
-        // Check if close to any vocabulary word
+        // Cek apakah dekat dengan kata kosakata apa pun
         $bestMatch = $this->findBestMatch($lowerWord);
         return $bestMatch !== null;
     }

@@ -11,66 +11,76 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 /**
- * AdvancedRetrievalService - Enhanced TF-IDF retrieval with hybrid reranking
+ * =========================================================================
+ * SERVICE ADVANCED RETRIEVAL
+ * =========================================================================
  * 
- * Implements multi-factor ranking with:
- * - Title overlap scoring (with bigram matching for exact phrases)
- * - Exact phrase boost (full query phrase in title)
- * - Query coverage scoring (all important tokens match)
- * - Domain match boost (category alignment)
- * - Negative domain penalty (unrelated domain suppression)
- * - Low priority token filtering (generic term weight reduction)
+ * Layanan ini bertanggung jawab untuk proses retrieval artikel berbasis TF-IDF
+ * yang diperkaya dengan berbagai strategi reranking.
+ * 
+ * Fungsi utama:
+ * - Menghitung skor relevansi multi-faktor.
+ * - Menggabungkan sinyal Typesense dan TF-IDF.
+ * - Menambahkan diversifikasi hasil dan penalti domain.
+ * - Menentukan kapan perlu eskalasi atau fallback aman.
+ * 
+ * Input:
+ * - Query pengguna.
+ * - Hasil kandidat artikel dari Typesense.
+ * 
+ * Output:
+ * - Hasil artikel yang diurutkan dengan skor dan confidence.
  */
 class AdvancedRetrievalService
 {
     // ============================================================
-    // CONFIDENCE THRESHOLDS
+    // AMBANG BATAS CONFIDENCE
     // ============================================================
-    // These thresholds control when results are considered reliable
-    private const SIMILARITY_THRESHOLD = 0.12;        // Minimum score to include a result
-    private const HIGH_SIMILARITY_THRESHOLD = 0.35;   // Score for high confidence
-    private const VERY_HIGH_SIMILARITY_THRESHOLD = 0.55; // Score for very high confidence
-    private const SAFE_FALLBACK_THRESHOLD = 0.18;     // Below this, use safe fallback instead of weak results
+    // Threshold ini mengontrol kapan hasil dianggap dapat diandalkan
+    private const SIMILARITY_THRESHOLD = 0.12;        // Skor minimum untuk menyertakan hasil
+    private const HIGH_SIMILARITY_THRESHOLD = 0.35;   // Skor untuk confidence tinggi
+    private const VERY_HIGH_SIMILARITY_THRESHOLD = 0.55; // Skor untuk confidence sangat tinggi
+    private const SAFE_FALLBACK_THRESHOLD = 0.18;     // Di bawah ini, gunakan fallback aman alih-alih hasil lemah
     
     private const TOP_K_RESULTS = 5;
     private const FAILURE_THRESHOLD = 3;
-    private const MAX_FAILURE_MEMORY = 10; // Maximum queries to track for failure
+    private const MAX_FAILURE_MEMORY = 10; // Maksimal query yang dilacak untuk kegagalan
     private const SESSION_FAILURE_KEY = 'chatbot_failure_memory';
     private const SESSION_CONVERSATION_KEY = 'chatbot_conversation_memory';
     private const CACHE_TTL = 86400;
     
     // ============================================================
-    // HYBRID RANKING WEIGHTS
+    // BOBOT PERINGKAT HYBRID
     // ============================================================
-    // These weights control the contribution of each ranking factor
-    private const WEIGHT_COSINE = 0.30;        // Base TF-IDF cosine similarity
-    private const WEIGHT_TITLE_OVERLAP = 0.25; // Title keyword overlap (increased)
-    private const WEIGHT_DOMAIN_MATCH = 0.15;  // Domain/category alignment
-    private const WEIGHT_QUERY_COVERAGE = 0.15; // Query term coverage (increased)
-    private const WEIGHT_EXACT_PHRASE = 0.10;  // Exact phrase match
-    private const WEIGHT_DIVERSIFICATION = 0.05; // Result diversity
+    // Bobot ini mengontrol kontribusi setiap faktor ranking
+    private const WEIGHT_COSINE = 0.30;        // Cosine similarity TF-IDF dasar
+    private const WEIGHT_TITLE_OVERLAP = 0.25; // Overlap kata kunci judul (ditingkatkan)
+    private const WEIGHT_DOMAIN_MATCH = 0.15;  // Keselarasan domain/kategori
+    private const WEIGHT_QUERY_COVERAGE = 0.15; // Cakupan term query (ditingkatkan)
+    private const WEIGHT_EXACT_PHRASE = 0.10;  // Pencocokan frasa exact
+    private const WEIGHT_DIVERSIFICATION = 0.05; // Diversifikasi hasil
     
     // ============================================================
-    // BONUS/PENALTY FACTORS
+    // FAKTOR BONUS/PENALTI
     // ============================================================
     private const TITLE_BOOST_FACTOR = 2.0;
-    private const EXACT_PHRASE_BONUS = 0.3;     // Bonus for exact phrase in title
-    private const FULL_COVERAGE_BONUS = 0.25;   // Bonus for matching all important terms
-    private const BIGRAM_MATCH_BONUS = 0.2;     // Bonus for bigram (2-gram) matches
-    private const DOMAIN_PENALTY = -0.5;        // Penalty for wrong domain
-    private const STRONG_DOMAIN_PENALTY = -0.8; // Strong penalty for forbidden domains
-    private const LOW_PRIORITY_WEIGHT = 0.1;    // Weight multiplier for generic terms
+    private const EXACT_PHRASE_BONUS = 0.3;     // Bonus untuk frasa exact di judul
+    private const FULL_COVERAGE_BONUS = 0.25;   // Bonus untuk pencocokan semua term penting
+    private const BIGRAM_MATCH_BONUS = 0.2;     // Bonus untuk bigram (2-gram) cocok
+    private const DOMAIN_PENALTY = -0.5;        // Penalti untuk domain yang salah
+    private const STRONG_DOMAIN_PENALTY = -0.8; // Penalti kuat untuk domain terlarang
+    private const LOW_PRIORITY_WEIGHT = 0.1;    // Multiplier bobot untuk term generik
     // ============================================================
-    // LOW PRIORITY / GENERIC TERMS
+    // TERM PRIORITAS RENDAH / GENERIK
     // ============================================================
-    // These terms should have REDUCED influence in ranking
-    // They are too common in helpdesk articles and overpower domain-specific terms
-    //
-    // Category 1: Generic instructional words (cara, mengatasi, etc.)
-    // Category 2: Generic technical/device words (pc, laptop, komputer, etc.)
-    //              These are too common and don't indicate specific intent
+    // Term ini harus memiliki pengaruh BERKURANG dalam ranking
+    // Mereka terlalu umum di artikel helpdesk dan mengalahkan term spesifik domain
+    
+    // Kategori 1: Kata instruksional generik (cara, mengatasi, dll.)
+    // Kategori 2: Kata teknis/perangkat generik (pc, laptop, komputer, dll.)
+    // Ini terlalu umum dan tidak menunjukkan intent spesifik
     private array $lowPriorityTerms = [
-        // Generic instructional words
+        // Kata instruksional generik
         'cara',
         'mengatasi',
         'solusi',
@@ -84,7 +94,7 @@ class AdvancedRetrievalService
         'bantuan',
         'petunjuk',
         
-        // Generic technical words - too common, don't indicate specific intent
+        // Kata teknis generik - terlalu umum, tidak menunjukkan intent spesifik
         'aplikasi',
         'masalah',
         'sistem',
@@ -100,16 +110,16 @@ class AdvancedRetrievalService
     ];
     
     // ============================================================
-    // IMPORTANT DOMAIN TOKENS (TRUE INTENT TOKENS)
+    // TOKEN DOMAIN PENTING (TOKEN INTENT SEBENARNYA)
     // ============================================================
-    // These tokens represent REAL user intent and should DOMINATE ranking
-    // When these appear in a query, articles matching these tokens should rank highest
-    // 
-    // NOTE: Generic device words (pc, laptop, komputer, desktop, notebook, error)
-    // are intentionally EXCLUDED because they are too generic and cause
-    // hardware articles to overpower security/software intent.
+    // Token-token ini mewakili intent PENGGUNA SEBENARNYA dan harus MENDOMINASI ranking
+    // Ketika token ini muncul dalam query, artikel yang cocok dengan token ini harus mendapat peringkat tertinggi
+    
+    // CATATAN: Kata perangkat generik (pc, laptop, komputer, desktop, notebook, error)
+    // sengaja DIKECUALIKAN karena terlalu umum dan menyebabkan
+    // artikel hardware mengalahkan intent keamanan/software.
     private array $importantDomainTokens = [
-        // Security tokens (HIGHEST PRIORITY)
+        // Token keamanan (PRIORITAS TERTINGGI)
         'virus',
         'malware',
         'ransomware',
@@ -118,13 +128,13 @@ class AdvancedRetrievalService
         'phishing',
         'antivirus',
         
-        // DevOps/Infrastructure tokens
+        // Token DevOps/Infrastruktur
         'docker',
         'kubernetes',
         'k8s',
         'container',
         
-        // Network tokens
+        // Token jaringan
         'wifi',
         'jaringan',
         'network',
@@ -134,34 +144,34 @@ class AdvancedRetrievalService
         'router',
         'modem',
         
-        // Hardware peripheral tokens
+        // Token periferal hardware
         'printer',
         'scanner',
         
-        // Data tokens
+        // Token data
         'database',
         'mysql',
         'postgresql',
         'mongodb',
         'sql',
         
-        // Communication tokens
+        // Token komunikasi
         'email',
         'gmail',
         'outlook',
         
-        // Web tokens
+        // Token web
         'website',
         'browser',
         'chrome',
         'firefox',
         
-        // Account tokens
+        // Token akun
         'akun',
         'login',
         'password',
         
-        // Specific issue tokens
+        // Token masalah spesifik
         'lemot',
         'bsod',
         'hang',
@@ -170,10 +180,10 @@ class AdvancedRetrievalService
     ];
     
     // ============================================================
-    // SECURITY PRIORITY TOKENS
+    // TOKEN PRIORITAS KEAMANAN
     // ============================================================
-    // When query contains ANY of these tokens, security articles
-    // should get a STRONG boost to override generic hardware articles
+    // Ketika query mengandung SALAH SATU token ini, artikel keamanan
+    // harus mendapat boost KUAT untuk mengalahkan artikel hardware generik
     private array $securityPriorityTokens = [
         'virus',
         'malware',
@@ -189,10 +199,10 @@ class AdvancedRetrievalService
     ];
     
     // ============================================================
-    // NEGATIVE DOMAIN PENALTY MAPPINGS
+    // PEMETAAN PENALTI DOMAIN NEGATIF
     // ============================================================
-    // When querying domain X, penalize articles from these unrelated domains
-    // This prevents cross-domain contamination (e.g., printer query returning BSOD articles)
+    // Ketika query domain X, beri penalti artikel dari domain yang tidak terkait
+    // Ini mencegah kontaminasi lintas domain (misal: query printer mengembalikan artikel BSOD)
     private array $negativeDomainPenalties = [
         'printer' => ['bsod', 'vpn', 'internet', 'wifi', 'security', 'email'],
         'komputer' => ['printer', 'vpn', 'email'],
@@ -406,10 +416,29 @@ class AdvancedRetrievalService
     
     private array $debugInfo = [];
     
-    // Diversification category quotas - ensure result diversity
-    private const MAX_RESULTS_PER_CATEGORY = 2; // Maximum 2 articles from same category
+    // Kuota diversifikasi kategori - memastikan keragaman hasil
+    private const MAX_RESULTS_PER_CATEGORY = 2; // Maksimal 2 artikel dari kategori yang sama
     private const DIVERSIFICATION_CATEGORIES = ['troubleshooting', 'optimization', 'tutorial', 'hardware'];
     
+    /**
+     * =========================================================================
+     * 1. METODE KONSTRUKTOR
+     * =========================================================================
+     *
+     * Fungsi:
+     * Inisialisasi dependensi service dan konfigurasi internal.
+     *
+     * Alur Proses:
+     * 1. Menerima dependency service melalui konstruktor.
+     * 1. Menyimpan dependensi ke properti internal.
+     * 1. Menyiapkan mode debug jika diperlukan.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - void
+     */
     public function __construct(
         PreprocessingService $preprocessor,
         TfidfService $tfidfService,
@@ -426,6 +455,25 @@ class AdvancedRetrievalService
         $this->phraseService = $phraseService;
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Retrieve
+     * =========================================================================
+     *
+     * Fungsi:
+     * Melakukan operasi retrieve di dalam service.
+     *
+     * Alur Proses:
+     * 1. Memproses input sesuai tujuan method.
+     * 1. Mengambil atau mengubah data internal.
+     * 1. Mengembalikan hasil sesuai tipe return.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - TOP_K_RESULTS
+     */
     public function retrieve(string $query, int $limit = self::TOP_K_RESULTS): array
     {
         $this->debugInfo = [
@@ -435,18 +483,18 @@ class AdvancedRetrievalService
         ];
         
         // ============================================================
-        // OUT-OF-DOMAIN DETECTION (BEFORE any retrieval)
+        // DETEKSI OUT-OF-DOMAIN (SEBELUM retrieval apa pun)
         // ============================================================
-        // Check if query is outside IT/support domain
-        // If so, return early with rejection message - DO NOT fallback to IT articles
+        // Cek apakah query di luar domain IT/support
+        // Jika ya, kembalikan lebih awal dengan pesan penolakan - JANGAN fallback ke artikel IT
         $outOfDomainCheck = $this->domainDetector->detectOutOfDomain($query);
         $this->debugInfo['out_of_domain_check'] = $outOfDomainCheck;
         
         if ($outOfDomainCheck['is_out_of_domain']) {
-            // If the reason is 'no_it_keywords', defer rejection and allow
-            // retrieval to run as a fallback. Explicit out-of-domain reasons
-            // (empty_query, explicit_out_of_domain_keywords, etc.) still
-            // cause immediate rejection.
+            // Jika alasannya 'no_it_keywords', tunda penolakan dan izinkan
+            // retrieval berjalan sebagai fallback. Alasan out-of-domain eksplisit
+            // (empty_query, explicit_out_of_domain_keywords, dll.) tetap
+            // menyebabkan penolakan langsung.
             $reason = $outOfDomainCheck['reason'] ?? '';
             if ($reason !== 'no_it_keywords') {
                 $this->debugInfo['stages'][] = [
@@ -458,7 +506,7 @@ class AdvancedRetrievalService
                 return $this->outOfDomainResult($query);
             }
 
-            // Log that we deferred rejection for no_it_keywords
+            // Log bahwa kita menunda penolakan untuk no_it_keywords
             $this->debugInfo['stages'][] = [
                 'stage' => 'out_of_domain_detection',
                 'input' => $query,
@@ -491,6 +539,25 @@ class AdvancedRetrievalService
         return $this->singleIntentRetrieval($normalizedQuery, $limit);
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Single Intent Retrieval
+     * =========================================================================
+     *
+     * Fungsi:
+     * Melakukan operasi single intent retrieval di dalam service.
+     *
+     * Alur Proses:
+     * 1. Memproses input sesuai tujuan method.
+     * 1. Mengambil atau mengubah data internal.
+     * 1. Mengembalikan hasil sesuai tipe return.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array
+     */
     private function singleIntentRetrieval(string $query, int $limit): array
     {
         $domainInfo = $this->domainDetector->detectDomain($query);
@@ -551,21 +618,40 @@ class AdvancedRetrievalService
         ];
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Multi Intent Retrieval
+     * =========================================================================
+     *
+     * Fungsi:
+     * Melakukan operasi multi intent retrieval di dalam service.
+     *
+     * Alur Proses:
+     * 1. Memproses input sesuai tujuan method.
+     * 1. Mengambil atau mengubah data internal.
+     * 1. Mengembalikan hasil sesuai tipe return.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array
+     */
     private function multiIntentRetrieval(array $intents, int $limit): array
     {
         $intentResults = [];
         $originalQuery = implode(' dan ', $intents);
         $allSeenIds = [];
         
-        // Save the current debug info to restore after single intent retrievals
+        // Save the saat ini debug info ke restore setelah single intent retrievals
         $savedDebugInfo = $this->debugInfo;
         
-        // Step 1: Retrieve results for EACH intent separately with a larger candidate pool
-        // We retrieve more candidates than needed to ensure we have enough for balanced merging
+        // Langkah 1: Retrieval hasil untuk SETIAP intent secara terpisah dengan kandidat pool lebih besar
+        // Kita retrieval lebih banyak kandidat dari yang dibutuhkan untuk memastikan cukup untuk merging seimbang
         $candidatesPerIntent = max(10, $limit * 2);
         
         foreach ($intents as $index => $intent) {
-            // Create a fresh debug info for each intent retrieval
+            // Buat debug info baru untuk setiap intent retrieval
             $this->debugInfo = [
                 'original_query' => $intent,
                 'stages' => [],
@@ -575,10 +661,10 @@ class AdvancedRetrievalService
             $normalizedIntent = $this->normalizeTypos($intent);
             $normalizedIntent = $this->normalizeSynonyms($normalizedIntent);
             
-            // Retrieve more candidates than the fair share to have options for merging
+            // Ambil lebih banyak kandidat dari fair share untuk punya opsi merging
             $result = $this->singleIntentRetrieval($normalizedIntent, $candidatesPerIntent);
             
-            // Tag each result with its source intent for tracking
+            // Tag setiap hasil dengan source intent-nya untuk tracking
             foreach ($result['results'] as &$article) {
                 $article['_intent_index'] = $index;
                 $article['_intent_query'] = $intent;
@@ -598,11 +684,11 @@ class AdvancedRetrievalService
             ];
         }
         
-        // Restore the main debug info
+        // Restore debug info utama
         $this->debugInfo = $savedDebugInfo;
         $this->debugInfo['intents'] = $intents;
         
-        // Step 2: Balanced merging - interleave results from each intent
+        // Langkah 2: Balanced merging - interleave hasil dari each intent
         $finalResults = $this->balancedMerge($intentResults, $limit, $allSeenIds);
         
         $this->trackRetrievalResult($originalQuery, $finalResults);
@@ -624,17 +710,17 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Balanced merge of results from multiple intents
+     * Balanced merge of hasil dari multiple intents
      * 
-     * This method ensures that each intent gets fair representation in the final results.
-     * It uses a round-robin approach, picking the best available result from each intent
-     * in turn, while avoiding duplicates.
+     * Metode ini ensures that each intent gets fair representation di the final hasil.
+     * It menggunakan a round-robin approach, picking the best available hasil dari each intent
+     * di turn, while avoiding duplicates.
      * 
      * Algorithm:
-     * 1. Calculate fair quota per intent (limit / num_intents)
-     * 2. Round-robin through intents, picking top available result from each
+     * 1. Hitung fair quota per intent (batas / num_intents)
+     * 2. Round-robin through intents, picking top available hasil dari each
      * 3. Skip duplicates (same article ID)
-     * 4. Continue until limit is reached or no more results available
+     * 4. Continue until batas is reached atau no lebih hasil available
      */
     private function balancedMerge(array $intentResults, int $limit, array &$seenIds): array
     {
@@ -643,13 +729,13 @@ class AdvancedRetrievalService
             return [];
         }
         
-        // Calculate fair quota per intent (minimum 1 result per intent if possible)
+        // Hitung fair quota per intent (minimum 1 hasil per intent jika possible)
         $quotaPerIntent = max(1, (int) ceil($limit / $numIntents));
         
-        // Track how many results we've taken from each intent
+        // Track how many hasil we've taken dari each intent
         $resultsPerIntent = array_fill(0, $numIntents, 0);
         
-        // Track current position in each intent's result list
+        // Track saat ini position di each intent's hasil daftar
         $currentPosition = array_fill(0, $numIntents, 0);
         
         $finalResults = [];
@@ -669,34 +755,34 @@ class AdvancedRetrievalService
                 $candidate = $intentResults[$intentIndex][$position];
                 $position++;
                 
-                // Skip duplicates (same article ID already in results)
+                // Skip duplicates (same article ID already di hasil)
                 if (isset($seenIds[$candidate['id']])) {
                     continue;
                 }
                 
-                // Skip results below minimum threshold
+                // Skip hasil below minimum ambang
                 if (($candidate['final_score'] ?? 0) < self::SIMILARITY_THRESHOLD * 0.5) {
                     continue;
                 }
                 
-                // Add this result
+                // Tambahkan this hasil
                 $seenIds[$candidate['id']] = true;
                 $resultsPerIntent[$intentIndex]++;
                 $totalResults++;
                 $countForThisIntent++;
                 
-                // Clean up internal tracking fields before adding to results
+                // Clean up internal tracking fields sebelum adding ke hasil
                 unset($candidate['_intent_index'], $candidate['_intent_query']);
                 $candidate['matched_intent'] = $intentIndex;
                 
                 $finalResults[] = $candidate;
             }
             
-            // Update position for potential overflow phase
+            // Perbarui position untuk potential overflow phase
             $currentPosition[$intentIndex] = $position;
         }
         
-        // Phase 2: If we still have room, do another round-robin pass
+        // Phase 2: Jika we still have room, do another round-robin pass
         if ($totalResults < $limit) {
             $moreRounds = true;
             $maxExtraRounds = 3; // Limit extra rounds
@@ -711,7 +797,7 @@ class AdvancedRetrievalService
                         break 2;
                     }
                     
-                    // Try to get one more result from this intent
+                    // Try ke get one lebih hasil dari this intent
                     while ($currentPosition[$intentIndex] < count($intentResults[$intentIndex])) {
                         $candidate = $intentResults[$intentIndex][$currentPosition[$intentIndex]];
                         $currentPosition[$intentIndex]++;
@@ -739,7 +825,7 @@ class AdvancedRetrievalService
             }
         }
         
-        // Phase 3: Fill remaining slots with best available from any intent
+        // Phase 3: Fill remaining slots dengan best available dari apa pun intent
         if ($totalResults < $limit) {
             $remainingCandidates = [];
             
@@ -754,7 +840,7 @@ class AdvancedRetrievalService
                 }
             }
             
-            // Sort remaining candidates by score and add top ones
+            // Sort remaining candidates dengan skor dan tambahkan top ones
             usort($remainingCandidates, fn($a, $b) => 
                 ($b['final_score'] ?? 0) <=> ($a['final_score'] ?? 0)
             );
@@ -782,6 +868,25 @@ class AdvancedRetrievalService
         return $finalResults;
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Get Allowed Categories
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil data get allowed categories untuk keperluan logika service.
+     *
+     * Alur Proses:
+     * 1. Menentukan sumber data untuk get allowed categories.
+     * 1. Mengambil atau memformat data.
+     * 1. Mengembalikan hasil dalam struktur yang sesuai.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array
+     */
     private function getAllowedCategories(array $domainInfo): array
     {
         if (!$domainInfo['detected'] || empty($domainInfo['domain'])) {
@@ -792,6 +897,25 @@ class AdvancedRetrievalService
         return $this->domainCategoryMap[$domain] ?? [];
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Get Domain Filtered Articles
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil data get domain filtered articles untuk keperluan logika service.
+     *
+     * Alur Proses:
+     * 1. Menentukan sumber data untuk get domain filtered articles.
+     * 1. Mengambil atau memformat data.
+     * 1. Mengembalikan hasil dalam struktur yang sesuai.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - Collection
+     */
     private function getDomainFilteredArticles(array $allowedCategories): Collection
     {
         if (empty($allowedCategories)) {
@@ -810,6 +934,25 @@ class AdvancedRetrievalService
             ->get();
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Get Published Articles
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil data get published articles untuk keperluan logika service.
+     *
+     * Alur Proses:
+     * 1. Menentukan sumber data untuk get published articles.
+     * 1. Mengambil atau memformat data.
+     * 1. Mengembalikan hasil dalam struktur yang sesuai.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - Collection
+     */
     private function getPublishedArticles(): Collection
     {
         return Article::where('is_published', true)
@@ -819,6 +962,25 @@ class AdvancedRetrievalService
             ->get();
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Expand Query
+     * =========================================================================
+     *
+     * Fungsi:
+     * Melakukan operasi expand query di dalam service.
+     *
+     * Alur Proses:
+     * 1. Memproses input sesuai tujuan method.
+     * 1. Mengambil atau mengubah data internal.
+     * 1. Mengembalikan hasil sesuai tipe return.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - string
+     */
     private function expandQuery(string $query, ?string $domain): string
     {
         $expanded = $query;
@@ -838,6 +1000,25 @@ class AdvancedRetrievalService
         return $expanded;
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Normalize Synonyms
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menormalisasi normalize synonyms agar konsisten di seluruh pipeline.
+     *
+     * Alur Proses:
+     * 1. Membersihkan teks/kata dari variasi atau typo.
+     * 1. Mengubah format ke bentuk standar.
+     * 1. Mengembalikan string atau token yang dinormalisasi.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - string
+     */
     private function normalizeSynonyms(string $query): string
     {
         $result = $query;
@@ -853,12 +1034,31 @@ class AdvancedRetrievalService
         return $result;
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Normalize Typos
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menormalisasi normalize typos agar konsisten di seluruh pipeline.
+     *
+     * Alur Proses:
+     * 1. Membersihkan teks/kata dari variasi atau typo.
+     * 1. Mengubah format ke bentuk standar.
+     * 1. Mengembalikan string atau token yang dinormalisasi.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - string
+     */
     private function normalizeTypos(string $query): string
     {
-        // Use VocabularyService for dynamic typo correction
+        // Gunakan VocabularyService untuk dynamic typo correction
         $normalizationResult = $this->vocabularyService->normalizeQuery($query);
         
-        // Store correction info for debugging
+        // Store correction info untuk debugging
         if (!empty($normalizationResult['corrections'])) {
             $this->debugInfo['vocabulary_corrections'] = $normalizationResult['corrections'];
         }
@@ -866,6 +1066,25 @@ class AdvancedRetrievalService
         return $normalizationResult['normalized'];
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Hybrid Ranking
+     * =========================================================================
+     *
+     * Fungsi:
+     * Melakukan operasi hybrid ranking di dalam service.
+     *
+     * Alur Proses:
+     * 1. Memproses input sesuai tujuan method.
+     * 1. Mengambil atau mengubah data internal.
+     * 1. Mengembalikan hasil sesuai tipe return.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - mixed
+     */
     private function hybridRanking(
         array $queryVector,
         array $documentVectors,
@@ -876,14 +1095,14 @@ class AdvancedRetrievalService
     ): array {
         $rankedResults = [];
         
-        // Check if query has security intent
+        // Periksa jika query has keamanan intent
         $hasSecurityIntent = $this->hasSecurityIntent($originalQuery);
         
         // ============================================================
-        // IMPORTANT PHRASE DETECTION (NEW - Phrase-level intent boosting)
+        // IMPORTANT PHRASE DETECTION (NEW - Frasa-level intent boosting)
         // ============================================================
-        // Detect important phrases in the query (e.g., "tidak terhubung", "gagal login")
-        // These phrases represent TRUE user intent and should DOMINATE ranking
+        // Detect penting frasa di the query (e.g., "tidak terhubung", "gagal login")
+        // These frasa represent TRUE user intent dan harus DOMINATE ranking
         $detectedPhrases = $this->phraseService->detectPhrases($originalQuery);
         $hasImportantPhrase = !empty($detectedPhrases);
         
@@ -903,18 +1122,18 @@ class AdvancedRetrievalService
             $domainPenalty = $this->calculateDomainPenalty($document, $domainInfo);
             
             // SECURITY PRIORITY BOOST
-            // When query contains security tokens (virus, malware, ransomware, trojan),
-            // strongly boost security-related articles to override generic hardware articles
+            // Ketika query mengandung keamanan token (virus, malware, ransomware, trojan),
+            // strongly boost keamanan-related articles ke override generic hardware articles
             $securityBoost = 0.0;
             if ($hasSecurityIntent && $this->isSecurityDocument($document)) {
-                $securityBoost = 0.35; // Strong boost for security articles when security intent detected
+                $securityBoost = 0.35; // Strong boost untuk keamanan articles ketika keamanan intent detected
             }
             
             // ============================================================
             // IMPORTANT PHRASE BOOSTING (NEW)
             // ============================================================
-            // If query contains important phrases, boost documents that match those phrases
-            // This is the KEY FIX for the problem where "wifi tidak terhubung" was returning
+            // Jika query mengandung penting frasa, boost dokumen that cocok those frasa
+            // This is the KEY FIX untuk the problem where "wifi tidak terhubung" was returning
             // "Internet lambat" instead of "Wifi tidak terhubung"
             $phraseBoost = 0.0;
             $phraseBoostDetails = [];
@@ -931,8 +1150,8 @@ class AdvancedRetrievalService
                 ];
             }
             
-            // Apply phrase boost as a DIRECT ADDITIVE BONUS (not weighted)
-            // This ensures phrase matches have STRONG influence on ranking
+            // Apply frasa boost as a DIRECT ADDITIVE BONUS (tidak weighted)
+            // This ensures frasa cocok have STRONG influence on ranking
             $finalScore = (
                 ($cosineSimilarity * self::WEIGHT_COSINE) +
                 ($titleOverlap * self::WEIGHT_TITLE_OVERLAP) +
@@ -976,12 +1195,12 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Calculate title overlap score with bigram matching for exact phrase detection
+     * Hitung judul overlap skor dengan bigram kecocokan untuk exact frasa detection
      * 
-     * This method now:
-     * 1. Filters out low-priority generic terms (cara, mengatasi, etc.)
-     * 2. Checks for bigram (2-gram) matches for exact phrase detection
-     * 3. Gives higher weight to domain-specific term matches
+     * Metode ini now:
+     * 1. Filters out low-prioritas generic terms (cara, mengatasi, etc.)
+     * 2. Checks untuk bigram (2-gram) cocok untuk exact frasa detection
+     * 3. Gives higher weight ke domain-specific term cocok
      */
     private function calculateTitleOverlap(array $queryVector, array $document): float
     {
@@ -993,17 +1212,17 @@ class AdvancedRetrievalService
         $titleTokens = $document['title_tokens'];
         $queryTerms = array_keys($queryVector);
         
-        // Filter out low-priority terms from query for title matching
+        // Filter out low-prioritas terms dari query untuk judul kecocokan
         $importantQueryTerms = array_filter($queryTerms, fn($t) => !$this->isLowPriorityTerm($t));
         
         if (empty($importantQueryTerms)) {
-            $importantQueryTerms = $queryTerms; // Fallback if all terms are low priority
+            $importantQueryTerms = $queryTerms; // Fallback jika semua terms are low prioritas
         }
         
-        // Check for bigram (2-gram) matches - this captures exact phrases like "komputer lemot"
+        // Periksa untuk bigram (2-gram) cocok - this captures exact frasa like "komputer lemot"
         $bigramMatches = $this->calculateBigramOverlap($queryTerms, $title);
         
-        // Calculate unigram overlap for important terms only
+        // Hitung unigram overlap untuk penting terms hanya
         $matchedTerms = 0;
         $weightedMatches = 0.0;
         foreach ($importantQueryTerms as $term) {
@@ -1022,22 +1241,22 @@ class AdvancedRetrievalService
             return 0.0;
         }
         
-        // Combine unigram and bigram scores
+        // Combine unigram dan bigram skor
         $unigramScore = $weightedMatches / count($importantQueryTerms);
         
-        // Bigram matches are strong signals of exact phrase matching
+        // Bigram cocok are strong signals of exact frasa kecocokan
         $score = $unigramScore + ($bigramMatches * 0.3);
         
         return min(1.0, $score);
     }
     
     /**
-     * Calculate bigram (2-gram) overlap between query and title
-     * This helps detect exact phrases like "komputer lemot" in titles
+     * Hitung bigram (2-gram) overlap between query dan judul
+     * This helps detect exact frasa like "komputer lemot" di titles
      */
     private function calculateBigramOverlap(array $queryTerms, string $title): int
     {
-        // Filter out low-priority terms for bigram generation
+        // Filter out low-prioritas terms untuk bigram generation
         $importantTerms = array_filter($queryTerms, fn($t) => !$this->isLowPriorityTerm($t));
         $importantTerms = array_values($importantTerms);
         
@@ -1048,7 +1267,7 @@ class AdvancedRetrievalService
         $titleLower = strtolower($title);
         $bigramMatches = 0;
         
-        // Generate bigrams from important query terms
+        // Generate bigrams dari penting query terms
         for ($i = 0; $i < count($importantTerms) - 1; $i++) {
             $bigram = $importantTerms[$i] . ' ' . $importantTerms[$i + 1];
             if (str_contains($titleLower, $bigram)) {
@@ -1060,7 +1279,7 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Check if a term is a low-priority generic term
+     * Periksa jika a term is a low-prioritas generic term
      */
     private function isLowPriorityTerm(string $term): bool
     {
@@ -1068,11 +1287,11 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Check if a term is domain-specific (should be weighted higher)
+     * Periksa jika a term is domain-specific (harus be weighted higher)
      * 
      * Note: Generic technical terms like 'pc', 'laptop', 'komputer', 'aplikasi', 'error'
-     * are intentionally EXCLUDED because they are too common and should be downweighted,
-     * not boosted. Only specific domain identifiers and action terms are boosted.
+     * are intentionally EXCLUDED because they are too common dan harus be downweighted,
+     * tidak boosted. Hanya specific domain identifiers dan action terms are boosted.
      */
     private function isDomainSpecificTerm(string $term): bool
     {
@@ -1080,8 +1299,8 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Check if query contains security priority tokens
-     * Returns true if ANY security token is found in the query
+     * Periksa jika query mengandung keamanan prioritas token
+     * Mengembalikan true jika ANY keamanan token is found di the query
      */
     private function hasSecurityIntent(string $query): bool
     {
@@ -1097,7 +1316,7 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Check if document is security-related
+     * Periksa jika dokumen is keamanan-related
      */
     private function isSecurityDocument(array $document): bool
     {
@@ -1105,12 +1324,12 @@ class AdvancedRetrievalService
         $content = strtolower($document['text'] ?? '');
         $category = strtolower($document['category_name'] ?? '');
         
-        // Check if category is security-related
+        // Periksa jika kategori is keamanan-related
         if ($category === 'security') {
             return true;
         }
         
-        // Check if title or content contains security tokens
+        // Periksa jika judul atau konten mengandung keamanan token
         foreach ($this->securityPriorityTokens as $token) {
             if (str_contains($title, $token) || str_contains($content, $token)) {
                 return true;
@@ -1120,6 +1339,25 @@ class AdvancedRetrievalService
         return false;
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Calculate Domain Match
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menghitung nilai calculate domain match berdasarkan input yang diberikan.
+     *
+     * Alur Proses:
+     * 1. Memproses input untuk menghitung calculate domain match.
+     * 1. Menerapkan rumus atau bobot relevansi.
+     * 1. Mengembalikan nilai numerik atau vektor.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - float
+     */
     private function calculateDomainMatch(array $document, array $domainInfo, array $allowedCategories): float
     {
         if (!$domainInfo['detected'] || empty($allowedCategories)) {
@@ -1139,12 +1377,12 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Calculate query coverage score - measures how many important query terms
-     * are present in the document
+     * Hitung query coverage skor - measures how many penting query terms
+     * are present di the dokumen
      * 
-     * This method now:
-     * 1. Ignores low-priority generic terms (cara, mengatasi, etc.)
-     * 2. Gives major boost when ALL important terms match
+     * Metode ini now:
+     * 1. Ignores low-prioritas generic terms (cara, mengatasi, etc.)
+     * 2. Gives major boost ketika ALL penting terms cocok
      * 3. Weights domain-specific terms higher
      */
     private function calculateQueryCoverage(array $queryVector, array $docVector): float
@@ -1155,14 +1393,14 @@ class AdvancedRetrievalService
         
         $queryTerms = array_keys($queryVector);
         
-        // Filter out low-priority and stopword terms
+        // Filter out low-prioritas dan stopword terms
         $importantTerms = array_filter($queryTerms, fn($t) => 
             !in_array($t, $this->itStopwords) && !$this->isLowPriorityTerm($t)
         );
         $importantTerms = array_values($importantTerms);
         
         if (empty($importantTerms)) {
-            // Fallback to all terms if everything is filtered
+            // Fallback ke semua terms jika everything is filtered
             $importantTerms = array_filter($queryTerms, fn($t) => !in_array($t, $this->itStopwords));
             $importantTerms = array_values($importantTerms);
         }
@@ -1188,7 +1426,7 @@ class AdvancedRetrievalService
         
         $baseScore = $weightedMatches / count($importantTerms);
         
-        // Major boost when ALL important terms match (full coverage)
+        // Major boost ketika ALL penting terms cocok (full coverage)
         $coverageRatio = $matchedTerms / count($importantTerms);
         if ($coverageRatio >= 1.0) {
             $baseScore += self::FULL_COVERAGE_BONUS;
@@ -1200,14 +1438,14 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Calculate exact phrase bonus - rewards documents where the query
-     * appears as an exact phrase in the title
+     * Hitung exact frasa bonus - rewards dokumen where the query
+     * muncul as an exact frasa di the judul
      * 
-     * This method now:
-     * 1. Gives maximum bonus for exact full query match in title
-     * 2. Checks for bigram/phrase matches (e.g., "komputer lemot" in title)
-     * 3. Filters out low-priority terms when checking word presence
-     * 4. Considers word order for phrase detection
+     * Metode ini now:
+     * 1. Gives maksimum bonus untuk exact full query cocok di judul
+     * 2. Checks untuk bigram/frasa cocok (e.g., "komputer lemot" di judul)
+     * 3. Filters out low-prioritas terms ketika checking word presence
+     * 4. Considers word order untuk frasa detection
      */
     private function calculateExactPhraseBonus(string $originalQuery, array $document): float
     {
@@ -1218,19 +1456,19 @@ class AdvancedRetrievalService
         $queryLower = strtolower(trim($originalQuery));
         $titleLower = strtolower($title);
         
-        // Filter out low-priority terms from query for phrase matching
+        // Filter out low-prioritas terms dari query untuk frasa kecocokan
         $queryWords = explode(' ', $queryLower);
         $importantWords = array_filter($queryWords, fn($w) => 
             mb_strlen($w) > 2 && !$this->isLowPriorityTerm($w)
         );
         $importantWords = array_values($importantWords);
         
-        // EXACT MATCH: Full query phrase in title (highest priority)
+        // EXACT MATCH: Full query frasa di judul (highest prioritas)
         if (str_contains($titleLower, $queryLower)) {
             return 1.0;
         }
         
-        // EXACT PHRASE MATCH: All important words appear consecutively in title
+        // EXACT PHRASE MATCH: All penting words muncul consecutively di judul
         if (count($importantWords) >= 2) {
             $importantPhrase = implode(' ', $importantWords);
             if (str_contains($titleLower, $importantPhrase)) {
@@ -1238,7 +1476,7 @@ class AdvancedRetrievalService
             }
         }
         
-        // ALL IMPORTANT WORDS IN TITLE (not necessarily consecutive)
+        // ALL IMPORTANT WORDS IN TITLE (tidak necessarily consecutive)
         $allImportantInTitle = true;
         foreach ($importantWords as $word) {
             if (!str_contains($titleLower, $word)) {
@@ -1251,7 +1489,7 @@ class AdvancedRetrievalService
             return 0.75;
         }
         
-        // Most words in title (with low-priority terms filtered)
+        // Most words di judul (dengan low-prioritas terms filtered)
         $wordsInTitle = 0;
         foreach ($importantWords as $word) {
             if (str_contains($titleLower, $word)) {
@@ -1263,13 +1501,13 @@ class AdvancedRetrievalService
             return 0.5;
         }
         
-        // Check excerpt for exact phrase
+        // Periksa excerpt untuk exact frasa
         $excerptLower = strtolower($excerpt);
         if (str_contains($excerptLower, $queryLower)) {
             return 0.4;
         }
         
-        // Check content for exact phrase
+        // Periksa konten untuk exact frasa
         $contentLower = strtolower($content);
         if (str_contains($contentLower, $queryLower)) {
             return 0.3;
@@ -1279,12 +1517,12 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Calculate domain penalty - penalizes articles from unrelated domains
+     * Hitung domain penalty - penalizes articles dari unrelated domains
      * 
-     * This method now:
-     * 1. Uses negative domain penalty mappings for stronger penalties
-     * 2. Checks for forbidden domain keywords in article content/title
-     * 3. Applies stronger penalties for clearly unrelated domains
+     * Metode ini now:
+     * 1. Uses negative domain penalty mappings untuk stronger penalties
+     * 2. Checks untuk forbidden domain kata kunci di article konten/judul
+     * 3. Applies stronger penalties untuk clearly unrelated domains
      */
     private function calculateDomainPenalty(array $document, array $domainInfo): float
     {
@@ -1298,20 +1536,20 @@ class AdvancedRetrievalService
         $title = strtolower($document['title'] ?? '');
         $content = strtolower($document['text'] ?? '');
         
-        // Check negative domain penalties (stronger penalties for unrelated domains)
+        // Periksa negative domain penalties (stronger penalties untuk unrelated domains)
         $negativeDomains = $this->negativeDomainPenalties[$detectedDomain] ?? [];
         foreach ($negativeDomains as $negativeDomain) {
-            // Check if the negative domain keyword appears in title or content
+            // Periksa jika the negative domain keyword muncul di judul atau konten
             if (str_contains($title, $negativeDomain) || str_contains($content, $negativeDomain)) {
                 return self::STRONG_DOMAIN_PENALTY;
             }
-            // Check if the document category matches the negative domain
+            // Periksa jika the dokumen kategori cocok the negative domain
             if ($docCategoryLower === strtolower($negativeDomain)) {
                 return self::STRONG_DOMAIN_PENALTY;
             }
         }
         
-        // Also check forbidden domain map (legacy penalty)
+        // Also periksa forbidden domain peta (legacy penalty)
         $forbiddenDomains = $this->forbiddenDomainMap[$detectedDomain] ?? [];
         foreach ($forbiddenDomains as $forbidden) {
             if ($docCategoryLower === strtolower($forbidden)) {
@@ -1322,6 +1560,25 @@ class AdvancedRetrievalService
         return 0.0;
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Diversify Results
+     * =========================================================================
+     *
+     * Fungsi:
+     * Melakukan operasi diversify results di dalam service.
+     *
+     * Alur Proses:
+     * 1. Memproses input sesuai tujuan method.
+     * 1. Mengambil atau mengubah data internal.
+     * 1. Mengembalikan hasil sesuai tipe return.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array
+     */
     private function diversifyResults(array $rankedResults, array $documents): array
     {
         $seenCategories = [];
@@ -1359,6 +1616,25 @@ class AdvancedRetrievalService
         return $rankedResults;
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Detect Multi Intent
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mendeteksi detect multi intent dari query pengguna.
+     *
+     * Alur Proses:
+     * 1. Analisis input query.
+     * 1. Cocokkan token terhadap pola atau domain.
+     * 1. Mengembalikan keputusan deteksi beserta metadata.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array
+     */
     private function detectMultiIntent(string $query): array
     {
         $intents = [];
@@ -1389,6 +1665,25 @@ class AdvancedRetrievalService
         return [$query];
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Track Retrieval Result
+     * =========================================================================
+     *
+     * Fungsi:
+     * Melakukan operasi track retrieval result di dalam service.
+     *
+     * Alur Proses:
+     * 1. Memproses input sesuai tujuan method.
+     * 1. Mengambil atau mengubah data internal.
+     * 1. Mengembalikan hasil sesuai tipe return.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - void
+     */
     private function trackRetrievalResult(string $query, array $results): void
     {
         $normalizedQuery = $this->normalizeQueryForTracking($query);
@@ -1408,6 +1703,20 @@ class AdvancedRetrievalService
         Session::put(self::SESSION_FAILURE_KEY, $failureMemory);
     }
     
+    /**
+     * =========================================================================
+     * 2. Metode Menentukan Eskalasi
+     * =========================================================================
+     * 
+     * Metode ini memeriksa apakah query telah gagal berkali-kali dan
+     * membutuhkan eskalasi ke staff atau tiket.
+     * 
+     * Parameter:
+     * string $query
+     * 
+     * Kembalikan:
+     * bool
+     */
     public function shouldEscalate(string $query): bool
     {
         $normalizedQuery = $this->normalizeQueryForTracking($query);
@@ -1415,6 +1724,17 @@ class AdvancedRetrievalService
         return ($failureMemory[$normalizedQuery] ?? 0) >= self::FAILURE_THRESHOLD;
     }
     
+    /**
+     * =========================================================================
+     * 3. Metode Respon Eskalasi
+     * =========================================================================
+     * 
+     * Metode ini mengembalikan paket data ketika sistem memutuskan untuk
+     * mengarahkan pengguna ke support atau tiket.
+     * 
+     * Kembalikan:
+     * array
+     */
     public function getEscalationResponse(): array
     {
         return [
@@ -1430,7 +1750,17 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Get failure count for a query
+     * =========================================================================
+     * 4. Metode Menghitung Kegagalan Query
+     * =========================================================================
+     * 
+     * Metode ini menghitung berapa kali query gagal menemukan hasil yang layak.
+     * 
+     * Parameter:
+     * string $query
+     * 
+     * Kembalikan:
+     * int
      */
     public function getFailureCount(string $query): int
     {
@@ -1440,7 +1770,20 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Clear failure memory for a query (called when success is achieved)
+     * Clear failure memory untuk a query (called ketika success is achieved)
+     */
+    /**
+     * =========================================================================
+     * 5. Metode Membersihkan Memori Kegagalan Query
+     * =========================================================================
+     * 
+     * Metode ini menghapus catatan kegagalan untuk query yang sudah berhasil.
+     * 
+     * Parameter:
+     * string $query
+     * 
+     * Kembalikan:
+     * void
      */
     public function clearFailureForQuery(string $query): void
     {
@@ -1451,7 +1794,20 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Store conversation context for memory
+     * Store conversation context untuk memory
+     */
+    /**
+     * =========================================================================
+     * 6. Metode Menyimpan Konteks Percakapan
+     * =========================================================================
+     * 
+     * Metode ini menyimpan alur percakapan terakhir untuk mendukung sesi dialog.
+     * 
+     * Parameter:
+     * array $context
+     * 
+     * Kembalikan:
+     * void
      */
     public function storeConversationContext(array $context): void
     {
@@ -1461,7 +1817,7 @@ class AdvancedRetrievalService
             'timestamp' => now()->timestamp,
         ]);
         
-        // Keep only last 10 interactions
+        // Simpan hanya last 10 interactions
         $conversationMemory = array_slice($conversationMemory, -10);
         
         Session::put(self::SESSION_CONVERSATION_KEY, $conversationMemory);
@@ -1469,6 +1825,19 @@ class AdvancedRetrievalService
     
     /**
      * Get recent conversation context
+     */
+    /**
+     * =========================================================================
+     * 7. Metode Mendapatkan Konteks Percakapan Terbaru
+     * =========================================================================
+     * 
+     * Metode ini mengambil beberapa interaksi terakhir dari sesi chatbot.
+     * 
+     * Parameter:
+     * int $batas
+     * 
+     * Kembalikan:
+     * array
      */
     public function getRecentConversationContext(int $limit = 3): array
     {
@@ -1484,13 +1853,37 @@ class AdvancedRetrievalService
     /**
      * Clear conversation memory
      */
+    /**
+     * =========================================================================
+     * 8. Metode Menghapus Memori Percakapan
+     * =========================================================================
+     * 
+     * Metode ini mengosongkan memori percakapan sehingga sesi berikutnya
+     * dimulai tanpa data sebelumnya.
+     * 
+     * Kembalikan:
+     * void
+     */
     public function clearConversationMemory(): void
     {
         Session::forget(self::SESSION_CONVERSATION_KEY);
     }
     
     /**
-     * Get clarification suggestions for ambiguous queries
+     * Get clarification suggestions untuk ambiguous query
+     */
+    /**
+     * =========================================================================
+     * 9. Metode Mendapatkan Saran Klarifikasi
+     * =========================================================================
+     * 
+     * Metode ini menghasilkan saran klarifikasi berdasarkan domain query.
+     * 
+     * Parameter:
+     * string $query
+     * 
+     * Kembalikan:
+     * array
      */
     public function getClarificationSuggestions(string $query): array
     {
@@ -1511,13 +1904,26 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Check if query needs clarification (ambiguous/generic)
+     * Periksa jika query needs clarification (ambiguous/generic)
+     */
+    /**
+     * =========================================================================
+     * 10. Metode Memeriksa Kebutuhan Klarifikasi
+     * =========================================================================
+     * 
+     * Metode ini menentukan apakah query terlalu umum atau ambigu.
+     * 
+     * Parameter:
+     * string $query
+     * 
+     * Kembalikan:
+     * bool
      */
     public function needsClarification(string $query): bool
     {
         $lowerQuery = strtolower(trim($query));
         
-        // Very short queries need clarification
+        // Very short query need clarification
         if (strlen($lowerQuery) < 5) {
             return true;
         }
@@ -1544,7 +1950,20 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Get clarification response for ambiguous queries
+     * Get clarification response untuk ambiguous query
+     */
+    /**
+     * =========================================================================
+     * 11. Metode Respon Klarifikasi
+     * =========================================================================
+     * 
+     * Metode ini membentuk jawaban klarifikasi untuk query ambigu.
+     * 
+     * Parameter:
+     * string $query
+     * 
+     * Kembalikan:
+     * array
      */
     public function getClarificationResponse(string $query): array
     {
@@ -1567,8 +1986,8 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Enhanced diversification with category quotas
-     * Ensures results are diverse across categories and types
+     * Enhanced diversification dengan kategori quotas
+     * Ensures hasil are diverse across kategori dan types
      */
     private function diversifyResultsEnhanced(array $rankedResults, array $documents): array
     {
@@ -1582,15 +2001,15 @@ class AdvancedRetrievalService
             $category = $document['category_name'] ?? 'unknown';
             $title = strtolower($document['title'] ?? '');
             
-            // Check category quota
+            // Periksa kategori quota
             $categoryCounts[$category] = $categoryCounts[$category] ?? 0;
             if ($categoryCounts[$category] >= self::MAX_RESULTS_PER_CATEGORY) {
-                // Apply heavy penalty for exceeding quota
+                // Apply heavy penalty untuk exceeding quota
                 $result['final_score'] = max(0, $result['final_score'] - 0.3);
                 $result['category_quota_exceeded'] = true;
             }
             
-            // Check title pattern diversity (avoid BSOD domination, etc.)
+            // Periksa judul pattern diversity (avoid BSOD domination, etc.)
             $titleWords = preg_split('/\s+/', $title);
             $titlePenalty = 0;
             foreach ($titleWords as $word) {
@@ -1611,17 +2030,55 @@ class AdvancedRetrievalService
             $diversifiedResults[] = $result;
         }
         
-        // Re-sort after penalties
+        // Re-sort setelah penalties
         usort($diversifiedResults, fn($a, $b) => $b['final_score'] <=> $a['final_score']);
         
         return $diversifiedResults;
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Normalize Query For Tracking
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menormalisasi normalize query for tracking agar konsisten di seluruh pipeline.
+     *
+     * Alur Proses:
+     * 1. Membersihkan teks/kata dari variasi atau typo.
+     * 1. Mengubah format ke bentuk standar.
+     * 1. Mengembalikan string atau token yang dinormalisasi.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - string
+     */
     private function normalizeQueryForTracking(string $query): string
     {
         return strtolower(trim(preg_replace('/\s+/', ' ', $query)));
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Prepare Documents
+     * =========================================================================
+     *
+     * Fungsi:
+     * Melakukan operasi prepare documents di dalam service.
+     *
+     * Alur Proses:
+     * 1. Memproses input sesuai tujuan method.
+     * 1. Mengambil atau mengubah data internal.
+     * 1. Mengembalikan hasil sesuai tipe return.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array
+     */
     private function prepareDocuments(Collection $articles): array
     {
         $documents = [];
@@ -1677,6 +2134,25 @@ class AdvancedRetrievalService
         return $documents;
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Build Tfidf Vectors
+     * =========================================================================
+     *
+     * Fungsi:
+     * Membangun objek/struktur build tfidf vectors untuk pipeline retrieval.
+     *
+     * Alur Proses:
+     * 1. Mempersiapkan data awal untuk build tfidf vectors.
+     * 1. Menggabungkan atribut penting.
+     * 1. Mengembalikan objek atau array yang siap dipakai.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array
+     */
     private function buildTfidfVectors(array $documents): array
     {
         $documentTermFrequencies = [];
@@ -1699,6 +2175,25 @@ class AdvancedRetrievalService
         ];
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Apply Threshold And Limit
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menerapkan transformasi atau boost pada data apply threshold and limit.
+     *
+     * Alur Proses:
+     * 1. Menerima input dasar dan aturan boosting.
+     * 1. Menghitung nilai tambahan berdasarkan kondisi.
+     * 1. Mengembalikan data dengan penyesuaian yang diterapkan.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array
+     */
     private function applyThresholdAndLimit(array $rankedResults, int $limit): array
     {
         $finalResults = [];
@@ -1714,7 +2209,7 @@ class AdvancedRetrievalService
             
             $doc = $result['document'];
             
-            // Use the doc_id from the ranked result (which is the article ID)
+            // Gunakan the doc_id dari the ranked hasil (which is the article ID)
             $articleId = $result['doc_id'] ?? $doc['doc_id'] ?? $doc['id'] ?? null;
             
             $finalResults[] = [
@@ -1735,6 +2230,25 @@ class AdvancedRetrievalService
         return $finalResults;
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Get Confidence Level
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil data get confidence level untuk keperluan logika service.
+     *
+     * Alur Proses:
+     * 1. Menentukan sumber data untuk get confidence level.
+     * 1. Mengambil atau memformat data.
+     * 1. Mengembalikan hasil dalam struktur yang sesuai.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - string
+     */
     private function getConfidenceLevel(float $score): string
     {
         if ($score >= self::HIGH_SIMILARITY_THRESHOLD) {
@@ -1745,6 +2259,25 @@ class AdvancedRetrievalService
         return 'low';
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Empty Result
+     * =========================================================================
+     *
+     * Fungsi:
+     * Melakukan operasi empty result di dalam service.
+     *
+     * Alur Proses:
+     * 1. Memproses input sesuai tujuan method.
+     * 1. Mengambil atau mengubah data internal.
+     * 1. Mengembalikan hasil sesuai tipe return.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array
+     */
     private function emptyResult(string $query): array
     {
         $this->trackRetrievalResult($query, []);
@@ -1759,10 +2292,10 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Return result for OUT-OF-DOMAIN queries
-     * This is called when a query is detected as non-IT related
+     * Kembalikan hasil untuk OUT-OF-DOMAIN query
+     * This is called ketika a query is detected as non-IT related
      * 
-     * DO NOT fallback to IT articles - return polite rejection instead
+     * DO NOT fallback ke IT articles - kembalikan polite rejection instead
      */
     private function outOfDomainResult(string $query): array
     {
@@ -1782,6 +2315,25 @@ class AdvancedRetrievalService
         ];
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Log Stage
+     * =========================================================================
+     *
+     * Fungsi:
+     * Melakukan operasi log stage di dalam service.
+     *
+     * Alur Proses:
+     * 1. Memproses input sesuai tujuan method.
+     * 1. Mengambil atau mengubah data internal.
+     * 1. Mengembalikan hasil sesuai tipe return.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - void
+     */
     private function logStage(string $stage, string $input, string $output): void
     {
         $this->debugInfo['stages'][] = [
@@ -1791,11 +2343,34 @@ class AdvancedRetrievalService
         ];
     }
     
+    /**
+     * =========================================================================
+     * 12. Metode Mendapatkan Kategori Kurasi
+     * =========================================================================
+     * 
+     * Metode ini mengembalikan daftar kategori yang dikurasi untuk chatbot.
+     * 
+     * Kembalikan:
+     * array
+     */
     public function getCuratedCategories(): array
     {
         return $this->curatedCategories;
     }
     
+    /**
+     * =========================================================================
+     * 13. Metode Mendapatkan Subtopik Kurasi
+     * =========================================================================
+     * 
+     * Metode ini mengembalikan subtopik yang telah dipetakan untuk kategori.
+     * 
+     * Parameter:
+     * string $categoryId
+     * 
+     * Kembalikan:
+     * array
+     */
     public function getCuratedSubtopics(string $categoryId): array
     {
         $subtopics = $this->curatedSubtopics[$categoryId] ?? [];
@@ -1807,6 +2382,19 @@ class AdvancedRetrievalService
         ], $subtopics);
     }
     
+    /**
+     * =========================================================================
+     * 14. Metode Mendeteksi Greeting
+     * =========================================================================
+     * 
+     * Metode ini memeriksa apakah query adalah sapaan pengguna.
+     * 
+     * Parameter:
+     * string $query
+     * 
+     * Kembalikan:
+     * bool
+     */
     public function isGreeting(string $query): bool
     {
         $greetings = ['halo', 'hai', 'hello', 'hi', 'pagi', 'siang', 'sore', 'malam', 'assalamualaikum', 'permisi'];
@@ -1821,6 +2409,16 @@ class AdvancedRetrievalService
         return false;
     }
     
+    /**
+     * =========================================================================
+     * 15. Metode Menghasilkan Respon Greeting
+     * =========================================================================
+     * 
+     * Metode ini menghasilkan sapaan yang sesuai waktu untuk pengguna.
+     * 
+     * Kembalikan:
+     * string
+     */
     public function getGreetingResponse(): string
     {
         $hour = date('H');
@@ -1841,13 +2439,13 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Evaluate if retrieval results are too weak and should use safe fallback
+     * Evaluate jika retrieval hasil are too weak dan harus gunakan safe fallback
      * 
-     * Returns true if ALL of these conditions are met:
-     * - Top score is below SAFE_FALLBACK_THRESHOLD
-     * - No strong title overlap (exact phrase match)
+     * Mengembalikan true jika ALL of these conditions are met:
+     * - Top skor is below SAFE_FALLBACK_THRESHOLD
+     * - Tidak strong judul overlap (exact frasa cocok)
      * - Low query coverage
-     * - Domain mismatch or no domain detected
+     * - Domain mismatch atau no domain detected
      */
     private function shouldUseSafeFallback(array $retrievalResult): bool
     {
@@ -1858,52 +2456,52 @@ class AdvancedRetrievalService
         $topArticle = $retrievalResult['results'][0];
         $topScore = $topArticle['final_score'] ?? 0;
         
-        // If top score is above safe fallback threshold, results are acceptable
+        // Jika top skor is above safe fallback ambang, hasil are acceptable
         if ($topScore >= self::SAFE_FALLBACK_THRESHOLD) {
             return false;
         }
         
-        // Check debug info for additional signals
+        // Periksa debug info untuk additional signals
         $debugInfo = $retrievalResult['debug'] ?? null;
         if (!$debugInfo) {
-            // Without debug info, we can't verify additional signals
-            // Fall back to score-based decision
+            // Without debug info, we dapat't verify additional signals
+            // Fall back ke skor-based decision
             return $topScore < self::SAFE_FALLBACK_THRESHOLD;
         }
         
-        // Check if there are any strong signals in the scores
+        // Periksa jika there are apa pun strong signals di the skor
         $scores = $debugInfo['scores'] ?? [];
         $hasStrongTitleOverlap = false;
         $hasStrongQueryCoverage = false;
         $hasExactPhraseMatch = false;
         
         foreach ($scores as $docId => $scoreBreakdown) {
-            // Check for strong title overlap (above 0.5)
+            // Periksa untuk strong judul overlap (above 0.5)
             if (($scoreBreakdown['title_overlap'] ?? 0) > 0.5) {
                 $hasStrongTitleOverlap = true;
             }
-            // Check for exact phrase match (exact_phrase score of 0.75+)
+            // Periksa untuk exact frasa cocok (exact_phrase skor of 0.75+)
             if (($scoreBreakdown['exact_phrase'] ?? 0) >= 0.75) {
                 $hasExactPhraseMatch = true;
             }
-            // Check for strong query coverage (above 0.7)
+            // Periksa untuk strong query coverage (above 0.7)
             if (($scoreBreakdown['query_coverage'] ?? 0) > 0.7) {
                 $hasStrongQueryCoverage = true;
             }
         }
         
-        // If ANY strong signal exists, allow the results through
+        // Jika ANY strong signal exists, allow the hasil through
         if ($hasStrongTitleOverlap || $hasStrongQueryCoverage || $hasExactPhraseMatch) {
             return false;
         }
         
-        // All signals are weak - use safe fallback
+        // All signals are weak - gunakan safe fallback
         return true;
     }
     
     /**
-     * Get safe fallback message for weak/unclear queries
-     * This prevents returning unrelated articles when confidence is too low
+     * Get safe fallback pesan untuk weak/unclear query
+     * This prevents returning unrelated articles ketika confidence is too low
      */
     private function getSafeFallbackResponse(string $query): array
     {
@@ -1933,9 +2531,22 @@ class AdvancedRetrievalService
         ];
     }
     
+    /**
+     * =========================================================================
+     * 16. Metode Membentuk Respon Akhir
+     * =========================================================================
+     * 
+     * Metode ini menyusun respon chatbot final berdasarkan hasil retrieval.
+     * 
+     * Parameter:
+     * array $retrievalResult
+     * 
+     * Kembalikan:
+     * array
+     */
     public function formatResponse(array $retrievalResult): array
     {
-        // Check for OUT-OF-DOMAIN queries first
+        // Periksa untuk OUT-OF-DOMAIN query first
         if (!empty($retrievalResult['is_out_of_domain'])) {
             return [
                 'success' => false,
@@ -1947,7 +2558,7 @@ class AdvancedRetrievalService
             ];
         }
         
-        // Check if results are too weak - use safe fallback instead of unrelated articles
+        // Periksa jika hasil are too weak - gunakan safe fallback instead of unrelated articles
         if ($this->shouldUseSafeFallback($retrievalResult)) {
             $this->trackRetrievalResult($retrievalResult['query'] ?? '', []);
             return $this->getSafeFallbackResponse($retrievalResult['query'] ?? '');
@@ -1971,7 +2582,7 @@ class AdvancedRetrievalService
         $topArticle = $retrievalResult['results'][0];
         $confidence = $topArticle['confidence'] ?? 'medium';
         
-        // Upgrade confidence to 'very_low' if score is extremely low
+        // Upgrade confidence ke 'very_low' jika skor is extremely low
         $topScore = $topArticle['final_score'] ?? 0;
         if ($topScore < self::SIMILARITY_THRESHOLD * 1.2) {
             $confidence = 'very_low';
@@ -1979,7 +2590,7 @@ class AdvancedRetrievalService
         
         $response = $this->generateResponseText($topArticle, count($retrievalResult['results']), $confidence);
         
-        // Show contact button for low and very_low confidence
+        // Show contact button untuk low dan very_low confidence
         $showContactButton = in_array($confidence, ['low', 'very_low']);
         
         return [
@@ -1994,37 +2605,56 @@ class AdvancedRetrievalService
         ];
     }
     
+    /**
+     * =========================================================================
+     * 1. METODE Generate Response Text
+     * =========================================================================
+     *
+     * Fungsi:
+     * Melakukan operasi generate response text di dalam service.
+     *
+     * Alur Proses:
+     * 1. Memproses input sesuai tujuan method.
+     * 1. Mengambil atau mengubah data internal.
+     * 1. Mengembalikan hasil sesuai tipe return.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - string
+     */
     private function generateResponseText(array $topArticle, int $totalResults, string $confidence): string
     {
         $title = $topArticle['title'];
         $excerpt = $topArticle['excerpt'] ?? '';
         $content = $topArticle['content'] ?? '';
 
-        // Generate short summary from excerpt or content
+        // Generate short summary dari excerpt atau konten
         $summary = $this->generateSummaryFromExcerpt($excerpt, $content, $title);
 
-        // Build response with summary + a more assistant-style label
+        // Bangun response dengan summary + a lebih assistant-style label
         $response = $summary . "\n\nUntuk panduan lebih lengkap, silakan lihat artikel berikut:";
 
         return $response;
     }
 
     /**
-     * Generate short summary from excerpt or content (2-4 sentences)
+     * Generate short summary dari excerpt atau konten (2-4 sentences)
      */
     private function generateSummaryFromExcerpt(string $excerpt, string $content = '', string $title = ''): string
     {
-        // Check if excerpt is informative enough (not just a description)
+        // Periksa jika excerpt is informative enough (tidak just a description)
         $excerptText = $this->stripHtmlTags($excerpt);
         $excerptSentences = preg_split('/(?<=[.!?])\s+/', $excerptText, -1, PREG_SPLIT_NO_EMPTY);
 
-        // Use excerpt if it has at least 2 sentences and is not too similar to title
+        // Gunakan excerpt jika it has at least 2 sentences dan is tidak too similar ke judul
         $useExcerpt = count($excerptSentences) >= 2 && !$this->isTooSimilarToTitle($excerptText, $title);
 
         if ($useExcerpt) {
             $summary = $this->extractSentences($excerptText, 1, 2);
         } elseif (!empty($content)) {
-            // Use first paragraph from content if excerpt is not informative
+            // Gunakan first paragraph dari konten jika excerpt is tidak informative
             $contentText = $this->stripHtmlTags($content);
             $firstParagraph = $this->extractFirstParagraph($contentText);
             $summary = $this->extractSentences($firstParagraph, 1, 2);
@@ -2033,10 +2663,10 @@ class AdvancedRetrievalService
             return 'Saya menemukan beberapa informasi yang relevan dengan pertanyaan Anda.';
         }
 
-        // Shorten the summary to a concise assistant-style response
+        // Shorten the summary ke a concise assistant-style response
         $summary = $this->shortenSummary($summary, 280, 2);
 
-        // Ensure it ends with proper punctuation
+        // Pastikan it ends dengan proper punctuation
         if (!in_array(substr($summary, -1), ['.', '!', '?'])) {
             $summary .= '.';
         }
@@ -2045,11 +2675,11 @@ class AdvancedRetrievalService
     }
 
     /**
-     * Strip HTML tags from text
+     * Strip HTML tags dari teks
      */
     private function stripHtmlTags(string $html): string
     {
-        // Remove HTML tags
+        // Hapus HTML tags
         $text = strip_tags($html);
         // Decode HTML entities
         $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -2059,7 +2689,7 @@ class AdvancedRetrievalService
     }
 
     /**
-     * Check if text is too similar to title (likely just a description)
+     * Periksa jika teks is too similar ke judul (likely just a description)
      */
     private function isTooSimilarToTitle(string $text, string $title): bool
     {
@@ -2070,12 +2700,12 @@ class AdvancedRetrievalService
         $textLower = mb_strtolower($text);
         $titleLower = mb_strtolower($title);
 
-        // Check if text contains title or title contains text
+        // Periksa jika teks mengandung judul atau judul mengandung teks
         if (str_contains($textLower, $titleLower) || str_contains($titleLower, $textLower)) {
             return true;
         }
 
-        // Check if text is very short (less than 50 chars)
+        // Periksa jika teks is very short (less daripada 50 chars)
         if (mb_strlen($text) < 50) {
             return true;
         }
@@ -2084,23 +2714,23 @@ class AdvancedRetrievalService
     }
 
     /**
-     * Extract first paragraph from text
+     * Extract first paragraph dari teks
      */
     private function extractFirstParagraph(string $text): string
     {
-        // Split by double newline or multiple newlines
+        // Split dengan double newline atau multiple newlines
         $paragraphs = preg_split('/\n\s*\n/', $text, -1, PREG_SPLIT_NO_EMPTY);
 
         if (empty($paragraphs)) {
             return $text;
         }
 
-        // Return first paragraph, cleaned
+        // Kembalikan first paragraph, cleaned
         return trim($paragraphs[0]);
     }
 
     /**
-     * Extract N to M sentences from text
+     * Extract N ke M sentences dari teks
      */
     private function extractSentences(string $text, int $min, int $max): string
     {
@@ -2111,13 +2741,32 @@ class AdvancedRetrievalService
             return $text;
         }
 
-        // Take min to max sentences
+        // Take min ke max sentences
         $count = min($max, max($min, count($sentences)));
         $selectedSentences = array_slice($sentences, 0, $count);
 
         return implode(' ', $selectedSentences);
     }
 
+    /**
+     * =========================================================================
+     * 1. METODE Shorten Summary
+     * =========================================================================
+     *
+     * Fungsi:
+     * Melakukan operasi shorten summary di dalam service.
+     *
+     * Alur Proses:
+     * 1. Memproses input sesuai tujuan method.
+     * 1. Mengambil atau mengubah data internal.
+     * 1. Mengembalikan hasil sesuai tipe return.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - string
+     */
     private function shortenSummary(string $summary, int $maxChars = 320, int $maxSentences = 3): string
     {
         $sentences = preg_split('/(?<=[.!?])\s+/', trim($summary), -1, PREG_SPLIT_NO_EMPTY);
@@ -2138,7 +2787,7 @@ class AdvancedRetrievalService
 
         $summary = trim(implode(' ', $selected));
 
-        // Remove long numbered list details to keep the summary concise.
+        // Hapus long numbered daftar details ke simpan the summary concise.
         $summary = preg_replace('/\s+(?:\d+\)|\d+\.)[\s\S]*$/u', '', $summary);
         $summary = preg_replace('/\s*Solusi:\s*[\s\S]*$/iu', '', $summary);
         $summary = rtrim($summary, ' ,;:');
@@ -2154,6 +2803,16 @@ class AdvancedRetrievalService
         return trim($summary);
     }
     
+    /**
+     * =========================================================================
+     * 17. Metode Mendapatkan Debug Info
+     * =========================================================================
+     * 
+     * Metode ini mengembalikan informasi debugging untuk proses retrieval.
+     * 
+     * Kembalikan:
+     * array
+     */
     public function getDebugInfo(): array
     {
         return $this->debugInfo;

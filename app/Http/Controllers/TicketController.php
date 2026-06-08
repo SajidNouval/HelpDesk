@@ -17,10 +17,38 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
+/**
+ * =========================================================================
+ * CONTROLLER TIKET
+ * =========================================================================
+ * 
+ * Controller ini menangani pembuatan, validasi, dan pelacakan tiket.
+ * 
+ * Tanggung jawab:
+ * - Menyediakan form tiket untuk pengguna tamu.
+ * - Menyimpan tiket dan laporan ke database.
+ * - Mengelola proses OTP untuk verifikasi tiket.
+ * - Menyediakan fitur pelacakan tiket dan pembaruan status.
+ * 
+ * Modul terkait:
+ * - TicketOtp
+ * - TicketLog
+ * - StaffProfile
+ */
 class TicketController extends Controller
 {
     /**
      * 📄 Form input tiket (guest) - Show help page dengan form
+     */
+    /**
+     * =========================================================================
+     * 1. Metode Menampilkan Form Tiket
+     * =========================================================================
+     * 
+     * Metode ini menampilkan halaman bantuan dengan form untuk membuat tiket.
+     * 
+     * Return:
+     * View
      */
     public function create()
     {
@@ -35,6 +63,26 @@ class TicketController extends Controller
 
     /**
      * 💾 Store tiket + auto assign + log
+     */
+    /**
+     * =========================================================================
+     * 2. Metode Menyimpan Tiket Baru
+     * =========================================================================
+     * 
+     * Metode ini membuat tiket baru berdasarkan laporan pengguna.
+     * 
+     * Alur proses:
+     * 1. Memvalidasi input form.
+     * 2. Memeriksa batas permintaan berdasarkan IP dan email.
+     * 3. Menyimpan tiket dan log dalam transaksi.
+     * 4. Menentukan penugasan staff secara otomatis.
+     * 5. Mengembalikan respon JSON atau redirect.
+     * 
+     * Parameter:
+     * Request $request
+     * 
+     * Return:
+     * RedirectResponse|JsonResponse
      */
     public function store(Request $request)
     {
@@ -145,6 +193,25 @@ class TicketController extends Controller
      * 📝 Store report dari artikel - dengan status waiting
      * Auto-assign ke staff dengan waiting tickets paling sedikit
      */
+    /**
+     * =========================================================================
+     * 3. Metode Menyimpan Laporan Artikel
+     * =========================================================================
+     * 
+     * Metode ini membuat tiket laporan dari halaman artikel.
+     * 
+     * Alur proses:
+     * 1. Memvalidasi laporan.
+     * 2. Memeriksa batas permintaan IP dan email.
+     * 3. Menyimpan tiket sebagai status waiting.
+     * 4. Menugaskan staff sesuai beban kerja.
+     * 
+     * Parameter:
+     * Request $request
+     * 
+     * Return:
+     * RedirectResponse|JsonResponse
+     */
     public function storeReport(Request $request)
     {
         // ✅ Validasi
@@ -239,6 +306,19 @@ class TicketController extends Controller
         return redirect()->back()->with('success', 'Laporan berhasil dibuat!')->with('ticket_id', $ticket->id);
     }
 
+    /**
+     * =========================================================================
+     * 4. Metode Meminta OTP
+     * =========================================================================
+     * 
+     * Metode ini membuat OTP untuk verifikasi pembuatan tiket livechat atau report.
+     * 
+     * Parameter:
+     * Request $request
+     * 
+     * Return:
+     * JsonResponse
+     */
     public function requestOtp(Request $request)
     {
         $validated = $request->validate([
@@ -306,6 +386,19 @@ class TicketController extends Controller
         ]);
     }
 
+    /**
+     * =========================================================================
+     * 5. Metode Memverifikasi OTP
+     * =========================================================================
+     * 
+     * Metode ini memverifikasi kode OTP dan membuat tiket setelah validasi.
+     * 
+     * Parameter:
+     * Request $request
+     * 
+     * Return:
+     * JsonResponse
+     */
     public function verifyOtp(Request $request)
     {
         $request->validate([
@@ -418,6 +511,19 @@ class TicketController extends Controller
         ]);
     }
 
+    /**
+     * =========================================================================
+     * 6. Metode Pelacakan Tiket
+     * =========================================================================
+     * 
+     * Metode ini menampilkan halaman pelacakan tiket berdasarkan token.
+     * 
+     * Parameter:
+     * string $token
+     * 
+     * Return:
+     * View
+     */
     public function track(string $token)
     {
         $ticket = Ticket::with(['category', 'messages', 'logs'])->where('tracking_token', $token)->firstOrFail();
@@ -542,6 +648,16 @@ class TicketController extends Controller
     /**
      * 📋 Admin lihat semua tiket
      */
+    /**
+     * =========================================================================
+     * 7. Metode Daftar Tiket Admin
+     * =========================================================================
+     * 
+     * Metode ini menampilkan daftar tiket untuk admin/staff.
+     * 
+     * Return:
+     * View
+     */
     public function index()
     {
         $tickets = Ticket::with(['category', 'staff'])->latest()->paginate(20);
@@ -552,6 +668,19 @@ class TicketController extends Controller
     /**
      * 🔍 Detail tiket + chat
      */
+    /**
+     * =========================================================================
+     * 8. Metode Detail Tiket
+     * =========================================================================
+     * 
+     * Metode ini menampilkan detail tiket beserta pesan dan log terkait.
+     * 
+     * Parameter:
+     * mixed $id
+     * 
+     * Return:
+     * View
+     */
     public function show($id)
     {
         $ticket = Ticket::with(['category', 'staff', 'messages', 'logs'])->findOrFail($id);
@@ -561,6 +690,20 @@ class TicketController extends Controller
 
     /**
      * 🔄 Update status tiket oleh staff
+     */
+    /**
+     * =========================================================================
+     * 9. Metode Memperbarui Status Tiket
+     * =========================================================================
+     * 
+     * Metode ini memungkinkan staff mengubah status tiket.
+     * 
+     * Parameter:
+     * Request $request
+     * mixed $id
+     * 
+     * Return:
+     * RedirectResponse
      */
     public function updateStatus(Request $request, $id)
     {

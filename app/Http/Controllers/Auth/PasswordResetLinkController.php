@@ -8,10 +8,28 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
+/**
+ * =============================================================================
+ * PASSWORD RESET LINK CONTROLLER - LINK RESET KATA SANDI
+ * =============================================================================
+ * 
+ * Controller ini menangani permintaan link reset password.
+ * 
+ * Fitur Utama:
+ * - Tampilan form forgot password
+ * - Pengiriman link reset password via email
+ */
 class PasswordResetLinkController extends Controller
 {
     /**
-     * Display the password reset link request view.
+     * =========================================================================
+     * 1. METODE CREATE - TAMPILKAN FORM LUPA PASSWORD
+     * =========================================================================
+     * 
+     * Fungsi: Menampilkan halaman lupa password.
+     * 
+     * Output:
+     * - View 'auth.forgot-password'
      */
     public function create(): View
     {
@@ -19,9 +37,24 @@ class PasswordResetLinkController extends Controller
     }
 
     /**
-     * Handle an incoming password reset link request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
+     * =========================================================================
+     * 2. METODE STORE - KIRIM LINK RESET PASSWORD
+     * =========================================================================
+     * 
+     * Fungsi: Memproses permintaan reset password.
+     * 
+     * Alur Proses:
+     * 1. Validasi email
+     * 2. Kirim link reset password menggunakan Password::sendResetLink
+     * 3. Cek status response
+     * 4. Redirect back dengan pesan sesuai hasil
+     * 
+     * Query yang Digunakan:
+     * - Password::sendResetLink(['email' => ...]): Kirim link reset
+     * 
+     * Output:
+     * - Redirect back with('status', ...) jika berhasil
+     * - Redirect back withErrors(['email' => ...]) jika gagal
      */
     public function store(Request $request): RedirectResponse
     {
@@ -29,9 +62,6 @@ class PasswordResetLinkController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        // We will send the password reset link to this user. Once we have attempted
-        // to send the link, we will examine the response then see the message we
-        // need to show to the user. Finally, we'll send out a proper response.
         $status = Password::sendResetLink(
             $request->only('email')
         );

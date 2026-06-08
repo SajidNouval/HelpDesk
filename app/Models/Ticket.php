@@ -59,16 +59,4 @@ class Ticket extends Model
     {
         return $this->hasMany(TicketLog::class);
     }
-
-    public function staffProfile()
-    {
-        return $this->hasOneThrough(
-            StaffProfile::class,
-            User::class,
-            'id',          // foreign key di users
-            'user_id',     // foreign key di staff_profiles
-            'staff_id',    // local key di tickets
-            'id'           // local key di users
-        );
-    }
 }

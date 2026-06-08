@@ -10,9 +10,6 @@
         <h1 class="text-3xl font-semibold text-gray-900">
             Artikel Bantuan
         </h1>
-        <p class="mt-1 text-sm text-gray-500">
-            Temukan jawaban atas pertanyaan Anda melalui artikel panduan kami.
-        </p>
 
         <!-- Breadcrumb -->
         <div class="text-sm text-gray-500 mt-2 flex items-center">

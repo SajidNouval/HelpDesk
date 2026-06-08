@@ -5,6 +5,19 @@ namespace App\Services\Chatbot;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * =========================================================================
+ * SERVICE PREPROCESSING
+ * =========================================================================
+ * 
+ * Layanan ini menormalkan query dan dokumen untuk pipeline retrieval.
+ * 
+ * Fungsi utama:
+ * - Normalisasi typo dan karakter berulang.
+ * - Case folding dan cleaning teks.
+ * - Tokenisasi, stopword removal, dan stemming.
+ * - Proteksi istilah teknis agar tidak dirusak oleh stemming.
+ */
 class PreprocessingService
 {
     /**
@@ -145,7 +158,7 @@ class PreprocessingService
         'instalsi' => 'instalasi',
         'instalasi' => 'instalasi',
         
-        // Update related
+        // Perbarui related
         'update' => 'update',
         'upadate' => 'update',
         'updt' => 'update',
@@ -189,23 +202,23 @@ class PreprocessingService
         'docker' => 'docker',
         'dockerr' => 'docker',
         
-        // Error related (with double r from compression)
+        // Error related (dengan double r dari compression)
         'error' => 'error',
         'errorr' => 'error',
         
-        // Virus related (with double s from compression)
+        // Virus related (dengan double s dari compression)
         'virus' => 'virus',
         'viruss' => 'virus',
         
-        // Printer related (with double r from compression)
+        // Printer related (dengan double r dari compression)
         'printer' => 'printer',
         'printerr' => 'printer',
         
-        // Internet related (with double t from compression)
+        // Internet related (dengan double t dari compression)
         'internet' => 'internet',
         'internett' => 'internet',
         
-        // Komputer related (with double r from compression)
+        // Komputer related (dengan double r dari compression)
         'komputer' => 'komputer',
         'komputerr' => 'komputer',
     ];
@@ -236,8 +249,8 @@ class PreprocessingService
     ];
 
     /**
-     * IT-specific generic helpdesk terms that should have extremely low weight
-     * These terms are too common in helpdesk articles and should NOT dominate TF-IDF ranking
+     * IT-specific generic helpdesk terms that harus have extremely low weight
+     * These terms are too common di helpdesk articles dan harus NOT dominate TF-IDF ranking
      */
     private array $itGenericTerms = [
         'cara',
@@ -251,12 +264,12 @@ class PreprocessingService
     ];
 
     /**
-     * Important domain/technical tokens that should be strongly boosted
-     * These are the KEY meaningful terms that should drive retrieval
+     * Important domain/technical token that harus be strongly boosted
+     * These are the KEY meaningful terms that harus drive retrieval
      * 
-     * IMPORTANT KEYWORD BOOSTING: When query contains these keywords,
-     * articles containing these keywords get MASSIVE boost to ensure
-     * they rank higher than generic articles.
+     * IMPORTANT KEYWORD BOOSTING: Ketika query mengandung these kata kunci,
+     * articles containing these kata kunci get MASSIVE boost ke pastikan
+     * they rank higher daripada generic articles.
      */
     private array $importantDomainTokens = [
         // Hardware domain
@@ -290,13 +303,13 @@ class PreprocessingService
     /**
      * PROTECTED TECHNICAL TOKENS - NEVER STEM THESE
      * 
-     * These technical/IT/security terms MUST remain EXACT.
-     * Stemming these terms destroys their meaning and causes
-     * retrieval failures for security-specific queries.
+     * These technical/IT/keamanan terms MUST remain EXACT.
+     * Stemming these terms destroys their meaning dan causes
+     * retrieval failures untuk keamanan-specific query.
      * 
-     * CRITICAL: ransomware -> ransomwar (WRONG!) should stay ransomware
-     * CRITICAL: malware -> malwar (WRONG!) should stay malware
-     * CRITICAL: trojan -> troj (WRONG!) should stay trojan
+     * CRITICAL: ransomware -> ransomwar (WRONG!) harus stay ransomware
+     * CRITICAL: malware -> malwar (WRONG!) harus stay malware
+     * CRITICAL: trojan -> troj (WRONG!) harus stay trojan
      */
     private array $protectedTechnicalTokens = [
         // Security/Malware terms (CRITICAL - these were failing)
@@ -441,8 +454,8 @@ class PreprocessingService
     ];
 
     /**
-     * Domain penalty mappings - penalize articles with these domain terms
-     * when the query does NOT contain related terms
+     * Domain penalty mappings - penalize articles dengan these domain terms
+     * ketika the query does NOT mengandung related terms
      */
     private array $domainPenaltyMappings = [
         'bsod' => ['blue', 'screen', 'crash', 'error', 'system'],
@@ -541,9 +554,22 @@ class PreprocessingService
      * Preprocess teks untuk query user atau dokumen
      * Menggunakan langkah yang sama untuk konsistensi
      *
-     * @param string $text Teks input
+     * @param string $teks Teks input
      * @param bool $applyTypoCorrection Apakah akan menerapkan koreksi typo (untuk query user)
-     * @return array Array token yang sudah diproses
+     * @kembalikan array Array token yang sudah diproses
+     */
+    /**
+     * =========================================================================
+     * 1. Metode Preprocess Utama
+     * =========================================================================
+     * 
+     * Melakukan preprocessing lengkap pada teks query atau dokumen.
+     * Termasuk case folding, typo correction, cleaning, tokenization,
+     * stopword removal, dan stemming.
+     * 
+     * @param string $teks Teks input
+     * @param bool $applyTypoCorrection Apakah akan menerapkan koreksi typo (untuk query user)
+     * @kembalikan array Array token yang sudah diproses
      */
     public function preprocess(string $text, bool $applyTypoCorrection = false): array
     {
@@ -554,7 +580,7 @@ class PreprocessingService
         $originalText = $text;
         $text = $this->caseFolding($text);
         
-        // Track preprocessing steps for debug logging
+        // Track preprocessing steps untuk debug logging
         $debugInfo = [
             'original_text' => $originalText,
             'after_case_folding' => $text,
@@ -581,12 +607,12 @@ class PreprocessingService
         $tokens = $this->stemAll($tokens);
         $debugInfo['token_count_after_stemming'] = count($tokens);
         
-        // Filter short tokens (less than 2 characters)
+        // Filter short token (less daripada 2 characters)
         $tokens = array_values(array_filter($tokens, fn($t) => mb_strlen($t) >= 2));
         $debugInfo['final_token_count'] = count($tokens);
         $debugInfo['final_tokens'] = $tokens;
         
-        // Log preprocessing if debug mode is enabled
+        // Log preprocessing jika debug mode is aktif
         if (config('app.debug', false)) {
             \Illuminate\Support\Facades\Log::debug('Preprocessing completed', $debugInfo);
         }
@@ -595,10 +621,14 @@ class PreprocessingService
     }
 
     /**
-     * Preprocess untuk dokumen - mengembalikan token dan frequency
-     *
-     * @param string $text Teks dokumen
-     * @return array ['tokens' => array, 'frequency' => array]
+     * =========================================================================
+     * 2. Metode Preprocess Dokumen
+     * =========================================================================
+     * 
+     * Memproses teks dokumen dan mengembalikan token serta frekuensi term.
+     * 
+     * @param string $teks Teks dokumen
+     * @kembalikan array ['token' => array, 'frequency' => array]
      */
     public function preprocessDocument(string $text): array
     {
@@ -616,11 +646,15 @@ class PreprocessingService
     }
 
     /**
-     * Preprocess dengan caching untuk performa
-     *
-     * @param string $text Teks input
+     * =========================================================================
+     * 3. Metode Preprocess dengan Cache
+     * =========================================================================
+     * 
+     * Memproses teks dan menyimpan hasil tokenisasi di cache untuk performa.
+     * 
+     * @param string $teks Teks input
      * @param string $cacheKey Cache key
-     * @return array Array token yang sudah diproses
+     * @kembalikan array Array token yang sudah diproses
      */
     public function preprocessWithCache(string $text, string $cacheKey): array
     {
@@ -681,7 +715,7 @@ class PreprocessingService
 
     /**
      * Step 5: Stemming untuk semua token
-     * PENTING: Technical tokens TIDAK akan di-stem untuk menjaga makna
+     * PENTING: Technical token TIDAK akan di-stem untuk menjaga makna
      */
     private function stemAll(array $tokens): array
     {
@@ -692,14 +726,14 @@ class PreprocessingService
      * Stemming sederhana untuk Bahasa Indonesia
      * Menggunakan pendekatan kombinasi prefix dan suffix removal
      * 
-     * PENTING: Protected technical tokens TIDAK akan di-stem!
+     * PENTING: Protected technical token TIDAK akan di-stem!
      * Ini memastikan istilah seperti "ransomware", "malware", "virus" 
      * tetap utuh dan tidak berubah menjadi "ransomwar", "malwar", dll.
      */
     private function stem(string $word): string
     {
-        // CRITICAL: Check if this is a protected technical token
-        // If yes, DO NOT STEM - return as-is
+        // CRITICAL: Periksa jika this is a protected technical token
+        // Jika yes, DO NOT STEM - kembalikan as-is
         if ($this->isProtectedTechnicalToken($word)) {
             return $word;
         }
@@ -734,10 +768,20 @@ class PreprocessingService
     }
 
     /**
-     * Check if a token is a protected technical token that should NOT be stemmed
+     * Periksa jika a token is a protected technical token that harus NOT be stemmed
      * 
      * @param string $token
-     * @return bool
+     * @kembalikan bool
+     */
+    /**
+     * =========================================================================
+     * 4. Metode Cek Token Teknis Terlindungi
+     * =========================================================================
+     * 
+     * Menentukan apakah token adalah istilah teknis yang tidak boleh di-stem.
+     * 
+     * @param string $token
+     * @kembalikan bool
      */
     public function isProtectedTechnicalToken(string $token): bool
     {
@@ -745,9 +789,18 @@ class PreprocessingService
     }
 
     /**
-     * Get all protected technical tokens
+     * Get semua protected technical token
      * 
-     * @return array
+     * @kembalikan array
+     */
+    /**
+     * =========================================================================
+     * 5. Metode Daftar Token Teknis Terlindungi
+     * =========================================================================
+     * 
+     * Mengembalikan daftar token teknis yang harus dipertahankan.
+     * 
+     * @kembalikan array
      */
     public function getProtectedTechnicalTokens(): array
     {
@@ -757,6 +810,15 @@ class PreprocessingService
     /**
      * Dapatkan daftar stopwords
      */
+    /**
+     * =========================================================================
+     * 6. Metode Daftar Stopwords
+     * =========================================================================
+     * 
+     * Mengembalikan daftar stopwords yang digunakan dalam preprocessing.
+     * 
+     * @kembalikan array
+     */
     public function getStopwords(): array
     {
         return $this->stopwords;
@@ -764,6 +826,16 @@ class PreprocessingService
 
     /**
      * Tambah stopwords custom
+     */
+    /**
+     * =========================================================================
+     * 7. Metode Tambah Stopwords
+     * =========================================================================
+     * 
+     * Menambahkan stopwords custom ke daftar yang ada.
+     * 
+     * @param array $words
+     * @kembalikan void
      */
     public function addStopwords(array $words): void
     {
@@ -773,6 +845,16 @@ class PreprocessingService
     /**
      * Cek apakah sebuah kata adalah stopword
      */
+    /**
+     * =========================================================================
+     * 8. Metode Cek Stopword
+     * =========================================================================
+     * 
+     * Menentukan apakah sebuah kata termasuk stopword.
+     * 
+     * @param string $word
+     * @kembalikan bool
+     */
     public function isStopword(string $word): bool
     {
         return in_array(mb_strtolower($word), $this->stopwords);
@@ -780,6 +862,16 @@ class PreprocessingService
 
     /**
      * Normalisasi teks untuk display (tanpa stemming)
+     */
+    /**
+     * =========================================================================
+     * 9. Metode Normalisasi Tampilan
+     * =========================================================================
+     * 
+     * Menormalkan teks untuk tampilan tanpa melakukan stemming.
+     * 
+     * @param string $teks
+     * @kembalikan string
      */
     public function normalizeForDisplay(string $text): string
     {
@@ -789,10 +881,10 @@ class PreprocessingService
     }
 
     /**
-     * Normalize repeated characters in a token
+     * Normalize repeated characters di a token
      * 
-     * Compresses repeated characters above 2 occurrences to handle spam queries.
-     * Examples:
+     * Compresses repeated characters above 2 occurrences ke handle spam query.
+     * Contoh:
      *   virusssss -> virus
      *   wifiii -> wifi
      *   lemottt -> lemot
@@ -800,21 +892,31 @@ class PreprocessingService
      *   dockerrrrrrrrrr -> docker
      * 
      * Valid double letters are preserved (google, access, support).
-     * Only compresses when a character is repeated 3+ times (total 3+ consecutive).
+     * Hanya compresses ketika a character is repeated 3+ times (total 3+ consecutive).
      * 
-     * @param string $token The token to normalize
-     * @return string The normalized token with compressed repeated characters
+     * @param string $token The token ke normalize
+     * @kembalikan string The normalized token dengan compressed repeated characters
+     */
+    /**
+     * =========================================================================
+     * 10. Metode Normalisasi Karakter Berulang
+     * =========================================================================
+     * 
+     * Mengurangi karakter berulang di token untuk menangani spam query.
+     * 
+     * @param string $token
+     * @kembalikan string
      */
     public function normalizeRepeatedChars(string $token): string
     {
-        // Use regex to find repeated characters and compress them
-        // Pattern: matches any character followed by the same character 2+ more times (total 3+)
-        // Replacement: keeps only 2 occurrences (preserving valid double letters)
+        // Gunakan regex ke find repeated characters dan compress them
+        // Pattern: cocok apa pun character followed dengan the same character 2+ lebih times (total 3+)
+        // Replacement: keeps hanya 2 occurrences (preserving valid double letters)
         $pattern = '/(.)\1{2,}/';
         
         $result = preg_replace_callback($pattern, function ($matches) {
             $char = $matches[1];
-            // Keep only 2 occurrences to preserve valid double letters
+            // Simpan hanya 2 occurrences ke preserve valid double letters
             return str_repeat($char, 2);
         }, $token);
         
@@ -827,8 +929,18 @@ class PreprocessingService
      * 1. Repeated character normalization (virusssss -> virus)
      * 2. Curated typo dictionary lookup
      * 
-     * @param string $text Teks query yang akan dinormalisasi
-     * @return string Teks yang sudah dinormalisasi
+     * @param string $teks Teks query yang akan dinormalisasi
+     * @kembalikan string Teks yang sudah dinormalisasi
+     */
+    /**
+     * =========================================================================
+     * 11. Metode Normalisasi Typo
+     * =========================================================================
+     * 
+     * Mengoreksi typo query menggunakan kamus curated dan kompresi karakter.
+     * 
+     * @param string $teks
+     * @kembalikan string
      */
     public function normalizeTypos(string $text): string
     {
@@ -840,10 +952,10 @@ class PreprocessingService
             $originalToken = $token;
             
             // STEP 1: Normalize repeated characters BEFORE dictionary lookup
-            // Example: virusssss -> virus, wifiii -> wifi, lemottt -> lemot
+            // Contoh: virusssss -> virus, wifiii -> wifi, lemottt -> lemot
             $compressedToken = $this->normalizeRepeatedChars($token);
             
-            // Log compression for debugging
+            // Log compression untuk debugging
             if ($compressedToken !== $token) {
                 Log::debug('Repeated character normalization in PreprocessingService', [
                     'original_token' => $token,
@@ -851,7 +963,7 @@ class PreprocessingService
                 ]);
             }
             
-            // STEP 2: Check typo dictionary (on compressed token)
+            // STEP 2: Periksa typo dictionary (on compressed token)
             $corrected = $this->typoDictionary[$compressedToken] ?? $compressedToken;
             $correctedTokens[] = $corrected;
         }
@@ -865,7 +977,18 @@ class PreprocessingService
      * 
      * @param string $originalText Teks asli
      * @param string $correctedText Teks yang sudah dikoreksi
-     * @return array Array berisi koreksi yang diterapkan
+     * @kembalikan array Array berisi koreksi yang diterapkan
+     */
+    /**
+     * =========================================================================
+     * 12. Metode Koreksi Typo
+     * =========================================================================
+     * 
+     * Mengembalikan daftar koreksi typo yang diterapkan untuk debug.
+     * 
+     * @param string $originalText
+     * @param string $correctedText
+     * @kembalikan array
      */
     public function getTypoCorrections(string $originalText, string $correctedText): array
     {
@@ -887,11 +1010,21 @@ class PreprocessingService
     }
 
     /**
-     * Ekstrak context tokens dari query
+     * Ekstrak context token dari query
      * Mengembalikan domain context yang terdeteksi
      * 
-     * @param array $tokens Array token yang sudah diproses
-     * @return array Array context tokens yang terdeteksi
+     * @param array $token Array token yang sudah diproses
+     * @kembalikan array Array context token yang terdeteksi
+     */
+    /**
+     * =========================================================================
+     * 13. Metode Ekstraksi Context Token
+     * =========================================================================
+     * 
+     * Mengembalikan daftar domain context yang terdeteksi dari token.
+     * 
+     * @param array $token
+     * @kembalikan array
      */
     public function extractContextTokens(array $tokens): array
     {
@@ -913,7 +1046,18 @@ class PreprocessingService
      * 
      * @param string $token Token yang akan dicek
      * @param string $context Domain context
-     * @return bool
+     * @kembalikan bool
+     */
+    /**
+     * =========================================================================
+     * 14. Metode Cek Context Token
+     * =========================================================================
+     * 
+     * Menentukan apakah token terkait dengan context domain tertentu.
+     * 
+     * @param string $token
+     * @param string $context
+     * @kembalikan bool
      */
     public function isContextToken(string $token, string $context): bool
     {
@@ -922,9 +1066,18 @@ class PreprocessingService
     }
 
     /**
-     * Dapatkan semua context tokens yang tersedia
+     * Dapatkan semua context token yang tersedia
      * 
-     * @return array
+     * @kembalikan array
+     */
+    /**
+     * =========================================================================
+     * 15. Metode Daftar Context Token
+     * =========================================================================
+     * 
+     * Mengembalikan daftar nama context token yang tersedia.
+     * 
+     * @kembalikan array
      */
     public function getContextTokens(): array
     {
@@ -935,6 +1088,16 @@ class PreprocessingService
      * Tambah typo correction custom
      * 
      * @param array $corrections Array ['typo' => 'correct']
+     */
+    /**
+     * =========================================================================
+     * 16. Metode Tambah Koreksi Typo
+     * =========================================================================
+     * 
+     * Menambahkan koreksi typo custom ke kamus internal.
+     * 
+     * @param array $corrections
+     * @kembalikan void
      */
     public function addTypoCorrections(array $corrections): void
     {
@@ -947,15 +1110,35 @@ class PreprocessingService
      * @param string $context Nama context
      * @param array $relatedTokens Token-token yang terkait
      */
+    /**
+     * =========================================================================
+     * 17. Metode Tambah Context Token
+     * =========================================================================
+     * 
+     * Menambahkan token baru yang terkait dengan context domain.
+     * 
+     * @param string $context
+     * @param array $relatedTokens
+     * @kembalikan void
+     */
     public function addContextToken(string $context, array $relatedTokens): void
     {
         $this->contextTokens[$context] = $relatedTokens;
     }
 
     /**
-     * Get IT-specific generic terms that should have extremely low weight
+     * Get IT-specific generic terms that harus have extremely low weight
      * 
-     * @return array
+     * @kembalikan array
+     */
+    /**
+     * =========================================================================
+     * 18. Metode Daftar IT Generic Terms
+     * =========================================================================
+     * 
+     * Mengembalikan istilah generik IT dengan bobot rendah.
+     * 
+     * @kembalikan array
      */
     public function getITGenericTerms(): array
     {
@@ -963,10 +1146,20 @@ class PreprocessingService
     }
 
     /**
-     * Check if a token is an IT generic term (should have low weight)
+     * Periksa jika a token is an IT generic term (harus have low weight)
      * 
      * @param string $token
-     * @return bool
+     * @kembalikan bool
+     */
+    /**
+     * =========================================================================
+     * 19. Metode Cek IT Generic Term
+     * =========================================================================
+     * 
+     * Menentukan apakah token termasuk istilah IT generik.
+     * 
+     * @param string $token
+     * @kembalikan bool
      */
     public function isITGenericTerm(string $token): bool
     {
@@ -974,9 +1167,18 @@ class PreprocessingService
     }
 
     /**
-     * Get important domain tokens that should be strongly boosted
+     * Get penting domain token that harus be strongly boosted
      * 
-     * @return array
+     * @kembalikan array
+     */
+    /**
+     * =========================================================================
+     * 20. Metode Daftar Token Domain Penting
+     * =========================================================================
+     * 
+     * Mengembalikan istilah domain penting yang harus di-boost.
+     * 
+     * @kembalikan array
      */
     public function getImportantDomainTokens(): array
     {
@@ -984,10 +1186,20 @@ class PreprocessingService
     }
 
     /**
-     * Check if a token is an important domain token (should be boosted)
+     * Periksa jika a token is an penting domain token (harus be boosted)
      * 
      * @param string $token
-     * @return bool
+     * @kembalikan bool
+     */
+    /**
+     * =========================================================================
+     * 21. Metode Cek Token Domain Penting
+     * =========================================================================
+     * 
+     * Menentukan apakah token merupakan istilah domain penting.
+     * 
+     * @param string $token
+     * @kembalikan bool
      */
     public function isImportantDomainToken(string $token): bool
     {
@@ -997,7 +1209,17 @@ class PreprocessingService
     /**
      * Get domain penalty mappings
      * 
-     * @return array
+     * @kembalikan array
+     */
+    /**
+     * =========================================================================
+     * 22. Metode Domain Penalty Mappings
+     * =========================================================================
+     * 
+     * Mengembalikan konfigurasi penalti domain apabila query tidak mengandung
+     * istilah terkait.
+     * 
+     * @kembalikan array
      */
     public function getDomainPenaltyMappings(): array
     {
@@ -1005,12 +1227,24 @@ class PreprocessingService
     }
 
     /**
-     * Preprocess query with detailed debug information
-     * Returns tokens along with debug info about stopwords removed and boosts
+     * Preprocess query dengan detailed debug informasi
+     * Mengembalikan token along dengan debug info about stopwords removed dan boosts
      * 
-     * @param string $text
+     * @param string $teks
      * @param bool $applyTypoCorrection
-     * @return array ['tokens' => array, 'removed_stopwords' => array, 'generic_terms' => array, 'domain_tokens' => array]
+     * @kembalikan array ['token' => array, 'removed_stopwords' => array, 'generic_terms' => array, 'domain_tokens' => array]
+     */
+    /**
+     * =========================================================================
+     * 23. Metode Preprocess dengan Debug
+     * =========================================================================
+     * 
+     * Memproses query dan mengembalikan token bersama debug info seperti stopwords
+     * yang dihapus dan istilah domain yang terdeteksi.
+     * 
+     * @param string $teks
+     * @param bool $applyTypoCorrection
+     * @kembalikan array ['token' => array, 'removed_stopwords' => array, 'generic_terms' => array, 'domain_tokens' => array]
      */
     public function preprocessWithDebug(string $text, bool $applyTypoCorrection = false): array
     {
@@ -1043,7 +1277,7 @@ class PreprocessingService
             return true;
         }));
         
-        // Track generic terms and domain tokens
+        // Track generic terms dan domain token
         $genericTerms = [];
         $domainTokens = [];
         

@@ -8,8 +8,57 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * =============================================================================
+ * ADMIN ARTICLE CONTROLLER - PENGELOLAAN ARTIKEL ADMIN
+ * =============================================================================
+ * 
+ * Controller ini bertanggung jawab untuk mengelola artikel dari sisi admin.
+ * Admin memiliki wewenang penuh untuk menyetujui, menolak, menyembunyikan,
+ * atau mereset statistik artikel yang dibuat oleh staff.
+ * 
+ * Fitur Utama:
+ * - Daftar semua artikel dengan filtering dan sorting
+ * - Detail artikel dengan statistik feedback
+ * - Persetujuan (approve) artikel untuk dipublikasi
+ * - Penolakan (reject) artikel dengan catatan
+ * - Sembunyikan/tampilkan artikel dari publik
+ * - Reset views dan feedback artikel
+ * 
+ * Model Terkait:
+ * - Article: Model artikel
+ * - Category: Kategori artikel (relasi)
+ * - User/Staff: Penulis artikel (relasi)
+ */
 class ArticleController extends Controller
 {
+    /**
+     * =========================================================================
+     * 1. METODE INDEX - DAFTAR ARTIKEL ADMIN
+     * =========================================================================
+     * 
+     * Fungsi: Menampilkan daftar semua artikel untuk admin.
+     * 
+     * Alur Proses:
+     * 1. Ambil parameter filter dari request (pencarian, sorting, status)
+     * 2. Bangun query dengan relasi category dan staff
+     * 3. Hitung jumlah feedback helpful dan not helpful
+     * 4. Terapkan filter pencarian berdasarkan judul, konten, atau nama staff
+     * 5. Terapkan filter status publikasi
+     * 6. Terapkan sorting berdasarkan parameter
+     * 7. Hitung statistik artikel (total, pending, approved, rejected)
+     * 8. Kembalikan view admin dengan data lengkap
+     * 
+     * Query yang Digunakan:
+     * - Article::with('category', 'staff'): Load relasi
+     * - withCount(): Hitung feedback helpful/not helpful
+     * - when($search, ...): Filter pencarian LIKE pada title, content, staff name
+     * - when($status, ...): Filter publish_status
+     * - paginate(20): Pagination 20 item per halaman
+     * 
+     * Output:
+     * - View 'admin.articles.index' dengan data artikel dan statistik
+     */
     public function index(): View
     {
         $search = request('q');
@@ -74,6 +123,25 @@ class ArticleController extends Controller
         ));
     }
 
+    /**
+     * =========================================================================
+     * 2. METODE SHOW - DETAIL ARTIKEL ADMIN
+     * =========================================================================
+     * 
+     * Fungsi: Menampilkan detail lengkap artikel untuk admin.
+     * 
+     * Alur Proses:
+     * 1. Load relasi category dan staff
+     * 2. Hitung jumlah feedback helpful dan not helpful
+     * 3. Kembalikan view detail
+     * 
+     * Query yang Digunakan:
+     * - $article->load(['category', 'staff']): Load relasi
+     * - loadCount(): Hitung feedback
+     * 
+     * Output:
+     * - View 'admin.articles.show'
+     */
     public function show(Article $article): View
     {
         $article->load(['category', 'staff']);
@@ -89,6 +157,16 @@ class ArticleController extends Controller
         return view('admin.articles.show', compact('article'));
     }
 
+    /**
+     * =========================================================================
+     * 3. HELPER - BUILD JSON RESPONSE
+     * =========================================================================
+     * 
+     * Fungsi: Membangun response JSON standar untuk operasi artikel.
+     * 
+     * Output:
+     * - JsonResponse dengan data artikel (views, is_hidden, publish_status, dll)
+     */
     private function buildJsonArticleResponse(Article $article, string $message): JsonResponse
     {
         return response()->json([
@@ -106,6 +184,19 @@ class ArticleController extends Controller
         ]);
     }
 
+    /**
+     * =========================================================================
+     * 4. METODE RESET VIEWS - RESET COUNTER VIEW
+     * =========================================================================
+     * 
+     * Fungsi: Mereset counter views artikel menjadi 0.
+     * 
+     * Query yang Digunakan:
+     * - $article->update(['views' => 0]): Update counter
+     * 
+     * Output:
+     * - Redirect atau JSON response dengan pesan sukses
+     */
     public function resetViews(Article $article): RedirectResponse|JsonResponse
     {
         $article->update(['views' => 0]);
@@ -117,6 +208,19 @@ class ArticleController extends Controller
         return redirect()->route('admin.articles.index')->with('success', 'View artikel berhasil di-reset.');
     }
 
+    /**
+     * =========================================================================
+     * 5. METODE RESET FEEDBACK - HAPUS FEEDBACK
+     * =========================================================================
+     * 
+     * Fungsi: Menghapus semua feedback artikel.
+     * 
+     * Query yang Digunakan:
+     * - $article->feedback()->delete(): Hapus semua feedback
+     * 
+     * Output:
+     * - Redirect atau JSON response
+     */
     public function resetFeedback(Article $article): RedirectResponse|JsonResponse
     {
         $article->feedback()->delete();
@@ -128,6 +232,24 @@ class ArticleController extends Controller
         return redirect()->route('admin.articles.index')->with('success', 'Feedback artikel berhasil di-reset.');
     }
 
+    /**
+     * =========================================================================
+     * 6. METODE TOGGLE HIDE - SEMBUNYIKAN/TAMPILKAN ARTIKEL
+     * =========================================================================
+     * 
+     * Fungsi: Toggle visibilitas artikel untuk publik.
+     * 
+     * Alur Proses:
+     * 1. Toggle nilai is_hidden (true -> false, false -> true)
+     * 2. Tentukan pesan berdasarkan status baru
+     * 3. Kembalikan response
+     * 
+     * Query yang Digunakan:
+     * - $article->update(['is_hidden' => !$article->is_hidden]): Toggle status
+     * 
+     * Output:
+     * - Redirect atau JSON response
+     */
     public function toggleHide(Article $article): RedirectResponse|JsonResponse
     {
         $article->update(['is_hidden' => !$article->is_hidden]);
@@ -143,6 +265,25 @@ class ArticleController extends Controller
         return redirect()->route('admin.articles.index')->with('success', $message);
     }
 
+    /**
+     * =========================================================================
+     * 7. METODE APPROVE - SETUJUI ARTIKEL
+     * =========================================================================
+     * 
+     * Fungsi: Menyetujui artikel untuk dipublikasi.
+     * 
+     * Alur Proses:
+     * 1. Update is_published = true
+     * 2. Update publish_status = 'approved'
+     * 3. Hapus rejection_note jika ada
+     * 4. Kembalikan response
+     * 
+     * Query yang Digunakan:
+     * - $article->update([...]): Update status publikasi
+     * 
+     * Output:
+     * - Redirect atau JSON response
+     */
     public function approve(Article $article): RedirectResponse|JsonResponse
     {
         $article->update([
@@ -158,6 +299,27 @@ class ArticleController extends Controller
         return redirect()->route('admin.articles.index')->with('success', 'Artikel berhasil disetujui dan dipublikasikan.');
     }
 
+    /**
+     * =========================================================================
+     * 8. METODE REJECT - TOLAK ARTIKEL
+     * =========================================================================
+     * 
+     * Fungsi: Menolak artikel dengan catatan penolakan.
+     * 
+     * Alur Proses:
+     * 1. Validasi rejection_note (wajib diisi)
+     * 2. Update is_published = false
+     * 3. Update publish_status = 'rejected'
+     * 4. Simpan rejection_note
+     * 5. Kembalikan response
+     * 
+     * Query yang Digunakan:
+     * - request()->validate(): Validasi input
+     * - $article->update([...]): Update status penolakan
+     * 
+     * Output:
+     * - Redirect atau JSON response
+     */
     public function reject(Article $article): RedirectResponse|JsonResponse
     {
         request()->validate([
@@ -177,6 +339,24 @@ class ArticleController extends Controller
         return redirect()->route('admin.articles.index')->with('success', 'Artikel ditolak. Catatan penolakan telah disimpan.');
     }
 
+    /**
+     * =========================================================================
+     * 9. METODE STORE REJECTION NOTE - SIMPAN CATATAN PENOLAKAN
+     * =========================================================================
+     * 
+     * Fungsi: Menyimpan/memperbarui catatan penolakan untuk artikel.
+     * 
+     * Alur Proses:
+     * 1. Validasi rejection_note
+     * 2. Update rejection_note pada artikel
+     * 3. Kembalikan response
+     * 
+     * Query yang Digunakan:
+     * - $article->update(['rejection_note' => ...]): Update catatan
+     * 
+     * Output:
+     * - Redirect atau JSON response
+     */
     public function storeRejectionNote(Article $article): RedirectResponse|JsonResponse
     {
         request()->validate([

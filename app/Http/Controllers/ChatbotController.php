@@ -12,23 +12,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 /**
- * ChatbotController - Advanced TF-IDF chatbot with retrieval refinement
+ * =========================================================================
+ * CONTROLLER CHATBOT
+ * =========================================================================
  * 
- * Features:
- * - Multi-intent splitting (queries with "dan", "atau", etc.)
- * - Result diversification (avoid category/title domination)
- * - Failure escalation (offer Live Chat/Buat Tiket after repeated failures)
- * - Conversation memory (track context across interactions)
- * - Clarification flow (guide users when queries are ambiguous)
+ * Controller ini bertugas menangani seluruh interaksi antara pengguna
+ * dan sistem chatbot Helpdesk TA.
  * 
- * Pipeline:
- * 1. Validate request input
- * 2. Check for greeting/smalltalk (rule-based, lightweight)
- * 3. Check for clarification needs (ambiguous queries)
- * 4. Check for multi-intent queries
- * 5. Delegate to AdvancedRetrievalService for TF-IDF retrieval
- * 6. Apply diversification and ranking
- * 7. Return formatted JSON response with escalation options if needed
+ * Tanggung jawab:
+ * - Menerima pertanyaan pengguna melalui endpoint chatbot.
+ * - Mengelola alur percakapan, klarifikasi, dan eskalasi.
+ * - Mendelegasikan permintaan ke layanan retrieval dan format respon.
+ * - Menyediakan fungsi bantuan seperti greeting, klarifikasi, dan histori.
+ * 
+ * Modul terkait:
+ * - AdvancedRetrievalService
+ * - ChatbotRetrievalService
+ * - ConversationFlowService
  */
 class ChatbotController extends Controller
 {
@@ -55,6 +55,26 @@ class ChatbotController extends Controller
      * 
      * @param Request $request
      * @return JsonResponse
+     */
+    /**
+     * =========================================================================
+     * 1. Metode Mendapatkan Respon Chatbot
+     * =========================================================================
+     * 
+     * Metode ini digunakan untuk memproses pertanyaan pengguna melalui chatbot.
+     * 
+     * Alur proses:
+     * 1. Menerima dan memvalidasi input pesan pengguna.
+     * 2. Mendeteksi greeting dan mengembalikan respon salam.
+     * 3. Mengecek kebutuhan klarifikasi untuk pertanyaan ambigu.
+     * 4. Menjalankan retrieval melalui AdvancedRetrievalService.
+     * 5. Menyimpan konteks percakapan dan membentuk respon akhir.
+     * 
+     * Parameter:
+     * Request $request
+     * 
+     * Return:
+     * JsonResponse
      */
     public function getResponse(Request $request): JsonResponse
     {
@@ -150,6 +170,24 @@ class ChatbotController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
+    /**
+     * =========================================================================
+     * 2. Metode Pencarian Chatbot
+     * =========================================================================
+     * 
+     * Metode ini menyediakan endpoint pencarian chatbot untuk query manual.
+     * 
+     * Alur proses:
+     * 1. Menerima parameter query dari request.
+     * 2. Memvalidasi input dan memanggil layanan retrieval.
+     * 3. Mengembalikan hasil pencarian dalam format JSON.
+     * 
+     * Parameter:
+     * Request $request
+     * 
+     * Return:
+     * JsonResponse
+     */
     public function chatbotSearch(Request $request): JsonResponse
     {
         $request->validate([
@@ -184,6 +222,20 @@ class ChatbotController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
+    /**
+     * =========================================================================
+     * 3. Metode Memeriksa Eskalasi Chatbot
+     * =========================================================================
+     * 
+     * Metode ini menentukan apakah pertanyaan pengguna memerlukan eskalasi
+     * ke tim support atau tiket.
+     * 
+     * Parameter:
+     * Request $request
+     * 
+     * Return:
+     * JsonResponse
+     */
     public function checkEscalation(Request $request): JsonResponse
     {
         $request->validate([
@@ -209,6 +261,20 @@ class ChatbotController extends Controller
      * 
      * @param Request $request
      * @return JsonResponse
+     */
+    /**
+     * =========================================================================
+     * 4. Metode Mendapatkan Klarifikasi
+     * =========================================================================
+     * 
+     * Metode ini memberikan pertanyaan klarifikasi ketika query pengguna
+     * teridentifikasi sebagai ambigu.
+     * 
+     * Parameter:
+     * Request $request
+     * 
+     * Return:
+     * JsonResponse
      */
     public function getClarification(Request $request): JsonResponse
     {
@@ -236,6 +302,19 @@ class ChatbotController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
+    /**
+     * =========================================================================
+     * 5. Metode Mendapatkan Histori Percakapan
+     * =========================================================================
+     * 
+     * Metode ini mengambil konteks percakapan terakhir dari sesi chatbot.
+     * 
+     * Parameter:
+     * Request $request
+     * 
+     * Return:
+     * JsonResponse
+     */
     public function getConversationHistory(Request $request): JsonResponse
     {
         $limit = $request->input('limit', 5);
@@ -252,6 +331,20 @@ class ChatbotController extends Controller
      * 
      * @param Request $request
      * @return JsonResponse
+     */
+    /**
+     * =========================================================================
+     * 6. Metode Menghapus Context Percakapan
+     * =========================================================================
+     * 
+     * Metode ini membersihkan memori percakapan chatbot untuk memulai ulang
+     * sesi interaksi.
+     * 
+     * Parameter:
+     * Request $request
+     * 
+     * Return:
+     * JsonResponse
      */
     public function clearConversation(Request $request): JsonResponse
     {

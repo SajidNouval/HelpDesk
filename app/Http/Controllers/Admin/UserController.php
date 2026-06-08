@@ -13,8 +13,54 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
+/**
+ * =============================================================================
+ * ADMIN USER CONTROLLER - PENGELOLAAN PENGGUNA ADMIN
+ * =============================================================================
+ * 
+ * Controller ini bertanggung jawab untuk mengelola pengguna sistem (khususnya
+ * staff) dari panel admin. Admin dapat membuat, mengedit, menghapus, dan
+ * menugaskan kategori ke staff.
+ * 
+ * Fitur Utama:
+ * - CRUD pengguna (create, read, update, delete)
+ * - Pencarian dan sorting pengguna
+ * - Penugasan kategori ke staff
+ * - Manajemen role (admin/staff) dan status (active/inactive)
+ * - Validasi self-delete prevention
+ * 
+ * Model Terkait:
+ * - User: Model pengguna
+ * - Category: Kategori untuk penugasan staff
+ * - StaffProfile: Relasi staff ke kategori
+ */
 class UserController extends Controller
 {
+    /**
+     * =========================================================================
+     * 1. METODE INDEX - DAFTAR PENGGUNA
+     * =========================================================================
+     * 
+     * Fungsi: Menampilkan daftar semua pengguna.
+     * 
+     * Alur Proses:
+     * 1. Bangun query dasar dengan hitung jumlah artikel
+     * 2. Terapkan filter pencarian (name, email)
+     * 3. Terapkan sorting berdasarkan parameter
+     * 4. Pagination 10 item per halaman
+     * 5. Hitung statistik pengguna (total, admin, staff, active)
+     * 6. Hitung top contributor
+     * 7. Kembalikan view dengan data lengkap
+     * 
+     * Query yang Digunakan:
+     * - User::withCount('articles'): Hitung artikel per user
+     * - when($search, ...): Filter name atau email
+     * - orderBy(): Sorting
+     * - paginate(10): Pagination
+     * 
+     * Output:
+     * - View 'admin.users.index'
+     */
     public function index(Request $request): View
     {
         $search = $request->query('q');
@@ -68,12 +114,43 @@ class UserController extends Controller
         ));
     }
 
+    /**
+     * =========================================================================
+     * 2. METODE CREATE - FORM TAMBAH STAFF
+     * =========================================================================
+     * 
+     * Fungsi: Menampilkan form untuk membuat staff baru.
+     * 
+     * Output:
+     * - View 'admin.users.create' dengan daftar kategori
+     */
     public function create(): View
     {
         $categories = Category::orderBy('name')->get();
         return view('admin.users.create', compact('categories'));
     }
 
+    /**
+     * =========================================================================
+     * 3. METODE STORE - SIMPAN STAFF BARU
+     * =========================================================================
+     * 
+     * Fungsi: Menyimpan staff baru ke database.
+     * 
+     * Alur Proses:
+     * 1. Validasi input (name, email, role, status, password, categories)
+     * 2. Buat user dengan role = 'staff'
+     * 3. Hash password
+     * 4. Buat StaffProfile untuk setiap kategori yang dipilih
+     * 5. Redirect dengan pesan sukses
+     * 
+     * Query yang Digunakan:
+     * - User::create([...]): Insert user baru
+     * - StaffProfile::firstOrCreate([...]): Buat relasi kategori
+     * 
+     * Output:
+     * - Redirect ke route('admin.users.index')
+     */
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -94,7 +171,6 @@ class UserController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        // Sync kategori melalui StaffProfile
         if ($validated['role'] === 'staff' && ! empty($validated['categories'])) {
             foreach ($validated['categories'] as $categoryId) {
                 StaffProfile::firstOrCreate([
@@ -108,6 +184,16 @@ class UserController extends Controller
             ->with('success', 'Staf baru berhasil dibuat.');
     }
 
+    /**
+     * =========================================================================
+     * 4. METODE EDIT - FORM EDIT STAFF
+     * =========================================================================
+     * 
+     * Fungsi: Menampilkan form edit staff.
+     * 
+     * Output:
+     * - View 'admin.users.edit' dengan data staff dan kategori
+     */
     public function edit(User $user): View
     {
         $categories = Category::orderBy('name')->get();
@@ -119,6 +205,29 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * =========================================================================
+     * 5. METODE UPDATE - PERBARUI STAFF
+     * =========================================================================
+     * 
+     * Fungsi: Memperbarui data staff.
+     * 
+     * Alur Proses:
+     * 1. Validasi input
+     * 2. Tentukan role (admin tetap admin, staff bisa diubah)
+     * 3. Update data user
+     * 4. Jika ada password baru, hash dan update
+     * 5. Sync kategori (hapus lama, buat baru)
+     * 6. Redirect dengan pesan sukses
+     * 
+     * Query yang Digunakan:
+     * - $user->update([...]): Update user
+     * - $user->staffProfiles()->delete(): Hapus relasi lama
+     * - StaffProfile::create([...]): Buat relasi baru
+     * 
+     * Output:
+     * - Redirect ke route('admin.users.index')
+     */
     public function update(Request $request, User $user): RedirectResponse
     {
         $validated = $request->validate([
@@ -147,7 +256,6 @@ class UserController extends Controller
 
         $user->update($updateData);
 
-        // Sync kategori melalui StaffProfile hanya jika tetap staff
         if ($role === 'staff') {
             $user->staffProfiles()->delete();
             if (! empty($validated['categories'])) {
@@ -164,6 +272,25 @@ class UserController extends Controller
             ->with('success', 'Data staf berhasil diperbarui.');
     }
 
+    /**
+     * =========================================================================
+     * 6. METODE DESTROY - HAPUS PENGGUNA
+     * =========================================================================
+     * 
+     * Fungsi: Menghapus pengguna dari database.
+     * 
+     * Alur Proses:
+     * 1. Cek apakah user mencoba menghapus diri sendiri
+     * 2. Jika ya, batalkan dengan error
+     * 3. Jika tidak, hapus user
+     * 4. Redirect dengan pesan sukses
+     * 
+     * Query yang Digunakan:
+     * - $user->delete(): Hapus user
+     * 
+     * Output:
+     * - Redirect ke route('admin.users.index')
+     */
     public function destroy(User $user): RedirectResponse
     {
         if (auth()->id() === $user->id) {

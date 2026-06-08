@@ -63,23 +63,14 @@ class User extends Authenticatable
         return $this->hasMany(StaffProfile::class);
     }
 
-    public function categories()
-    {
-        return $this->hasManyThrough(Category::class, StaffProfile::class, 'user_id', 'id', 'id', 'category_id');
-    }
-
     public function tickets()
     {
         return $this->hasMany(Ticket::class, 'staff_id');
     }
 
+
     public function articles()
     {
         return $this->hasMany(Article::class, 'staff_id');
-    }
-
-    public function staffProfile()
-    {
-        return $this->hasOne(StaffProfile::class);
     }
 }
