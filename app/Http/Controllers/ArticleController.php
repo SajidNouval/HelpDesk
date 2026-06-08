@@ -13,7 +13,12 @@ class ArticleController extends Controller
     // Staff CRUD methods
     public function index()
     {
-        $articles = Article::with('category', 'staff')
+        $search = request('q');
+        $sort = request('sort', 'created_desc');
+        $status = request('status');
+
+        $articlesQuery = Article::with('category', 'staff')
+            ->where('staff_id', auth()->id())
             ->withCount([
                 'feedback as helpful_count' => function ($query) {
                     $query->where('is_helpful', true);
@@ -22,10 +27,59 @@ class ArticleController extends Controller
                     $query->where('is_helpful', false);
                 },
             ])
-            ->orderByRaw('(staff_id = ?) DESC', [auth()->id()])
-            ->paginate(10);
+            ->when($search, function ($query, $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('title', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%")
+                        ->orWhereHas('category', function ($query) use ($search) {
+                            $query->where('name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($status, function ($query, $status) {
+                $query->where('publish_status', $status);
+            });
 
-        return view('staff.articles.index', compact('articles'));
+        switch ($sort) {
+            case 'created_asc':
+                $articlesQuery->orderBy('created_at', 'asc');
+                break;
+            case 'created_desc':
+                $articlesQuery->orderBy('created_at', 'desc');
+                break;
+            case 'title_asc':
+                $articlesQuery->orderBy('title', 'asc');
+                break;
+            case 'title_desc':
+                $articlesQuery->orderBy('title', 'desc');
+                break;
+            case 'views_desc':
+                $articlesQuery->orderBy('views', 'desc');
+                break;
+            case 'views_asc':
+                $articlesQuery->orderBy('views', 'asc');
+                break;
+            default:
+                $articlesQuery->orderBy('created_at', 'desc');
+        }
+
+        $articles = $articlesQuery->paginate(10)->withQueryString();
+
+        $totalArticles = Article::where('staff_id', auth()->id())->count();
+        $pendingArticles = Article::where('staff_id', auth()->id())->where('publish_status', 'pending')->count();
+        $approvedArticles = Article::where('staff_id', auth()->id())->where('publish_status', 'approved')->count();
+        $rejectedArticles = Article::where('staff_id', auth()->id())->where('publish_status', 'rejected')->count();
+
+        return view('staff.articles.index', compact(
+            'articles',
+            'search',
+            'sort',
+            'status',
+            'totalArticles',
+            'pendingArticles',
+            'approvedArticles',
+            'rejectedArticles'
+        ));
     }
 
     public function create()

@@ -65,7 +65,7 @@
                 <div class="mb-6 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                     <div class="p-6">
                         <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Ringkasan Statistik</h3>
-                        
+
                         <!-- Main Stats Row -->
                         <div class="flex flex-wrap items-center gap-6 mb-5 pb-5 border-b border-gray-100">
                             <div class="flex items-center gap-3">
@@ -79,7 +79,7 @@
                                     <p class="text-xl font-bold text-gray-900">{{ $staffCount }}</p>
                                 </div>
                             </div>
-                            
+
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
                                     <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,7 +91,7 @@
                                     <p class="text-xl font-bold text-gray-900">{{ $articleCount }}</p>
                                 </div>
                             </div>
-                            
+
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
                                     <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,9 +104,9 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Ticket Status Row -->
-                        <div class="flex flex-wrap items-center gap-6">
+                        <div class="flex flex-wrap items-center gap-6 mb-5 pb-5 border-b border-gray-100">
                             <div class="flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
                                 <span class="text-sm text-gray-600">Total Tiket Diproses: <strong class="text-gray-900">{{ $ticketsWaiting }}</strong></span>
@@ -116,30 +116,21 @@
                                 <span class="text-sm text-gray-600">Total Tiket Selesai: <strong class="text-gray-900">{{ $ticketsDone }}</strong></span>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Live Service Settings Card -->
-                <div class="mb-6 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div class="space-y-1">
+                        <!-- Live Service Status Row -->
+                        <div class="flex flex-wrap items-center justify-between gap-4">
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status Live Service</span>
-                                <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full {{ $liveServiceEnabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                    {{ $liveServiceEnabled ? 'Aktif' : 'Nonaktif' }}
-                                </span>
+                                <span class="w-2.5 h-2.5 rounded-full {{ $liveServiceEnabled ? 'bg-green-400' : 'bg-gray-400' }}"></span>
+                                <span class="text-sm text-gray-600">Status Live Service: <strong class="text-gray-900">{{ $liveServiceEnabled ? 'Aktif' : 'Nonaktif' }}</strong></span>
                             </div>
-                            <p class="text-xs text-gray-500">
-                                Live chat tiket hanya akan tersedia jika layanan ini aktif. Laporan/report tetap dapat dibuat kapan saja.
-                            </p>
+                            <form action="{{ route('admin.live-service.toggle') }}" method="POST" class="shrink-0">
+                                @csrf
+                                <input type="hidden" name="status" value="{{ $liveServiceEnabled ? 'off' : 'on' }}">
+                                <button type="submit" class="inline-flex items-center justify-center h-9 px-4 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-xs font-medium transition whitespace-nowrap">
+                                    {{ $liveServiceEnabled ? 'Nonaktifkan' : 'Aktifkan' }}
+                                </button>
+                            </form>
                         </div>
-                        <form action="{{ route('admin.live-service.toggle') }}" method="POST" class="shrink-0">
-                            @csrf
-                            <input type="hidden" name="status" value="{{ $liveServiceEnabled ? 'off' : 'on' }}">
-                            <button type="submit" class="inline-flex items-center justify-center h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition whitespace-nowrap">
-                                Kelola Live Service
-                            </button>
-                        </form>
                     </div>
                 </div>
 
@@ -151,7 +142,6 @@
                         <div class="flex items-center justify-between mb-4">
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900">Artikel Menunggu Persetujuan</h3>
-                                <p class="text-sm text-gray-500">Daftar usulan artikel baru dari staf yang perlu Anda tinjau.</p>
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="px-2.5 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">

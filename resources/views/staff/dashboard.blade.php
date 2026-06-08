@@ -6,9 +6,6 @@
             <h1 class="text-3xl font-semibold text-gray-900">
                 Dashboard Staf
             </h1>
-            <p class="mt-1 text-sm text-gray-500">
-                Pantau aktivitas tiket, artikel, dan status layanan Anda.
-            </p>
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
@@ -46,20 +43,9 @@
                                 Kelola Artikel
                             </a>
                         </li>
-                        <li>
-                            <a href="{{ route('staff.articles.create') }}" class="block rounded-l-md px-3 py-2 transition hover:text-red-500">
-                                Buat Artikel Baru
-                            </a>
-                        </li>
                     </ul>
 
-                    <!-- Profile Card -->
-                    <div class="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                        <h4 class="font-semibold text-gray-700 mb-2">Profil Anda</h4>
-                        <p class="text-sm text-gray-600 mb-2">{{ Auth::user()->name }}</p>
-                        <p class="text-xs text-gray-500 mb-3">{{ Auth::user()->email }}</p>
-                        <p class="text-xs font-semibold text-green-600">● Aktif</p>
-                    </div>
+                    
                 </div>
             </div>
 
@@ -88,137 +74,143 @@
 
             <div class="col-span-12 md:col-span-9">
 
-                <!-- Live Service Status Card -->
-                <div class="mb-6 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div class="space-y-1">
+                <!-- Statistics Overview -->
+                <div class="mb-6 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-6">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Ringkasan Statistik</h3>
+
+                        <!-- Main Stats Row -->
+                        <div class="flex flex-wrap items-center gap-6 mb-5 pb-5 border-b border-gray-100">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium">Total Artikel</p>
+                                    <p class="text-xl font-bold text-gray-900">{{ $totalArticles }}</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium">Total Tiket</p>
+                                    <p class="text-xl font-bold text-gray-900">{{ $totalTickets }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Article Status Row -->
+                        <div class="flex flex-wrap items-center gap-6 mb-5 pb-5 border-b border-gray-100">
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status Live Service</span>
-                                <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full {{ $liveServiceEnabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                    {{ $liveServiceEnabled ? 'Aktif' : 'Nonaktif' }}
-                                </span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-green-400"></span>
+                                <span class="text-sm text-gray-600">Artikel Disetujui: <strong class="text-gray-900">{{ $articlesApproved }}</strong></span>
                             </div>
-                            <p class="text-xs text-gray-500">
-                                Live chat tiket hanya akan tersedia jika layanan ini aktif. Laporan/report tetap dapat dibuat kapan saja.
-                            </p>
-                        </div>
-                        <div class="shrink-0">
-                            <span class="inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-semibold {{ $liveServiceEnabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                {{ $liveServiceEnabled ? 'Live Chat Dibuka' : 'Live Chat Ditutup' }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section: Statistik Artikel & Tiket -->
-                <div class="mb-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Card 1: Statistik Artikel -->
-                        <div class="p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-                            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Statistik Artikel</h3>
-                            <div class="space-y-3 text-sm">
-                                <div class="flex justify-between items-center py-1 border-b border-gray-100">
-                                    <span class="text-gray-600">Total Artikel</span>
-                                    <span class="font-semibold text-gray-900 text-base">{{ $totalArticles }}</span>
-                                </div>
-                                <div class="flex justify-between items-center py-1 border-b border-gray-100">
-                                    <span class="text-gray-600">Disetujui</span>
-                                    <span class="font-semibold text-green-600 text-base">{{ $articlesApproved }}</span>
-                                </div>
-                                <div class="flex justify-between items-center py-1 border-b border-gray-100">
-                                    <span class="text-gray-600">Pending</span>
-                                    <span class="font-semibold text-yellow-600 text-base">{{ $articlesPending }}</span>
-                                </div>
-                                <div class="flex justify-between items-center py-1">
-                                    <span class="text-gray-600">Ditolak</span>
-                                    <span class="font-semibold text-red-600 text-base">{{ $articlesRejected }}</span>
-                                </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+                                <span class="text-sm text-gray-600">Artikel Pending: <strong class="text-gray-900">{{ $articlesPending }}</strong></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-400"></span>
+                                <span class="text-sm text-gray-600">Artikel Ditolak: <strong class="text-gray-900">{{ $articlesRejected }}</strong></span>
                             </div>
                         </div>
 
-                        <!-- Card 2: Statistik Tiket -->
-                        <div class="p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-                            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Statistik Tiket</h3>
-                            <div class="space-y-3 text-sm">
-                                <div class="flex justify-between items-center py-1 border-b border-gray-100">
-                                    <span class="text-gray-600">Total Tiket</span>
-                                    <span class="font-semibold text-gray-900 text-base">{{ $totalTickets }}</span>
-                                </div>
-                                <div class="flex justify-between items-center py-1 border-b border-gray-100">
-                                    <span class="text-gray-600">Waiting</span>
-                                    <span class="font-semibold text-yellow-600 text-base">{{ $ticketsWaiting }}</span>
-                                </div>
-                                <div class="flex justify-between items-center py-1 border-b border-gray-100">
-                                    <span class="text-gray-600">Diproses</span>
-                                    <span class="font-semibold text-red-600 text-base">{{ $ticketsProcessing }}</span>
-                                </div>
-                                <div class="flex justify-between items-center py-1">
-                                    <span class="text-gray-600">Selesai</span>
-                                    <span class="font-semibold text-green-600 text-base">{{ $ticketsDone }}</span>
-                                </div>
+                        <!-- Ticket Status Row -->
+                        <div class="flex flex-wrap items-center gap-6 mb-5 pb-5 border-b border-gray-100">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+                                <span class="text-sm text-gray-600">Tiket Waiting: <strong class="text-gray-900">{{ $ticketsWaiting }}</strong></span>
                             </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-400"></span>
+                                <span class="text-sm text-gray-600">Tiket Diproses: <strong class="text-gray-900">{{ $ticketsProcessing }}</strong></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-green-400"></span>
+                                <span class="text-sm text-gray-600">Tiket Selesai: <strong class="text-gray-900">{{ $ticketsDone }}</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Live Service Status Row -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full {{ $liveServiceEnabled ? 'bg-green-400' : 'bg-gray-400' }}"></span>
+                            <span class="text-sm text-gray-600">Status Live Service: <strong class="text-gray-900">{{ $liveServiceEnabled ? 'Aktif' : 'Nonaktif' }}</strong></span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Tiket Hari Ini Section -->
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h2 class="text-xl font-semibold text-gray-900">Tiket Hari Ini</h2>
-                            <p class="text-sm text-gray-500">Daftar tiket masuk hari ini yang ditugaskan kepada Anda.</p>
-                        </div>
-                        <span class="px-2.5 py-0.5 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
-                            {{ $todayTickets->count() }} tiket
-                        </span>
-                    </div>
-
-                    @if ($todayTickets->count() > 0)
-                        <div class="grid grid-cols-1 gap-4">
-                            @foreach ($sortedTickets->take(5) as $ticket)
-                                <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 hover:shadow-md transition">
-                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                        <div class="space-y-1">
-                                            <div class="flex items-center gap-2">
-                                                <h3 class="font-semibold text-gray-900 text-sm">
-                                                    <x-truncate-text :value="$ticket->subject" />
-                                                </h3>
-                                                <x-status-badge :status="$ticket->status" />
-                                            </div>
-                                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
-                                                <span>Kategori: <strong class="text-gray-700 font-medium">{{ $ticket->category->name ?? 'Tanpa kategori' }}</strong></span>
-                                                <span>•</span>
-                                                <span>Pelapor: <strong class="text-gray-700 font-medium">{{ $ticket->name }}</strong></span>
-                                                <span>•</span>
-                                                <span>{{ $ticket->created_at->format('d M Y, H:i') }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="shrink-0">
-                                            <a href="{{ route('staff.tickets.index') }}" class="inline-flex items-center justify-center h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-xs font-medium transition">
-                                                Kelola Tiket →
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-
-                        @if ($todayTickets->count() > 5)
-                            <div class="mt-4 text-right">
-                                <a href="{{ route('staff.tickets.index') }}" class="text-sm font-semibold text-red-500 hover:text-red-600 transition inline-flex items-center gap-1">
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">Tiket Hari Ini</h3>
+                                <p class="text-sm text-gray-500">Daftar tiket masuk hari ini yang ditugaskan kepada Anda.</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="px-2.5 py-0.5 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
+                                    {{ $todayTickets->count() }} tiket
+                                </span>
+                                <a href="{{ route('staff.tickets.index') }}" class="text-xs font-semibold text-red-500 hover:text-red-600 transition flex items-center gap-1">
                                     Lihat Semua Tiket →
                                 </a>
                             </div>
-                        @endif
-                    @else
-                        <div class="text-center py-12 bg-white border border-gray-200 rounded-xl shadow-sm">
-                            <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            <h3 class="text-sm font-semibold text-gray-900 mb-1">Tidak Ada Tiket Hari Ini</h3>
-                            <p class="text-xs text-gray-500">Belum ada tiket yang ditugaskan hari ini.</p>
                         </div>
-                    @endif
+
+                        @if ($todayTickets->count() > 0)
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Subjek</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Kategori</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Pelapor</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Tanggal</th>
+                                            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        @foreach ($sortedTickets->take(10) as $ticket)
+                                            <tr class="hover:bg-gray-50 transition">
+                                                <td class="px-6 py-4 text-gray-900 font-medium">
+                                                    <x-truncate-text :value="$ticket->subject" class="block text-gray-700" />
+                                                </td>
+                                                <td class="px-6 py-4 text-gray-600">{{ $ticket->category->name ?? 'Tanpa kategori' }}</td>
+                                                <td class="px-6 py-4 text-gray-600">{{ $ticket->name }}</td>
+                                                <td class="px-6 py-4 text-gray-600">{{ $ticket->created_at->format('d M Y, H:i') }}</td>
+                                                <td class="px-6 py-4 text-center">
+                                                    <x-status-badge :status="$ticket->status" />
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            @if ($todayTickets->count() > 10)
+                                <div class="mt-4 text-right">
+                                    <a href="{{ route('staff.tickets.index') }}" class="text-sm font-semibold text-red-500 hover:text-red-600 transition inline-flex items-center gap-1">
+                                        Lihat Semua Tiket →
+                                    </a>
+                                </div>
+                            @endif
+                        @else
+                            <div class="text-center py-12">
+                                <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <h3 class="text-sm font-semibold text-gray-900 mb-1">Tidak Ada Tiket Hari Ini</h3>
+                                <p class="text-xs text-gray-500">Belum ada tiket yang ditugaskan hari ini.</p>
+                            </div>
+                        @endif
+                    </div>
                 </div>
 
             </div>

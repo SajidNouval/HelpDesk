@@ -17,16 +17,33 @@ class UserController extends Controller
 {
     public function index(Request $request): View
     {
-        $search = $request->query('search');
+        $search = $request->query('q');
+        $sort = $request->query('sort', 'created_asc');
 
         $usersQuery = User::withCount('articles')
-            ->orderBy('name')
             ->when($search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             });
+
+        switch ($sort) {
+            case 'created_asc':
+                $usersQuery->orderBy('created_at', 'asc');
+                break;
+            case 'created_desc':
+                $usersQuery->orderBy('created_at', 'desc');
+                break;
+            case 'name_asc':
+                $usersQuery->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $usersQuery->orderBy('name', 'desc');
+                break;
+            default:
+                $usersQuery->orderBy('created_at', 'asc');
+        }
 
         $users = $usersQuery->paginate(10)->withQueryString();
 
@@ -42,6 +59,7 @@ class UserController extends Controller
         return view('admin.users.index', compact(
             'users',
             'search',
+            'sort',
             'totalStaff',
             'totalAdmin',
             'totalStaffHelpdesk',
@@ -108,18 +126,26 @@ class UserController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'role' => ['required', Rule::in(['admin', 'staff'])],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'categories' => ['nullable', 'array'],
             'categories.*' => ['exists:categories,id'],
         ]);
 
         $role = $user->role === 'admin' ? 'admin' : 'staff';
+        $status = $user->role === 'admin' ? 'active' : $validated['status'];
 
-        $user->update([
+        $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $role,
-            'status' => $validated['status'],
-        ]);
+            'status' => $status,
+        ];
+
+        if (! empty($validated['password'])) {
+            $updateData['password'] = Hash::make($validated['password']);
+        }
+
+        $user->update($updateData);
 
         // Sync kategori melalui StaffProfile hanya jika tetap staff
         if ($role === 'staff') {

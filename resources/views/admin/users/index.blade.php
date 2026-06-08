@@ -5,9 +5,6 @@
             <h1 class="text-3xl font-semibold text-gray-900">
                 Kelola Staf
             </h1>
-            <p class="mt-1 text-sm text-gray-500">
-                Manajemen staf untuk sistem helpdesk.
-            </p>
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
@@ -52,34 +49,12 @@
                         </li>
                     </ul>
 
-                    <!-- Profile Card -->
-                    <div class="mt-6 p-4 bg-gray-50 rounded">
-                        <h4 class="font-semibold text-gray-700 mb-2">Profil Anda</h4>
-                        <p class="text-sm text-gray-600 mb-2">{{ Auth::user()->name }}</p>
-                        <p class="text-xs text-gray-500 mb-3">{{ Auth::user()->email }}</p>
-                        <p class="text-xs font-semibold text-green-600">● Aktif</p>
-                    </div>
+                    
                 </div>
             </div>
 
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
-                    <div>
-                        <h2 class="text-xl font-semibold text-gray-900">Daftar Staf</h2>
-                        <p class="text-sm text-gray-500">Kelola akun petugas helpdesk.</p>
-                    </div>
-
-                    <div class="flex items-center">
-                        <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                            Tambah Staf
-                        </a>
-                    </div>
-                </div>
-
                 @if(session('success'))
                     <x-alert type="success" class="mb-6">
                         {{ session('success') }}
@@ -92,36 +67,112 @@
                     </x-alert>
                 @endif
 
-                <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
-                    <div class="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                        <div class="text-sm text-gray-500">Total Staf</div>
-                        <div class="text-xl font-semibold text-gray-900">{{ number_format($totalStaff) }}</div>
-                    </div>
-                    <div class="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                        <div class="text-sm text-gray-500">Staf Aktif</div>
-                        <div class="text-xl font-semibold text-gray-900">{{ number_format($activeStaff) }}</div>
-                    </div>
-                    <div class="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                        <div class="text-sm text-gray-500">Total Admin</div>
-                        <div class="text-xl font-semibold text-gray-900">{{ number_format($totalAdmin) }}</div>
-                    </div>
-                    <div class="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                        <div class="text-sm text-gray-500">Staf Helpdesk</div>
-                        <div class="text-xl font-semibold text-gray-900">{{ number_format($totalStaffHelpdesk) }}</div>
+                <!-- Header Section with Statistics -->
+                <div class="mb-6 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-6">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-900">Daftar Staf</h2>
+                                <p class="text-sm text-gray-500">Kelola akun petugas helpdesk.</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <!-- Search Input -->
+                                <form action="{{ route('admin.users.index') }}" method="GET" class="flex items-center">
+                                    @if(request('sort'))
+                                        <input type="hidden" name="sort" value="{{ request('sort') }}">
+                                    @endif
+                                    <div class="relative">
+                                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari staf..." class="w-48 h-10 pl-9 pr-4 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                                        <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                    </div>
+                                </form>
+
+                                <!-- Sort Dropdown -->
+                                <div class="relative">
+                                    <select id="sortSelect"
+                                            onchange="window.location.href=this.value"
+                                            class="h-10 pl-4 pr-8 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none cursor-pointer">
+
+                                        <option value="{{ route('admin.users.index', ['sort' => 'created_asc', 'q' => request('q')]) }}"
+                                            {{ request('sort') == 'created_asc' || !request('sort') ? 'selected' : '' }}>
+                                            Terlama - Terbaru
+                                        </option>
+
+                                        <option value="{{ route('admin.users.index', ['sort' => 'created_desc', 'q' => request('q')]) }}"
+                                            {{ request('sort') == 'created_desc' ? 'selected' : '' }}>
+                                            Terbaru - Terlama
+                                        </option>
+
+                                        <option value="{{ route('admin.users.index', ['sort' => 'name_asc', 'q' => request('q')]) }}"
+                                            {{ request('sort') == 'name_asc' ? 'selected' : '' }}>
+                                            A - Z
+                                        </option>
+
+                                        <option value="{{ route('admin.users.index', ['sort' => 'name_desc', 'q' => request('q')]) }}"
+                                            {{ request('sort') == 'name_desc' ? 'selected' : '' }}>
+                                            Z - A
+                                        </option>
+
+                                    </select>
+                                    <svg class="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+
+                                <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Tambah Staf
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap items-center gap-6 pt-4 border-t border-gray-100">
+                            <div class="flex items-center gap-2">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium">Total Staf</p>
+                                    <p class="text-xl font-bold text-gray-900">{{ number_format($totalStaff) }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium">Staf Aktif</p>
+                                    <p class="text-xl font-bold text-gray-900">{{ number_format($activeStaff) }}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="bg-white border border-gray-100 rounded-lg shadow-sm">
-                    <div class="p-4 overflow-x-auto">
+                    <div class="p-4">
                         @if($users->count())
-                            <table class="min-w-full divide-y divide-gray-100">
+                            <table class="divide-y divide-gray-100" style="table-layout: fixed; width: 100%;">
+                                <colgroup>
+                                    <col style="width: 25%;">
+                                    <col style="width: 25%;">
+                                    <col style="width: 15%;">
+                                    <col style="width: 15%;">
+                                    <col style="width: 20%;">
+                                </colgroup>
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Staff</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Artikel Dibuat</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bergabung</th>
                                         <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                                     </tr>
@@ -129,56 +180,36 @@
                                 <tbody class="bg-white divide-y divide-gray-100">
                                         @foreach($users as $user)
                                             <tr class="hover:bg-gray-50 transition">
-                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                <td class="px-4 py-3 overflow-hidden">
                                                     <div class="flex items-center gap-3">
-                                                        <div class="w-9 h-9 bg-red-100 rounded-full flex items-center justify-center text-red-600 font-semibold">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
-                                                        <div class="space-y-1">
+                                                        <div class="w-9 h-9 bg-red-100 rounded-full flex items-center justify-center text-red-600 font-semibold flex-shrink-0">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
+                                                        <div class="space-y-1 min-w-0">
                                                             <div class="flex items-center gap-2">
-                                                                <x-truncate-text :value="$user->name" class="text-gray-900 font-medium block" />
+                                                                <div class="truncate text-gray-900 font-medium">{{ $user->name }}</div>
                                                                 
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap">
-                                                    <x-truncate-text :value="$user->email" class="text-gray-600 text-sm block" />
+                                                <td class="px-4 py-3 overflow-hidden">
+                                                    <div class="truncate text-gray-600 text-sm">{{ $user->email }}</div>
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap">
-                                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">{{ ucfirst($user->role) }}</span>
-                                                </td>
-                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                <td class="px-4 py-3 overflow-hidden">
                                                     <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $user->status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-700' }}">{{ $user->status === 'active' ? 'Aktif' : 'Nonaktif' }}</span>
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap">
-                                                    <span class="text-gray-600 text-sm">{{ $user->articles_count }}</span>
-                                                </td>
-                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                <td class="px-4 py-3 overflow-hidden">
                                                     <span class="text-gray-600 text-sm">{{ $user->created_at->format('d M Y') }}</span>
                                                 </td>
                                                 <td class="px-4 py-3 text-right whitespace-nowrap">
                                                     <div class="inline-flex items-center gap-2">
-                                                        <a href="{{ route('admin.users.edit', $user) }}" class="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:border-red-500 hover:text-red-600 mr-2" title="Edit">
+                                                        <a href="{{ route('admin.users.edit', $user) }}" class="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:border-red-500 hover:text-red-600" title="Edit">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                             </svg>
                                                         </a>
 
                                                         @if(auth()->id() !== $user->id)
-                                                            <form id="toggle-form-user-{{ $user->id }}" action="{{ route('admin.users.update', $user) }}" method="POST" class="inline-block">
-                                                                @csrf
-                                                                @method('PATCH')
-                                                                <input type="hidden" name="status" value="{{ $user->status === 'active' ? 'inactive' : 'active' }}" />
-                                                                <button type="button"
-                                                                        data-toggle-user="toggle-form-user-{{ $user->id }}"
-                                                                        data-user-name="{{ $user->name }}"
-                                                                        data-user-status="{{ $user->status }}"
-                                                                        class="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 transition text-sm font-medium"
-                                                                        title="{{ $user->status === 'active' ? 'Nonaktifkan Staff' : 'Aktifkan Staff' }}">
-                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3" />
-                                                                    </svg>
-                                                                </button>
-                                                            </form>
+                                                            
 
                                                             <form id="delete-form-user-{{ $user->id }}" action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline-block">
                                                                 @csrf

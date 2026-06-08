@@ -12,7 +12,11 @@ class ArticleController extends Controller
 {
     public function index(): View
     {
-        $articles = Article::with('category', 'staff')
+        $search = request('q');
+        $sort = request('sort', 'created_desc');
+        $status = request('status');
+
+        $articlesQuery = Article::with('category', 'staff')
             ->withCount([
                 'feedback as helpful_count' => function ($query) {
                     $query->where('is_helpful', true);
@@ -21,10 +25,53 @@ class ArticleController extends Controller
                     $query->where('is_helpful', false);
                 },
             ])
-            ->orderBy('views', 'desc')
-            ->paginate(20);
+            ->when($search, function ($query, $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('title', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%")
+                        ->orWhereHas('staff', function ($query) use ($search) {
+                            $query->where('name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($status, function ($query, $status) {
+                $query->where('publish_status', $status);
+            });
 
-        return view('admin.articles.index', compact('articles'));
+        switch ($sort) {
+            case 'created_asc':
+                $articlesQuery->orderBy('created_at', 'asc');
+                break;
+            case 'created_desc':
+                $articlesQuery->orderBy('created_at', 'desc');
+                break;
+            case 'title_asc':
+                $articlesQuery->orderBy('title', 'asc');
+                break;
+            case 'title_desc':
+                $articlesQuery->orderBy('title', 'desc');
+                break;
+            default:
+                $articlesQuery->orderBy('created_at', 'desc');
+        }
+
+        $articles = $articlesQuery->paginate(20)->withQueryString();
+
+        $totalArticles = Article::count();
+        $pendingArticles = Article::where('publish_status', 'pending')->count();
+        $approvedArticles = Article::where('publish_status', 'approved')->count();
+        $rejectedArticles = Article::where('publish_status', 'rejected')->count();
+
+        return view('admin.articles.index', compact(
+            'articles',
+            'search',
+            'sort',
+            'status',
+            'totalArticles',
+            'pendingArticles',
+            'approvedArticles',
+            'rejectedArticles'
+        ));
     }
 
     public function show(Article $article): View

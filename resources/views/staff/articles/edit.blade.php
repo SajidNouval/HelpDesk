@@ -44,50 +44,52 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('staff.articles.index') }}" class="block rounded-l-md px-3 py-2 transition hover:text-red-500">
+                            <a href="{{ route('staff.articles.index') }}" class="block rounded-l-md px-3 py-2 transition text-red-500 font-semibold border-l-4 border-red-500 bg-red-50">
                                 Kelola Artikel
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('staff.articles.create') }}" class="block rounded-l-md px-3 py-2 transition hover:text-red-500">
-                                Buat Artikel Baru
                             </a>
                         </li>
                     </ul>
 
-                    <!-- Profile Card -->
-                    <div class="mt-6 p-4 bg-gray-50 rounded">
-                        <h4 class="font-semibold text-gray-700 mb-2">Profil Anda</h4>
-                        <p class="text-sm text-gray-600 mb-2">{{ Auth::user()->name }}</p>
-                        <p class="text-xs text-gray-500 mb-3">{{ Auth::user()->email }}</p>
-                        <p class="text-xs font-semibold text-green-600">● Aktif</p>
-                    </div>
                 </div>
             </div>
 
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9">
-
-                <!-- Success/Error Alert -->
-                @if (session('success'))
-                    <div class="mb-4 p-4 bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-200 rounded-lg flex items-center gap-3">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        {{ session('success') }}
+                @if($errors->any())
+                    <div class="rounded-2xl bg-red-50 p-4 border border-red-200 mb-6">
+                        <div class="flex gap-3">
+                            <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                            </svg>
+                            <div>
+                                <h3 class="text-sm font-semibold text-red-800">Ada kesalahan dalam input:</h3>
+                                <ul class="mt-2 text-sm text-red-700 list-disc list-inside space-y-1">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 @endif
-
-                <div class="mb-6">
-                    <h2 class="text-xl font-semibold text-gray-900">Form Edit Artikel</h2>
-                    <p class="text-sm text-gray-500">Perbarui informasi artikel "{{ $article->title }}".</p>
-                </div>
 
                 <!-- Form Card -->
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm max-w-4xl">
                     <div class="p-6">
+                        <!-- Header -->
+                        <div class="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
+                            <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-900">Form Edit Artikel</h2>
+                                <p class="text-sm text-gray-500">Perbarui informasi artikel {{ $article->title }}.</p>
+                            </div>
+                        </div>
 
-                        <form id="article-form" method="POST" action="{{ route('staff.articles.update', $article) }}" class="space-y-6">
+                        <form id="article-form" method="POST" action="{{ route('staff.articles.update', $article) }}" class="space-y-5">
                             @csrf
                             @method('PUT')
 
@@ -138,19 +140,39 @@
                                 </div>
                             </div>
 
-                            <div class="pt-6 border-t border-gray-200 flex justify-end gap-3">
+                            <div class="pt-4 border-t border-gray-200 flex justify-end gap-3">
                                 <a href="{{ route('staff.articles.index') }}">
                                     <button type="button" class="h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
                                         Batal
                                     </button>
                                 </a>
-                                <button type="submit" class="h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
-                                    Update Artikel
+                                <button type="button" id="btn-save-article" class="h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
+                                    Simpan Perubahan
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
+
+                <!-- Confirmation Dialog -->
+                <x-confirm-dialog
+                    id="confirm-edit-article"
+                    title="Simpan Perubahan"
+                    message="Apakah Anda yakin ingin menyimpan perubahan artikel ini?"
+                    primaryText="Simpan"
+                    secondaryText="Batal"
+                />
+
+                <script>
+                    document.getElementById('btn-save-article').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.confirmDialog.open('confirm-edit-article', {
+                            onConfirm: function() {
+                                document.getElementById('article-form').submit();
+                            }
+                        });
+                    });
+                </script>
 
             </div>
         </div>

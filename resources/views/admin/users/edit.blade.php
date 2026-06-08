@@ -5,9 +5,6 @@
             <h1 class="text-3xl font-semibold text-gray-900">
                 Edit Staf
             </h1>
-            <p class="mt-1 text-sm text-gray-500">
-                Perbarui informasi staf yang sudah ada.
-            </p>
 
             <!-- Breadcrumb -->
             <div class="text-sm text-gray-500 mt-2 flex items-center">
@@ -54,23 +51,12 @@
                         </li>
                     </ul>
 
-                    <!-- Profile Card -->
-                    <div class="mt-6 p-4 bg-gray-50 rounded">
-                        <h4 class="font-semibold text-gray-700 mb-2">Profil Anda</h4>
-                        <p class="text-sm text-gray-600 mb-2">{{ Auth::user()->name }}</p>
-                        <p class="text-xs text-gray-500 mb-3">{{ Auth::user()->email }}</p>
-                        <p class="text-xs font-semibold text-green-600">● Aktif</p>
-                    </div>
+                    
                 </div>
             </div>
 
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9">
-                <div class="mb-6">
-                    <h2 class="text-xl font-semibold text-gray-900">Form Edit Staf</h2>
-                    <p class="text-sm text-gray-500">Perbarui informasi staf {{ $user->name }}.</p>
-                </div>
-
                 @if($errors->any())
                     <div class="rounded-md bg-red-50 p-4 border border-red-200 mb-6">
                         <div class="flex">
@@ -89,8 +75,22 @@
                     </div>
                 @endif
 
+                <!-- Form Card -->
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm max-w-4xl">
                     <div class="p-6">
+                        <!-- Header -->
+                        <div class="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
+                            <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-900">Form Edit Staf</h2>
+                                <p class="text-sm text-gray-500">Perbarui informasi staf {{ $user->name }}.</p>
+                            </div>
+                        </div>
+
                             <form id="staff-form" action="{{ route('admin.users.update', $user) }}" method="POST" class="space-y-6">
                                 @csrf
                                 @method('PATCH')
@@ -112,28 +112,37 @@
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role <span class="text-red-500">*</span></label>
-                                        <input id="role" type="text" value="{{ ucfirst(old('role', $user->role)) }}" disabled
-                                               class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 bg-gray-100 cursor-not-allowed"
-                                        >
-                                        <input type="hidden" name="role" value="{{ old('role', $user->role) }}">
-                                    </div>
+                                    <input type="hidden" name="role" value="{{ old('role', $user->role) }}">
 
-                                    @if($user->role === 'admin' || $user->email === 'admin@gmail.com')
-                                        <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
-                                            <p class="font-semibold">Administrator Utama</p>
-                                            <p class="mt-1">Role tidak dapat diubah.</p>
+                                    @if($user->role !== 'admin' && $user->email !== 'admin@gmail.com')
+                                        <div>
+                                            <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status Akun <span class="text-red-500">*</span></label>
+                                            <select id="status" name="status" required
+                                                    class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
+                                                <option value="active" {{ old('status', $user->status) === 'active' ? 'selected' : '' }}>Aktif</option>
+                                                <option value="inactive" {{ old('status', $user->status) === 'inactive' ? 'selected' : '' }}>Nonaktif</option>
+                                            </select>
                                         </div>
+                                    @else
+                                        <input type="hidden" name="status" value="active">
                                     @endif
 
-                                    <div>
-                                        <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status Akun <span class="text-red-500">*</span></label>
-                                        <select id="status" name="status" required
-                                                class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
-                                            <option value="active" {{ old('status', $user->status) === 'active' ? 'selected' : '' }}>Aktif</option>
-                                            <option value="inactive" {{ old('status', $user->status) === 'inactive' ? 'selected' : '' }}>Nonaktif</option>
-                                        </select>
+                                    <div class="pt-4 border-t border-gray-100">
+                                        <p class="text-sm font-medium text-gray-700 mb-3">Ganti Password <span class="text-xs text-gray-400 font-normal">(opsional)</span></p>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password Baru</label>
+                                                <input id="password" name="password" type="password"
+                                                       class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
+                                                       placeholder="Masukkan password baru (kosongkan jika tidak ingin mengubah)">
+                                            </div>
+                                            <div>
+                                                <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Password Baru</label>
+                                                <input id="password_confirmation" name="password_confirmation" type="password"
+                                                       class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
+                                                       placeholder="Ulangi password baru">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 

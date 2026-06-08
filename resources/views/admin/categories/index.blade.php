@@ -86,30 +86,30 @@
                                 <!-- Sort Dropdown -->
                                 <div class="relative">
                                     <select id="sortSelect"
-        onchange="window.location.href=this.value"
-        class="h-10 pl-4 pr-8 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none cursor-pointer">
+                                            onchange="window.location.href=this.value"
+                                            class="h-10 pl-4 pr-8 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none cursor-pointer">
 
-    <option value="{{ route('admin.categories.index', ['sort' => 'updated_desc', 'q' => request('q')]) }}"
-        {{ request('sort') == 'updated_desc' || !request('sort') ? 'selected' : '' }}>
-        Terbaru - Terlama
-    </option>
+                                        <option value="{{ route('admin.categories.index', ['sort' => 'updated_desc', 'q' => request('q')]) }}"
+                                            {{ request('sort') == 'updated_desc' || !request('sort') ? 'selected' : '' }}>
+                                            Terbaru - Terlama
+                                        </option>
 
-    <option value="{{ route('admin.categories.index', ['sort' => 'updated_asc', 'q' => request('q')]) }}"
-        {{ request('sort') == 'updated_asc' ? 'selected' : '' }}>
-        Terlama - Terbaru
-    </option>
+                                        <option value="{{ route('admin.categories.index', ['sort' => 'updated_asc', 'q' => request('q')]) }}"
+                                            {{ request('sort') == 'updated_asc' ? 'selected' : '' }}>
+                                            Terlama - Terbaru
+                                        </option>
 
-    <option value="{{ route('admin.categories.index', ['sort' => 'name_asc', 'q' => request('q')]) }}"
-        {{ request('sort') == 'name_asc' ? 'selected' : '' }}>
-        A - Z
-    </option>
+                                        <option value="{{ route('admin.categories.index', ['sort' => 'name_asc', 'q' => request('q')]) }}"
+                                            {{ request('sort') == 'name_asc' ? 'selected' : '' }}>
+                                            A - Z
+                                        </option>
 
-    <option value="{{ route('admin.categories.index', ['sort' => 'name_desc', 'q' => request('q')]) }}"
-        {{ request('sort') == 'name_desc' ? 'selected' : '' }}>
-        Z - A
-    </option>
+                                        <option value="{{ route('admin.categories.index', ['sort' => 'name_desc', 'q' => request('q')]) }}"
+                                            {{ request('sort') == 'name_desc' ? 'selected' : '' }}>
+                                            Z - A
+                                        </option>
 
-</select>
+                                    </select>
                                     <svg class="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                     </svg>
@@ -139,13 +139,18 @@
                 </div>
 
                 <div class="bg-white border border-gray-100 rounded-lg shadow-sm">
-                    <div class="p-4 overflow-x-auto">
+                    <div class="p-4">
                         @if($categories->count())
-                            <table class="min-w-full divide-y divide-gray-100">
+                            <table class="divide-y divide-gray-100" style="table-layout: fixed; width: 100%;">
+                                <colgroup>
+                                    <col style="width: 25%;">
+                                    <col style="width: 33%;">
+                                    <col style="width: 25%;">
+                                    <col style="width: 17%;">
+                                </colgroup>
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Kategori</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Artikel</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Terakhir Diperbarui</th>
                                         <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
@@ -154,41 +159,40 @@
                                 <tbody class="bg-white divide-y divide-gray-100">
                                     @foreach($categories as $category)
                                         <tr class="hover:bg-gray-50 transition">
-                                            <td class="px-4 py-3 whitespace-nowrap">
-                                                <x-truncate-text :value="$category->name" class="text-sm font-medium text-gray-900 block" />
+                                            <td class="px-4 py-3 overflow-hidden">
+                                                <div class="truncate text-sm font-medium text-gray-900">{{ $category->name }}</div>
                                                 @if($category->slug)
-                                                    <div class="text-xs text-gray-400">/{{ $category->slug }}</div>
+                                                    <div class="text-xs text-gray-400 truncate">/{{ $category->slug }}</div>
                                                 @endif
                                             </td>
-                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                                                {{ $category->articles_count ?? $category->articles()->count() }}
+                                            <td class="px-4 py-3 overflow-hidden">
+                                                <div class="truncate text-sm text-gray-600">{{ $category->description }}</div>
                                             </td>
-                                            <td class="px-4 py-3 max-w-sm text-sm text-gray-600">
-                                                <x-truncate-text :value="$category->description" class="text-sm text-gray-600 block" />
-                                            </td>
-                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                            <td class="px-4 py-3 overflow-hidden">
                                                 @if($category->updated_at)
-                                                    <div>{{ $category->updated_at->format('d M Y') }}</div>
-                                                    <div class="text-xs text-gray-400">{{ $category->updated_at->diffForHumans() }}</div>
+                                                    <div class="truncate text-sm text-gray-600">{{ $category->updated_at->format('d M Y') }}</div>
+                                                    <div class="text-xs text-gray-400 truncate">{{ $category->updated_at->diffForHumans() }}</div>
                                                 @else
                                                     -
                                                 @endif
                                             </td>
                                             <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                                                <a href="{{ route('admin.categories.edit', $category) }}" class="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:border-red-500 hover:text-red-600 mr-2" title="Edit">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                                    </svg>
-                                                </a>
-                                                <form id="delete-form-{{ $category->id }}" action="{{ route('admin.categories.destroy', $category) }}" method="POST" class="inline-block">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" data-delete-category="delete-form-{{ $category->id }}" class="inline-flex items-center px-3 py-1.5 rounded-md border border-red-600 text-red-600 hover:bg-red-50" title="Hapus">
+                                                <div class="inline-flex items-center gap-2">
+                                                    <a href="{{ route('admin.categories.edit', $category) }}" class="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:border-red-500 hover:text-red-600" title="Edit">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                                         </svg>
-                                                    </button>
-                                                </form>
+                                                    </a>
+                                                    <form id="delete-form-{{ $category->id }}" action="{{ route('admin.categories.destroy', $category) }}" method="POST" class="inline-block">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="button" data-delete-category="delete-form-{{ $category->id }}" class="inline-flex items-center px-3 py-1.5 rounded-md border border-red-600 text-red-600 hover:bg-red-50" title="Hapus">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                            </svg>
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach
