@@ -9,19 +9,30 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
+/**
+ * =========================================================================
+ * EVENT TICKET CLOSED - TIKET DITUTUP
+ * =========================================================================
+ *
+ * Event ini di-trigger ketika tiket ditutup.
+ * Event ini di-broadcast ke channel tiket untuk notifikasi real-time.
+ */
 class TicketClosed implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
-     * Create a new event instance.
+     * Fungsi:
+     * Membuat instance event baru dengan data tiket.
      */
     public function __construct(public Ticket $ticket) {}
 
     /**
-     * Get the channels the event should broadcast on.
+     * Fungsi:
+     * Menentukan channel untuk broadcast event.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * Output:
+     * - Array channel untuk broadcast ke tiket terkait.
      */
     public function broadcastOn(): array
     {
@@ -31,7 +42,11 @@ class TicketClosed implements ShouldBroadcast
     }
 
     /**
-     * The event's broadcast name.
+     * Fungsi:
+     * Menentukan nama event untuk broadcast.
+     *
+     * Output:
+     * - String nama event 'TicketClosed'.
      */
     public function broadcastAs(): string
     {
@@ -39,9 +54,11 @@ class TicketClosed implements ShouldBroadcast
     }
 
     /**
-     * Get the data to broadcast.
+     * Fungsi:
+     * Menentukan data yang di-broadcast bersama event.
      *
-     * @return array<string, mixed>
+     * Output:
+     * - Array data tiket untuk broadcast.
      */
     public function broadcastWith(): array
     {

@@ -6,10 +6,29 @@ use App\Models\Chatbot;
 use App\Models\Category;
 use Illuminate\Database\Seeder;
 
+/**
+ * =========================================================================
+ * SEEDER CHATBOT - SEEDER RULES CHATBOT
+ * =========================================================================
+ *
+ * Seeder ini membuat rules chatbot untuk routing query ke kategori.
+ *
+ * Rules yang Dibuat:
+ * - Wifi/internet/lemot/putus/sinyal/jaringan/koneksi -> Kategori Wifi
+ * - Email/outlook/gmail/kirim email/terima email/spam -> Kategori Email
+ * - Aplikasi/software/install/download/crash/error -> Kategori Aplikasi
+ * - Hardware/komputer/monitor/keyboard/mouse/device/perangkat -> Kategori Hardware
+ * - Password/login/akses/lupa password/reset password/tidak bisa login -> Kategori Wifi
+ *
+ * Catatan:
+ * - Setiap rule memiliki priority untuk ranking
+ * - Response template untuk setiap kategori
+ */
 class ChatbotSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Fungsi:
+     * Menjalankan seeder untuk membuat rules chatbot.
      */
     public function run(): void
     {

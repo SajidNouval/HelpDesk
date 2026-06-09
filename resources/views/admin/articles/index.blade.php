@@ -262,14 +262,11 @@
                                                     </a>
 
                                                     @if($article->publish_status === 'pending' || $article->publish_status === 'rejected')
-                                                        <form action="{{ route('admin.articles.approve', $article) }}" method="POST" class="inline-block">
-                                                            @csrf
-                                                            <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700" title="Setujui" data-ajax data-confirm="Apakah Anda yakin ingin menyetujui artikel ini?">
-                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                                </svg>
-                                                            </button>
-                                                        </form>
+                                                        <button type="button" onclick="confirmApprove('{{ route('admin.articles.approve', $article) }}')" class="inline-flex items-center px-3 py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700" title="Setujui">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                            </svg>
+                                                        </button>
                                                     @endif
 
                                                     @if($article->publish_status === 'pending')
@@ -281,21 +278,18 @@
                                                     @endif
 
                                                     @if($article->publish_status === 'approved')
-                                                        <form action="{{ route('admin.articles.toggle-hide', $article) }}" method="POST" class="inline-block">
-                                                            @csrf
-                                                            <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-md border {{ $article->is_hidden ? 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100' }}" title="{{ $article->is_hidden ? 'Tampilkan Arsip' : 'Arsipkan' }}" data-ajax>
-                                                                @if($article->is_hidden)
-                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                                                    </svg>
-                                                                @else
-                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                                                                    </svg>
-                                                                @endif
-                                                            </button>
-                                                        </form>
+                                                        <button type="button" onclick="confirmToggleHide('{{ route('admin.articles.toggle-hide', $article) }}', {{ $article->is_hidden ? 'true' : 'false' }})" class="inline-flex items-center px-3 py-1.5 rounded-md border {{ $article->is_hidden ? 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100' }}" title="{{ $article->is_hidden ? 'Tampilkan Arsip' : 'Arsipkan' }}">
+                                                            @if($article->is_hidden)
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                                </svg>
+                                                            @else
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                                                                </svg>
+                                                            @endif
+                                                        </button>
                                                     @endif
                                                 </div>
                                             </td>
@@ -344,19 +338,71 @@
         </div>
     </div>
 
+    <!-- Confirmation Dialogs -->
+    <x-confirm-dialog
+        id="confirm-approve-article"
+        title="Setujui Publikasi"
+        message="Apakah Anda yakin ingin menyetujui publikasi artikel ini?"
+        primaryText="Setujui"
+        secondaryText="Batal"
+    />
+
+    <x-confirm-dialog
+        id="confirm-archive-article"
+        title="Arsipkan Artikel"
+        message="Apakah Anda yakin ingin mengarsipkan artikel ini dari publik?"
+        primaryText="Arsipkan"
+        secondaryText="Batal"
+    />
+
+    <x-confirm-dialog
+        id="confirm-show-article"
+        title="Tampilkan ke Publik"
+        message="Apakah Anda yakin ingin menampilkan artikel ini kembali ke publik?"
+        primaryText="Tampilkan"
+        secondaryText="Batal"
+    />
+
     <script>
     function openRejectModal(actionUrl) {
         const modal = document.getElementById('rejectModal');
         const form = document.getElementById('rejectForm');
-        
+
         // Set form action URL
         form.action = actionUrl;
-        
+
         // Clear previous rejection note
         form.querySelector('textarea[name="rejection_note"]').value = '';
-        
+
         // Show modal
         modal.classList.remove('hidden');
+    }
+
+    function confirmApprove(actionUrl) {
+        window.confirmDialog.open('confirm-approve-article', {
+            onConfirm: function() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = actionUrl;
+                form.innerHTML = '<input type="hidden" name="_token" value="{{ csrf_token() }}">';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
+    function confirmToggleHide(actionUrl, isHidden) {
+        const dialogId = isHidden ? 'confirm-show-article' : 'confirm-archive-article';
+        window.confirmDialog.open(dialogId, {
+            onConfirm: function() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = actionUrl;
+                form.innerHTML = '<input type="hidden" name="_token" value="{{ csrf_token() }}">';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
     }
     </script>
 </x-app-layout>

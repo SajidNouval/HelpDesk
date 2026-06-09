@@ -10,22 +10,26 @@ use Typesense\Exceptions\ObjectNotFound;
 
 /**
  * =========================================================================
- * SERVICE TYPESENSE
+ * TYPESENSE SERVICE - INTEGRASI PENCARIAN FULL-TEKS
  * =========================================================================
  * 
- * Layanan ini mengelola integrasi dengan Typesense untuk pencarian full-teks
+ * Service ini mengelola integrasi dengan Typesense untuk pencarian full-teks
  * yang cepat dengan dukungan fuzzy kecocokan dan typo tolerance.
  * 
- * Fungsi utama:
+ * Tanggung Jawab:
  * - Menginisialisasi dan mengelola koneksi ke server Typesense.
  * - Membuat dan mengelola koleksi artikel untuk indexing.
  * - Melakukan indexing artikel (single dan bulk).
  * - Pencarian artikel dengan typo tolerance dan fuzzy kecocokan.
  * - Mengelola synonym sets untuk meningkatkan pemahaman query.
  * 
- * Digunakan oleh:
- * - ChatbotRetrievalService (sebagai mesin retrieval utama)
- * - AdvancedRetrievalService (sebagai sumber kandidat)
+ * Digunakan Oleh:
+ * - ChatbotRetrievalService
+ * - AdvancedRetrievalService
+ * 
+ * Service Terkait:
+ * - TfidfService
+ * - DomainDetectionService
  */
 class TypesenseService
 {
@@ -35,13 +39,12 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 1. Kumpulan Sinonim Berbasis Intent
+     * 1. KUMPULAN SINONIM BERBASIS INTENT
      * =========================================================================
      * 
      * Kumpulan sinonim tingkat intent untuk meningkatkan pemahaman query.
      * Setiap kumpulan mengelompokkan istilah terkait yang mengekspresikan
-     * intent yang sama. Kumpulan ini KECIL dan BERFOKUS PADA INTENT,
-     * bukan kamus manual yang besar.
+     * intent yang sama.
      */
     private array $intentSynonymSets = [
         // Intent konektivitas: istilah terkait koneksi jaringan
@@ -98,10 +101,17 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 2. Konstruktor - Inisialisasi Klien Typesense
+     * 2. METODE KONSTRUKTOR - INISIALISASI KLIEN TYPESENSE
      * =========================================================================
      * 
-     * Menginisialisasi klien Typesense saat service dibuat.
+     * Fungsi: Menginisialisasi klien Typesense saat service dibuat.
+     * 
+     * Alur Proses:
+     * 1. Memanggil method initializeClient.
+     * 2. Membangun koneksi ke server Typesense.
+     * 
+     * Output:
+     * - Instance TypesenseService dengan koneksi aktif.
      */
     public function __construct()
     {
@@ -110,13 +120,22 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 3. Metode Initialize Klien (Private)
+     * 3. METODE INITIALIZE CLIENT (PRIVATE)
      * =========================================================================
      * 
-     * Menginisialisasi koneksi ke server Typesense menggunakan konfigurasi
-     * dari file config/typesense.php.
+     * Fungsi: Menginisialisasi koneksi ke server Typesense.
      * 
-     * @kembalikan void
+     * Alur Proses:
+     * 1. Membaca konfigurasi dari config/typesense.php.
+     * 2. Membuat instance klien Typesense dengan konfigurasi.
+     * 3. Menguji koneksi dengan mengambil daftar koleksi.
+     * 4. Menandai status koneksi sebagai terhubung atau tidak.
+     * 
+     * Query yang Digunakan:
+     * - $this->client->collections->retrieve(): Test koneksi
+     * 
+     * Output:
+     * - Property $this->isConnected di-set ke true atau false.
      */
     private function initializeClient(): void
     {
@@ -151,12 +170,13 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 4. Metode isConnected()
+     * 4. METODE IS CONNECTED
      * =========================================================================
      * 
-     * Memeriksa apakah koneksi ke Typesense berhasil didirikan.
+     * Fungsi: Memeriksa apakah koneksi ke Typesense berhasil.
      * 
-     * @kembalikan bool Benar jika terhubung, false jika tidak
+     * Output:
+     * - Boolean true jika terhubung, false jika tidak.
      */
     public function isConnected(): bool
     {
@@ -165,12 +185,13 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 5. Metode getClient()
+     * 5. METODE GET CLIENT
      * =========================================================================
      * 
-     * Mengembalikan instance klien Typesense untuk operasi langsung.
+     * Fungsi: Mengembalikan instance klien Typesense untuk operasi langsung.
      * 
-     * @kembalikan Klien|null Instance klien atau null jika tidak terhubung
+     * Output:
+     * - Instance klien Typesense atau null jika tidak terhubung.
      */
     public function getClient(): ?Client
     {
@@ -179,14 +200,25 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 6. Metode createOrUpdateCollection()
+     * 6. METODE CREATE OR UPDATE COLLECTION
      * =========================================================================
      * 
-     * Membuat atau memperbarui koleksi artikel di Typesense.
-     * Jika koleksi sudah ada, akan dihapus dan dibuat ulang untuk memastikan
-     * skema selalu sesuai dengan konfigurasi terbaru.
+     * Fungsi: Membuat atau memperbarui koleksi artikel di Typesense.
      * 
-     * @kembalikan array ['success' => bool, 'pesan' => string, 'koleksi' => mixed]
+     * Alur Proses:
+     * 1. Memeriksa status koneksi Typesense.
+     * 2. Membaca konfigurasi koleksi dari config.
+     * 3. Jika koleksi sudah ada, hapus koleksi lama.
+     * 4. Membuat koleksi baru dengan skema terbaru.
+     * 5. Mengembalikan hasil operasi.
+     * 
+     * Query yang Digunakan:
+     * - $this->client->collections[$collectionName]->retrieve(): Cek koleksi
+     * - $this->client->collections[$collectionName]->delete(): Hapus koleksi
+     * - $this->client->collections->create(): Buat koleksi
+     * 
+     * Output:
+     * - Array dengan status sukses, pesan, dan data koleksi.
      */
     public function createOrUpdateCollection(): array
     {
@@ -198,18 +230,18 @@ class TypesenseService
             $collectionConfig = config('typesense.collections.articles');
             $collectionName = $collectionConfig['name'];
 
-            // Periksa apakah koleksi ada
+            // 1. Periksa apakah koleksi ada
             try {
                 $existingCollection = $this->client->collections[$collectionName]->retrieve();
                 
-                // Hapus dan buat ulang agar skema tetap terbaru
+                // 2. Hapus dan buat ulang agar skema tetap terbaru
                 $this->client->collections[$collectionName]->delete();
                 Log::info("Deleted existing Typesense collection: {$collectionName}");
             } catch (ObjectNotFound $e) {
                 Log::info("Creating new Typesense collection: {$collectionName}");
             }
 
-            // Buat the koleksi
+            // 3. Buat koleksi baru
             $collection = $this->client->collections->create([
                 'name' => $collectionName,
                 'fields' => $collectionConfig['fields'],
@@ -239,14 +271,22 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 7. Metode indexArticle()
+     * 7. METODE INDEX ARTICLE
      * =========================================================================
      * 
-     * Mengindex satu artikel ke Typesense. Menggunakan upsert untuk
-     * mengupdate artikel yang sudah ada atau menambah yang baru.
+     * Fungsi: Mengindex satu artikel ke Typesense.
      * 
-     * @param Article $article Objek artikel yang akan diindex
-     * @kembalikan array ['success' => bool, 'pesan' => string, 'dokumen' => mixed]
+     * Alur Proses:
+     * 1. Memeriksa status koneksi Typesense.
+     * 2. Menyiapkan data artikel untuk indexing.
+     * 3. Melakukan upsert dokumen ke koleksi.
+     * 4. Mengembalikan hasil operasi.
+     * 
+     * Query yang Digunakan:
+     * - $this->client->collections[$collectionName]->documents->upsert(): Upsert dokumen
+     * 
+     * Output:
+     * - Array dengan status sukses, pesan, dan data dokumen.
      */
     public function indexArticle(Article $article): array
     {
@@ -295,13 +335,22 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 8. Metode removeArticle()
+     * 8. METODE REMOVE ARTICLE
      * =========================================================================
      * 
-     * Menghapus artikel dari index Typesense berdasarkan ID.
+     * Fungsi: Menghapus artikel dari index Typesense berdasarkan ID.
      * 
-     * @param string $articleId ID artikel yang akan dihapus
-     * @kembalikan array ['success' => bool, 'pesan' => string]
+     * Alur Proses:
+     * 1. Memeriksa status koneksi Typesense.
+     * 2. Menghapus dokumen dari koleksi berdasarkan ID.
+     * 3. Menangani kasus dokumen tidak ditemukan.
+     * 4. Mengembalikan hasil operasi.
+     * 
+     * Query yang Digunakan:
+     * - $this->client->collections[$collectionName]->documents[$articleId]->delete(): Hapus dokumen
+     * 
+     * Output:
+     * - Array dengan status sukses dan pesan.
      */
     public function removeArticle(string $articleId): array
     {
@@ -338,7 +387,7 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 9. Kata Kunci Keamanan untuk Boosting Kategori
+     * 9. KATA KUNCI KEAMANAN UNTUK BOOSTING KATEGORI
      * =========================================================================
      * 
      * Daftar kata kunci yang terkait dengan keamanan untuk boosting
@@ -352,13 +401,18 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 10. Metode isSecurityQuery() (Private)
+     * 10. METODE IS SECURITY QUERY (PRIVATE)
      * =========================================================================
      * 
-     * Memeriksa apakah query terkait dengan keamanan untuk boosting.
+     * Fungsi: Memeriksa apakah query terkait dengan keamanan.
      * 
-     * @param string $query Query yang akan diperiksa
-     * @kembalikan bool Benar jika query terkait keamanan
+     * Alur Proses:
+     * 1. Mengubah query ke huruf kecil.
+     * 2. Mencocokkan query dengan daftar kata kunci keamanan.
+     * 3. Mengembalikan true jika ada kecocokan.
+     * 
+     * Output:
+     * - Boolean true jika query terkait keamanan, false jika tidak.
      */
     private function isSecurityQuery(string $query): bool
     {
@@ -373,14 +427,18 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 11. Metode normalizeRepeatedChars() (Private)
+     * 11. METODE NORMALIZE REPEATED CHARS (PRIVATE)
      * =========================================================================
      * 
-     * Menormalisasi karakter berulang dalam token query.
-     * Menangani typo ekstrem seperti "vvvvvirus" -> "vvvirus".
+     * Fungsi: Menormalisasi karakter berulang dalam token query.
      * 
-     * @param string $query Query yang akan dinormalisasi
-     * @kembalikan string Query yang sudah dinormalisasi
+     * Alur Proses:
+     * 1. Memecah query menjadi token.
+     * 2. Mengompres karakter yang diulang 3+ kali menjadi 2.
+     * 3. Menggabungkan kembali token menjadi query.
+     * 
+     * Output:
+     * - String query yang sudah dinormalisasi.
      */
     private function normalizeRepeatedChars(string $query): string
     {
@@ -388,8 +446,7 @@ class TypesenseService
         $normalizedTokens = [];
         
         foreach ($tokens as $token) {
-            // Kompres karakter yang diulang 3+ kali menjadi 2
-            // This handles cases like "vvvvvirus" -> "vvvirus"
+            // Mengompres karakter yang diulang 3+ kali menjadi 2
             $pattern = '/(.)\1{2,}/';
             $normalized = preg_replace($pattern, '$1$1', $token);
             $normalizedTokens[] = $normalized ?? $token;
@@ -400,23 +457,30 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 12. Metode pencarian() - Pencarian Utama
+     * 12. METODE SEARCH - PENCARIAN UTAMA
      * =========================================================================
      * 
-     * Melakukan pencarian artikel dengan typo tolerance dan fuzzy kecocokan.
-     * Ini adalah metode retrieval utama untuk chatbot.
+     * Fungsi: Melakukan pencarian artikel dengan typo tolerance dan fuzzy kecocokan.
      * 
-     * @param string $query Query pencarian dari pengguna
-     * @param int $batas Jumlah maksimal hasil yang dikembalikan
-     * @param array $opsi Opsi pencarian tambahan (category_id, domain)
-     * @kembalikan array ['success' => bool, 'pesan' => string, 'hasil' => array, 'total' => int, 'debug' => array]
+     * Alur Proses:
+     * 1. Menormalisasi karakter berulang dalam query.
+     * 2. Memeriksa status koneksi Typesense.
+     * 3. Membangun parameter pencarian dengan ranking dan typo tolerance.
+     * 4. Mendeteksi query keamanan untuk boosting kategori.
+     * 5. Menjalankan pencarian ke Typesense.
+     * 6. Memproses dan mengembalikan hasil pencarian.
+     * 
+     * Query yang Digunakan:
+     * - $this->client->collections[$collectionName]->documents->search(): Pencarian dokumen
+     * 
+     * Output:
+     * - Array dengan status sukses, hasil pencarian, total, dan debug info.
      */
     public function search(string $query, int $limit = 20, array $options = []): array
     {
         $originalQuery = $query;
         
-        // STEP 0: Normalize repeated characters sebelum searching
-        // This handles extreme typo like "vvvvvirus" -> "vvvirus"
+        // Menormalisasi karakter berulang sebelum pencarian
         $normalizedQuery = $this->normalizeRepeatedChars($query);
         $query = $normalizedQuery;
         
@@ -453,54 +517,52 @@ class TypesenseService
             $collectionName = config('typesense.collections.articles.name');
             $searchConfig = config('typesense.search');
 
-            // Periksa apakah query terkait keamanan untuk boosting
+            // Memeriksa apakah query terkait keamanan untuk boosting
             $isSecurityQuery = $this->isSecurityQuery($query);
             $this->debugInfo['is_security_query'] = $isSecurityQuery;
 
-            // Bangun parameter pencarian dengan ranking dan toleransi typo yang ditingkatkan
+            // Membangun parameter pencarian dengan ranking dan toleransi typo
             $searchParams = [
                 'q' => $query,
-                'query_by' => 'title,keywords,category_name,content',  // Prioritize judul, kata kunci, kategori
-                'query_by_weights' => '8,6,4,2',         // Judul=8, kata kunci=6, kategori=4, konten=2
+                'query_by' => 'title,keywords,category_name,content',
+                'query_by_weights' => '8,6,4,2',
                 
-                // STEP 1: Improved pencarian parameter untuk better ranking
-                'prioritize_exact_match' => true,         // Prioritize exact cocok
-                'text_match_type' => 'max_score',         // Gunakan max skor untuk multi-field kecocokan
-                'token_separators' => [' ', '-'],         // Token separators untuk better word boundary detection
-                'drop_tokens_threshold' => 0,             // Never drop token - simpan semua query terms
+                // Parameter pencarian untuk ranking yang lebih baik
+                'prioritize_exact_match' => true,
+                'text_match_type' => 'max_score',
+                'token_separators' => [' ', '-'],
+                'drop_tokens_threshold' => 0,
                 
-                // STEP 2: Enhanced typo tolerance dengan infix pencarian
-                // Allow up ke 4 typo untuk very long words (handles extreme typo like "vvvvvirus")
-                'num_typos' => 4,                         // Allow up ke 4 typo (increased dari 3)
-                'min_len_1typo' => 2,                     // Minimum length untuk 1 typo (reduced dari 3)
-                'min_len_2typo' => 4,                     // Minimum length untuk 2 typo (reduced dari 6)
+                // Toleransi typo dengan pencarian infix
+                'num_typos' => 4,
+                'min_len_1typo' => 2,
+                'min_len_2typo' => 4,
                 
-                // Enable both prefix AND infix pencarian untuk kecocokan typo within words
-                'prefix' => 'always',                     // Match at beginning of words
-                'infix' => 'always',                      // Match anywhere within words (critical untuk typo like "doocker")
-                'infix_score' => 'max_score',             // Gunakan max skor ketika infix cocok
+                // Pencarian prefix dan infix untuk kecocokan typo
+                'prefix' => 'always',
+                'infix' => 'always',
+                'infix_score' => 'max_score',
                 
                 'typo_tokens_threshold' => $searchConfig['typo_tokens_threshold'] ?? 3,
                 
                 'per_page' => $limit,
                 'page' => 1,
-                'exhaustive_search' => true,              // Enable exhaustive pencarian untuk better typo kecocokan
-                'filter_by' => 'is_published:true',       // Hanya pencarian dipublikasikan articles
+                'exhaustive_search' => true,
+                'filter_by' => 'is_published:true',
             ];
 
-            // Tambahkan kategori filter jika specified
+            // Menambahkan filter kategori jika specified
             if (isset($options['category_id'])) {
                 $searchParams['filter_by'] .= ' && category_id:=' . $options['category_id'];
             }
 
-            // Tambahkan domain filter jika specified
+            // Menambahkan filter domain jika specified
             if (isset($options['domain'])) {
                 $searchParams['filter_by'] .= ' && category_name:=' . $options['domain'];
             }
 
-            // STEP 3: Boost keamanan articles untuk keamanan-related query
+            // Boost artikel keamanan untuk query terkait keamanan
             if ($isSecurityQuery) {
-                // Gunakan optional_filter_by ke boost keamanan kategori articles without excluding others
                 $searchParams['optional_filter_by'] = 'category_name:=Keamanan Sistem';
                 $this->debugInfo['security_boost_applied'] = true;
                 $this->debugInfo['boost_category'] = 'Keamanan Sistem';
@@ -511,10 +573,10 @@ class TypesenseService
                 ]);
             }
 
-            // Jalankan pencarian
+            // Menjalankan pencarian
             $searchResults = $this->client->collections[$collectionName]->documents->search($searchParams);
 
-            // STEP 5: Log RAW Typesense hits BEFORE TF-IDF (critical untuk debugging)
+            // Log hasil Typesense untuk debugging
             $rawHitsLog = [];
             if (isset($searchResults['hits']) && !empty($searchResults['hits'])) {
                 foreach ($searchResults['hits'] as $idx => $hit) {
@@ -526,7 +588,7 @@ class TypesenseService
                         'category_name' => $document['category_name'] ?? '',
                     ];
                     
-                    // Store di debug info untuk retrieval
+                    // Menyimpan di debug info untuk retrieval
                     $this->debugInfo['raw_hits_before_tfidf'][] = [
                         'rank' => $idx + 1,
                         'id' => $document['id'],
@@ -543,7 +605,7 @@ class TypesenseService
                 'security_boost_applied' => $this->debugInfo['security_boost_applied'],
             ]);
 
-            // Proses hasil
+            // Memproses hasil pencarian
             $results = [];
             if (isset($searchResults['hits']) && !empty($searchResults['hits'])) {
                 foreach ($searchResults['hits'] as $hit) {
@@ -572,7 +634,7 @@ class TypesenseService
                 }
             }
 
-            // Lacak koreksi typo dari hasil pencarian
+            // Melacak koreksi typo dari hasil pencarian
             if (isset($searchResults['request_params']['q'])) {
                 $correctedQuery = $searchResults['request_params']['q'];
                 if ($correctedQuery !== $query) {
@@ -615,13 +677,24 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 13. Metode indexAllArticles() - Bulk Indexing
+     * 13. METODE INDEX ALL ARTICLES - BULK INDEXING
      * =========================================================================
      * 
-     * Mengindex semua artikel yang sudah dipublikasi secara massal.
-     * Digunakan untuk rebuilding index atau initial indexing.
+     * Fungsi: Mengindex semua artikel yang sudah dipublikasi secara massal.
      * 
-     * @kembalikan array ['success' => bool, 'pesan' => string, 'indexed' => int, 'errors' => int, 'error_details' => array]
+     * Alur Proses:
+     * 1. Mengambil semua artikel yang sudah dipublikasi.
+     * 2. Menyiapkan data artikel untuk bulk indexing.
+     * 3. Melakukan import dokumen dalam batch.
+     * 4. Menghitung jumlah sukses dan error.
+     * 5. Mengembalikan hasil operasi.
+     * 
+     * Query yang Digunakan:
+     * - Article::where('is_published', true)->with('category')->get(): Ambil artikel
+     * - $this->client->collections[$collectionName]->documents->import(): Import batch
+     * 
+     * Output:
+     * - Array dengan status sukses, jumlah indexed, errors, dan detail error.
      */
     public function indexAllArticles(): array
     {
@@ -655,6 +728,7 @@ class TypesenseService
                     ];
                     continue;
                 }
+                // Menyiapkan data dokumen untuk indexing
                 $documents[] = [
                     'id' => (string) $article->id,
                     'title' => $article->title,
@@ -671,9 +745,10 @@ class TypesenseService
             }
 
             if (count($documents) > 0) {
-                // Upsert dokumen di batch
+                // Upsert dokumen dalam batch
                 $result = $this->client->collections[$collectionName]->documents->import($documents, ['action' => 'upsert']);
 
+                // Menghitung jumlah sukses dan error
                 foreach ($result as $idx => $item) {
                     if (isset($item['success']) && $item['success']) {
                         $successCount++;
@@ -723,12 +798,22 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 14. Metode deleteCollection()
+     * 14. METODE DELETE COLLECTION
      * =========================================================================
      * 
-     * Menghapus koleksi artikel dari Typesense.
+     * Fungsi: Menghapus koleksi artikel dari Typesense.
      * 
-     * @kembalikan array ['success' => bool, 'pesan' => string]
+     * Alur Proses:
+     * 1. Memeriksa status koneksi Typesense.
+     * 2. Menghapus koleksi dari Typesense.
+     * 3. Menangani kasus koleksi tidak ditemukan.
+     * 4. Mengembalikan hasil operasi.
+     * 
+     * Query yang Digunakan:
+     * - $this->client->collections[$collectionName]->delete(): Hapus koleksi
+     * 
+     * Output:
+     * - Array dengan status sukses dan pesan.
      */
     public function deleteCollection(): array
     {
@@ -764,12 +849,21 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 15. Metode getCollectionStats()
+     * 15. METODE GET COLLECTION STATS
      * =========================================================================
      * 
-     * Mengambil statistik koleksi Typesense (jumlah dokumen, field, dll).
+     * Fungsi: Mengambil statistik koleksi Typesense.
      * 
-     * @kembalikan array ['success' => bool, 'pesan' => string, 'stats' => array]
+     * Alur Proses:
+     * 1. Memeriksa status koneksi Typesense.
+     * 2. Mengambil data koleksi dari Typesense.
+     * 3. Mengembalikan statistik jumlah dokumen dan field.
+     * 
+     * Query yang Digunakan:
+     * - $this->client->collections[$collectionName]->retrieve(): Ambil statistik
+     * 
+     * Output:
+     * - Array dengan status sukses, pesan, dan data statistik.
      */
     public function getCollectionStats(): array
     {
@@ -808,12 +902,13 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 16. Metode getDebugInfo()
+     * 16. METODE GET DEBUG INFO
      * =========================================================================
      * 
-     * Mengembalikan informasi debug dari operasi terakhir.
+     * Fungsi: Mengembalikan informasi debug dari operasi terakhir.
      * 
-     * @kembalikan array Informasi debug
+     * Output:
+     * - Array berisi informasi debug pencarian.
      */
     public function getDebugInfo(): array
     {
@@ -822,12 +917,13 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 17. Metode getSynonymCollectionName() (Private)
+     * 17. METODE GET SYNONYM COLLECTION NAME (PRIVATE)
      * =========================================================================
      * 
-     * Mengembalikan nama koleksi untuk operasi synonym.
+     * Fungsi: Mengembalikan nama koleksi untuk operasi synonym.
      * 
-     * @kembalikan string Nama koleksi sinonim
+     * Output:
+     * - String nama koleksi sinonim.
      */
     private function getSynonymCollectionName(): string
     {
@@ -836,12 +932,13 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 18. Metode getIntentSynonymSets()
+     * 18. METODE GET INTENT SYNONYM SETS
      * =========================================================================
      * 
-     * Mengembalikan semua kumpulan sinonim berbasis intent.
+     * Fungsi: Mengembalikan semua kumpulan sinonim berbasis intent.
      * 
-     * @kembalikan array Kumpulan sinonim
+     * Output:
+     * - Array berisi semua kumpulan sinonim intent.
      */
     public function getIntentSynonymSets(): array
     {
@@ -850,14 +947,22 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 19. Metode createSynonym()
+     * 19. METODE CREATE SYNONYM
      * =========================================================================
      * 
-     * Membuat atau memperbarui satu kumpulan sinonim di Typesense.
+     * Fungsi: Membuat atau memperbarui satu kumpulan sinonim di Typesense.
      * 
-     * @param string $synonymId Identifier unik untuk kumpulan sinonim
-     * @param array $synonyms Array istilah sinonim
-     * @kembalikan array ['success' => bool, 'pesan' => string, 'data' => mixed]
+     * Alur Proses:
+     * 1. Memeriksa status koneksi Typesense.
+     * 2. Validasi jumlah sinonim minimal 2.
+     * 3. Melakukan upsert synonym ke koleksi.
+     * 4. Mengembalikan hasil operasi.
+     * 
+     * Query yang Digunakan:
+     * - $this->client->collections[$collectionName]->synonyms->upsert(): Upsert synonym
+     * 
+     * Output:
+     * - Array dengan status sukses, pesan, dan data synonym.
      */
     public function createSynonym(string $synonymId, array $synonyms): array
     {
@@ -900,12 +1005,20 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 20. Metode createAllSynonyms()
+     * 20. METODE CREATE ALL SYNONYMS
      * =========================================================================
      * 
-     * Membuat semua kumpulan sinonim berbasis intent di Typesense.
+     * Fungsi: Membuat semua kumpulan sinonim berbasis intent di Typesense.
      * 
-     * @kembalikan array ['success' => bool, 'created' => int, 'errors' => int, 'details' => array]
+     * Alur Proses:
+     * 1. Memeriksa status koneksi Typesense.
+     * 2. Iterasi semua kumpulan sinonim intent.
+     * 3. Memanggil createSynonym untuk setiap kumpulan.
+     * 4. Menghitung jumlah sukses dan error.
+     * 5. Mengembalikan hasil operasi.
+     * 
+     * Output:
+     * - Array dengan status sukses, jumlah created, errors, dan detail error.
      */
     public function createAllSynonyms(): array
     {
@@ -921,8 +1034,10 @@ class TypesenseService
         ];
 
         foreach ($this->intentSynonymSets as $intent => $synonyms) {
+            // Membuat synonym untuk setiap intent
             $result = $this->createSynonym($intent, $synonyms);
             
+            // Menghitung jumlah sukses dan error
             if ($result['success']) {
                 $results['created']++;
             } else {
@@ -941,13 +1056,22 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 21. Metode getSynonym()
+     * 21. METODE GET SYNONYM
      * =========================================================================
      * 
-     * Mengambil kumpulan sinonim tertentu dari Typesense.
+     * Fungsi: Mengambil kumpulan sinonim tertentu dari Typesense.
      * 
-     * @param string $synonymId Identifier kumpulan sinonim
-     * @kembalikan array|null Data sinonim atau null jika tidak ditemukan
+     * Alur Proses:
+     * 1. Memeriksa status koneksi Typesense.
+     * 2. Mengambil data synonym berdasarkan ID.
+     * 3. Menangani kasus synonym tidak ditemukan.
+     * 4. Mengembalikan data synonym atau null.
+     * 
+     * Query yang Digunakan:
+     * - $this->client->collections[$collectionName]->synonyms[$synonymId]->retrieve(): Ambil synonym
+     * 
+     * Output:
+     * - Array data synonym atau null jika tidak ditemukan.
      */
     public function getSynonym(string $synonymId): ?array
     {
@@ -969,12 +1093,21 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 22. Metode getAllSynonyms()
+     * 22. METODE GET ALL SYNONYMS
      * =========================================================================
      * 
-     * Mengambil semua kumpulan sinonim dari Typesense.
+     * Fungsi: Mengambil semua kumpulan sinonim dari Typesense.
      * 
-     * @kembalikan array Array semua kumpulan sinonim
+     * Alur Proses:
+     * 1. Memeriksa status koneksi Typesense.
+     * 2. Mengambil semua synonym dari koleksi.
+     * 3. Mengembalikan array synonym.
+     * 
+     * Query yang Digunakan:
+     * - $this->client->collections[$collectionName]->synonyms->retrieve(): Ambil semua synonym
+     * 
+     * Output:
+     * - Array berisi semua kumpulan sinonim.
      */
     public function getAllSynonyms(): array
     {
@@ -994,13 +1127,22 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 23. Metode deleteSynonym()
+     * 23. METODE DELETE SYNONYM
      * =========================================================================
      * 
-     * Menghapus kumpulan sinonim tertentu dari Typesense.
+     * Fungsi: Menghapus kumpulan sinonim tertentu dari Typesense.
      * 
-     * @param string $synonymId Identifier kumpulan sinonim
-     * @kembalikan array ['success' => bool, 'pesan' => string]
+     * Alur Proses:
+     * 1. Memeriksa status koneksi Typesense.
+     * 2. Menghapus synonym berdasarkan ID.
+     * 3. Menangani kasus synonym tidak ditemukan.
+     * 4. Mengembalikan hasil operasi.
+     * 
+     * Query yang Digunakan:
+     * - $this->client->collections[$collectionName]->synonyms[$synonymId]->delete(): Hapus synonym
+     * 
+     * Output:
+     * - Array dengan status sukses dan pesan.
      */
     public function deleteSynonym(string $synonymId): array
     {
@@ -1035,12 +1177,20 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 24. Metode deleteAllSynonyms()
+     * 24. METODE DELETE ALL SYNONYMS
      * =========================================================================
      * 
-     * Menghapus semua kumpulan sinonim dari Typesense.
+     * Fungsi: Menghapus semua kumpulan sinonim dari Typesense.
      * 
-     * @kembalikan array ['success' => bool, 'deleted' => int, 'errors' => int]
+     * Alur Proses:
+     * 1. Memeriksa status koneksi Typesense.
+     * 2. Iterasi semua kumpulan sinonim intent.
+     * 3. Memanggil deleteSynonym untuk setiap kumpulan.
+     * 4. Menghitung jumlah deleted dan error.
+     * 5. Mengembalikan hasil operasi.
+     * 
+     * Output:
+     * - Array dengan status sukses, jumlah deleted, dan errors.
      */
     public function deleteAllSynonyms(): array
     {
@@ -1052,7 +1202,9 @@ class TypesenseService
         $errors = 0;
 
         foreach (array_keys($this->intentSynonymSets) as $intent) {
+            // Menghapus synonym untuk setiap intent
             $result = $this->deleteSynonym($intent);
+            // Menghitung jumlah deleted dan error
             if ($result['success']) {
                 $deleted++;
             } else {
@@ -1071,13 +1223,20 @@ class TypesenseService
 
     /**
      * =========================================================================
-     * 25. Metode matchSynonymIntents()
+     * 25. METODE MATCH SYNONYM INTENTS
      * =========================================================================
      * 
-     * Memeriksa apakah query cocok dengan intent sinonim apa pun.
+     * Fungsi: Memeriksa apakah query cocok dengan intent sinonim.
      * 
-     * @param string $query Query pencarian
-     * @kembalikan array Array intent yang cocok dengan istilah sinonim mereka
+     * Alur Proses:
+     * 1. Mengubah query ke huruf kecil.
+     * 2. Iterasi semua kumpulan sinonim intent.
+     * 3. Mencocokkan query dengan setiap sinonim.
+     * 4. Mengumpulkan intent yang cocok beserta istilah yang match.
+     * 5. Mengembalikan array intent yang cocok.
+     * 
+     * Output:
+     * - Array intent yang cocok dengan istilah sinonim mereka.
      */
     public function matchSynonymIntents(string $query): array
     {
@@ -1085,8 +1244,10 @@ class TypesenseService
         $matchedIntents = [];
 
         foreach ($this->intentSynonymSets as $intent => $synonyms) {
+            // Memeriksa setiap sinonim dalam kumpulan intent
             foreach ($synonyms as $synonym) {
                 if (str_contains($lowerQuery, strtolower($synonym))) {
+                    // Jika cocok, tambahkan ke hasil
                     if (!isset($matchedIntents[$intent])) {
                         $matchedIntents[$intent] = [
                             'intent' => $intent,

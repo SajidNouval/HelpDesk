@@ -710,17 +710,24 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Balanced merge of hasil dari multiple intents
-     * 
-     * Metode ini ensures that each intent gets fair representation di the final hasil.
-     * It menggunakan a round-robin approach, picking the best available hasil dari each intent
-     * di turn, while avoiding duplicates.
-     * 
-     * Algorithm:
-     * 1. Hitung fair quota per intent (batas / num_intents)
-     * 2. Round-robin through intents, picking top available hasil dari each
-     * 3. Skip duplicates (same article ID)
-     * 4. Continue until batas is reached atau no lebih hasil available
+     * =========================================================================
+     * 1. METODE BALANCED MERGE
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menggabungkan hasil dari multiple intent dengan representasi yang seimbang.
+     *
+     * Alur Proses:
+     * 1. Menghitung kuota fair per intent.
+     * 2. Melakukan round-robin untuk mengambil hasil dari setiap intent.
+     * 3. Melewati duplikasi berdasarkan article ID.
+     * 4. Mengembalikan hasil yang sudah digabungkan.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array
      */
     private function balancedMerge(array $intentResults, int $limit, array &$seenIds): array
     {
@@ -729,19 +736,19 @@ class AdvancedRetrievalService
             return [];
         }
         
-        // Hitung fair quota per intent (minimum 1 hasil per intent jika possible)
+        // Menghitung kuota fair per intent
         $quotaPerIntent = max(1, (int) ceil($limit / $numIntents));
         
-        // Track how many hasil we've taken dari each intent
+        // Melacak jumlah hasil per intent
         $resultsPerIntent = array_fill(0, $numIntents, 0);
         
-        // Track saat ini position di each intent's hasil daftar
+        // Melacak posisi saat ini di setiap intent
         $currentPosition = array_fill(0, $numIntents, 0);
         
         $finalResults = [];
         $totalResults = 0;
         
-        // Phase 1: Round-robin - give each intent its fair quota
+        // Tahap 1: Round-robin untuk memberikan kuota fair ke setiap intent
         for ($intentIndex = 0; $intentIndex < $numIntents; $intentIndex++) {
             if ($totalResults >= $limit) {
                 break;
@@ -755,37 +762,37 @@ class AdvancedRetrievalService
                 $candidate = $intentResults[$intentIndex][$position];
                 $position++;
                 
-                // Skip duplicates (same article ID already di hasil)
+                // Melewati duplikat
                 if (isset($seenIds[$candidate['id']])) {
                     continue;
                 }
                 
-                // Skip hasil below minimum ambang
+                // Melewati hasil di bawah threshold
                 if (($candidate['final_score'] ?? 0) < self::SIMILARITY_THRESHOLD * 0.5) {
                     continue;
                 }
                 
-                // Tambahkan this hasil
+                // Menambahkan hasil
                 $seenIds[$candidate['id']] = true;
                 $resultsPerIntent[$intentIndex]++;
                 $totalResults++;
                 $countForThisIntent++;
                 
-                // Clean up internal tracking fields sebelum adding ke hasil
+                // Membersihkan field tracking internal
                 unset($candidate['_intent_index'], $candidate['_intent_query']);
                 $candidate['matched_intent'] = $intentIndex;
                 
                 $finalResults[] = $candidate;
             }
             
-            // Perbarui position untuk potential overflow phase
+            // Memperbarui posisi untuk tahap overflow
             $currentPosition[$intentIndex] = $position;
         }
         
-        // Phase 2: Jika we still have room, do another round-robin pass
+        // Tahap 2: Round-robin tambahan jika masih ada ruang
         if ($totalResults < $limit) {
             $moreRounds = true;
-            $maxExtraRounds = 3; // Limit extra rounds
+            $maxExtraRounds = 3;
             $round = 0;
             
             while ($moreRounds && $totalResults < $limit && $round < $maxExtraRounds) {
@@ -797,7 +804,7 @@ class AdvancedRetrievalService
                         break 2;
                     }
                     
-                    // Try ke get one lebih hasil dari this intent
+                    // Mengambil satu hasil tambahan dari intent ini
                     while ($currentPosition[$intentIndex] < count($intentResults[$intentIndex])) {
                         $candidate = $intentResults[$intentIndex][$currentPosition[$intentIndex]];
                         $currentPosition[$intentIndex]++;
@@ -825,7 +832,7 @@ class AdvancedRetrievalService
             }
         }
         
-        // Phase 3: Fill remaining slots dengan best available dari apa pun intent
+        // Tahap 3: Mengisi slot tersisa dengan kandidat terbaik
         if ($totalResults < $limit) {
             $remainingCandidates = [];
             
@@ -840,7 +847,7 @@ class AdvancedRetrievalService
                 }
             }
             
-            // Sort remaining candidates dengan skor dan tambahkan top ones
+            // Mengurutkan kandidat tersisa berdasarkan skor
             usort($remainingCandidates, fn($a, $b) => 
                 ($b['final_score'] ?? 0) <=> ($a['final_score'] ?? 0)
             );
@@ -1195,12 +1202,24 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Hitung judul overlap skor dengan bigram kecocokan untuk exact frasa detection
-     * 
-     * Metode ini now:
-     * 1. Filters out low-prioritas generic terms (cara, mengatasi, etc.)
-     * 2. Checks untuk bigram (2-gram) cocok untuk exact frasa detection
-     * 3. Gives higher weight ke domain-specific term cocok
+     * =========================================================================
+     * 1. METODE CALCULATE TITLE OVERLAP
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menghitung skor overlap judul dengan bigram untuk deteksi frasa exact.
+     *
+     * Alur Proses:
+     * 1. Memfilter term generik dengan prioritas rendah.
+     * 2. Memeriksa kecocokan bigram untuk deteksi frasa exact.
+     * 3. Memberikan bobot lebih tinggi untuk term domain spesifik.
+     * 4. Mengembalikan skor overlap yang dihitung.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - float
      */
     private function calculateTitleOverlap(array $queryVector, array $document): float
     {
@@ -1251,8 +1270,24 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Hitung bigram (2-gram) overlap between query dan judul
-     * This helps detect exact frasa like "komputer lemot" di titles
+     * =========================================================================
+     * 1. METODE CALCULATE BIGRAM OVERLAP
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menghitung overlap bigram antara query dan judul.
+     *
+     * Alur Proses:
+     * 1. Memfilter term dengan prioritas rendah.
+     * 2. Generate bigram dari term penting.
+     * 3. Memeriksa kecocokan bigram di judul.
+     * 4. Mengembalikan jumlah kecocokan bigram.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - int
      */
     private function calculateBigramOverlap(array $queryTerms, string $title): int
     {
@@ -1279,7 +1314,23 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Periksa jika a term is a low-prioritas generic term
+     * =========================================================================
+     * 1. METODE IS LOW PRIORITY TERM
+     * =========================================================================
+     *
+     * Fungsi:
+     * Memeriksa apakah term adalah term generik dengan prioritas rendah.
+     *
+     * Alur Proses:
+     * 1. Menerima term yang akan diperiksa.
+     * 2. Membandingkan dengan daftar term prioritas rendah.
+     * 3. Mengembalikan status prioritas term.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - bool
      */
     private function isLowPriorityTerm(string $term): bool
     {
@@ -1287,11 +1338,23 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Periksa jika a term is domain-specific (harus be weighted higher)
-     * 
-     * Note: Generic technical terms like 'pc', 'laptop', 'komputer', 'aplikasi', 'error'
-     * are intentionally EXCLUDED because they are too common dan harus be downweighted,
-     * tidak boosted. Hanya specific domain identifiers dan action terms are boosted.
+     * =========================================================================
+     * 1. METODE IS DOMAIN SPECIFIC TERM
+     * =========================================================================
+     *
+     * Fungsi:
+     * Memeriksa apakah term adalah spesifik domain.
+     *
+     * Alur Proses:
+     * 1. Menerima term yang akan diperiksa.
+     * 2. Membandingkan dengan daftar term domain spesifik.
+     * 3. Mengembalikan status domain spesifik term.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - bool
      */
     private function isDomainSpecificTerm(string $term): bool
     {
@@ -1299,8 +1362,24 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Periksa jika query mengandung keamanan prioritas token
-     * Mengembalikan true jika ANY keamanan token is found di the query
+     * =========================================================================
+     * 1. METODE HAS SECURITY INTENT
+     * =========================================================================
+     *
+     * Fungsi:
+     * Memeriksa apakah query mengandung token prioritas keamanan.
+     *
+     * Alur Proses:
+     * 1. Menerima query yang akan diperiksa.
+     * 2. Memecah query menjadi token.
+     * 3. Memeriksa kecocokan dengan token keamanan.
+     * 4. Mengembalikan status intent keamanan.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - bool
      */
     private function hasSecurityIntent(string $query): bool
     {
@@ -1316,7 +1395,24 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Periksa jika dokumen is keamanan-related
+     * =========================================================================
+     * 1. METODE IS SECURITY DOCUMENT
+     * =========================================================================
+     *
+     * Fungsi:
+     * Memeriksa apakah dokumen terkait keamanan.
+     *
+     * Alur Proses:
+     * 1. Menerima data dokumen.
+     * 2. Memeriksa kategori dokumen.
+     * 3. Memeriksa token keamanan di judul dan konten.
+     * 4. Mengembalikan status keamanan dokumen.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - bool
      */
     private function isSecurityDocument(array $document): bool
     {
@@ -1377,13 +1473,24 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Hitung query coverage skor - measures how many penting query terms
-     * are present di the dokumen
-     * 
-     * Metode ini now:
-     * 1. Ignores low-prioritas generic terms (cara, mengatasi, etc.)
-     * 2. Gives major boost ketika ALL penting terms cocok
-     * 3. Weights domain-specific terms higher
+     * =========================================================================
+     * 1. METODE CALCULATE QUERY COVERAGE
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menghitung skor coverage query berdasarkan term penting yang ada di dokumen.
+     *
+     * Alur Proses:
+     * 1. Memfilter term generik dengan prioritas rendah.
+     * 2. Memberikan bobot lebih tinggi untuk term domain spesifik.
+     * 3. Memberikan bonus besar ketika semua term penting cocok.
+     * 4. Mengembalikan skor coverage yang dihitung.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - float
      */
     private function calculateQueryCoverage(array $queryVector, array $docVector): float
     {
@@ -1438,14 +1545,24 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Hitung exact frasa bonus - rewards dokumen where the query
-     * muncul as an exact frasa di the judul
-     * 
-     * Metode ini now:
-     * 1. Gives maksimum bonus untuk exact full query cocok di judul
-     * 2. Checks untuk bigram/frasa cocok (e.g., "komputer lemot" di judul)
-     * 3. Filters out low-prioritas terms ketika checking word presence
-     * 4. Considers word order untuk frasa detection
+     * =========================================================================
+     * 1. METODE CALCULATE EXACT PHRASE BONUS
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menghitung bonus frasa exact untuk dokumen yang mengandung query di judul.
+     *
+     * Alur Proses:
+     * 1. Memfilter term dengan prioritas rendah.
+     * 2. Memeriksa kecocokan frasa exact di judul.
+     * 3. Memeriksa kecocokan di excerpt dan konten.
+     * 4. Mengembalikan bonus frasa yang dihitung.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - float
      */
     private function calculateExactPhraseBonus(string $originalQuery, array $document): float
     {
@@ -1517,12 +1634,24 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Hitung domain penalty - penalizes articles dari unrelated domains
-     * 
-     * Metode ini now:
-     * 1. Uses negative domain penalty mappings untuk stronger penalties
-     * 2. Checks untuk forbidden domain kata kunci di article konten/judul
-     * 3. Applies stronger penalties untuk clearly unrelated domains
+     * =========================================================================
+     * 1. METODE CALCULATE DOMAIN PENALTY
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menghitung penalti domain untuk artikel dari domain yang tidak terkait.
+     *
+     * Alur Proses:
+     * 1. Memeriksa penalti domain negatif.
+     * 2. Memeriksa kata kunci domain terlarang di konten/judul.
+     * 3. Menerapkan penalti yang lebih kuat untuk domain yang tidak terkait.
+     * 4. Mengembalikan nilai penalti domain.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - float
      */
     private function calculateDomainPenalty(array $document, array $domainInfo): float
     {
@@ -1986,8 +2115,24 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Enhanced diversification dengan kategori quotas
-     * Ensures hasil are diverse across kategori dan types
+     * =========================================================================
+     * 1. METODE DIVERSIFY RESULTS ENHANCED
+     * =========================================================================
+     *
+     * Fungsi:
+     * Melakukan diversifikasi hasil dengan kuota kategori.
+     *
+     * Alur Proses:
+     * 1. Memeriksa kuota kategori untuk setiap hasil.
+     * 2. Menerapkan penalti untuk hasil yang melebihi kuota.
+     * 3. Memeriksa diversifikasi pola judul.
+     * 4. Mengembalikan hasil yang sudah didiversifikasi.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array
      */
     private function diversifyResultsEnhanced(array $rankedResults, array $documents): array
     {
@@ -2292,10 +2437,23 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Kembalikan hasil untuk OUT-OF-DOMAIN query
-     * This is called ketika a query is detected as non-IT related
-     * 
-     * DO NOT fallback ke IT articles - kembalikan polite rejection instead
+     * =========================================================================
+     * 1. METODE OUT OF DOMAIN RESULT
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengembalikan hasil untuk query di luar domain.
+     *
+     * Alur Proses:
+     * 1. Menerima query yang terdeteksi di luar domain.
+     * 2. Mencatat informasi penolakan ke log.
+     * 3. Mengembalikan respons penolakan yang sopan.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array
      */
     private function outOfDomainResult(string $query): array
     {
@@ -2439,13 +2597,24 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Evaluate jika retrieval hasil are too weak dan harus gunakan safe fallback
-     * 
-     * Mengembalikan true jika ALL of these conditions are met:
-     * - Top skor is below SAFE_FALLBACK_THRESHOLD
-     * - Tidak strong judul overlap (exact frasa cocok)
-     * - Low query coverage
-     * - Domain mismatch atau no domain detected
+     * =========================================================================
+     * 1. METODE SHOULD USE SAFE FALLBACK
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengevaluasi apakah hasil retrieval terlalu lemah dan perlu fallback aman.
+     *
+     * Alur Proses:
+     * 1. Memeriksa skor tertinggi terhadap threshold aman.
+     * 2. Memeriksa sinyal tambahan dari debug info.
+     * 3. Memeriksa overlap judul dan coverage query.
+     * 4. Mengembalikan keputusan penggunaan fallback.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - bool
      */
     private function shouldUseSafeFallback(array $retrievalResult): bool
     {
@@ -2500,8 +2669,24 @@ class AdvancedRetrievalService
     }
     
     /**
-     * Get safe fallback pesan untuk weak/unclear query
-     * This prevents returning unrelated articles ketika confidence is too low
+     * =========================================================================
+     * 1. METODE GET SAFE FALLBACK RESPONSE
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengembalikan respons fallback aman untuk query yang lemah/tidak jelas.
+     *
+     * Alur Proses:
+     * 1. Menerima query yang terlalu lemah.
+     * 2. Mencatat informasi fallback ke log.
+     * 3. Memilih pesan fallback yang sesuai.
+     * 4. Mengembalikan respons dengan saran kategori.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array
      */
     private function getSafeFallbackResponse(string $query): array
     {
@@ -2640,7 +2825,26 @@ class AdvancedRetrievalService
     }
 
     /**
-     * Generate short summary dari excerpt atau konten (2-4 sentences)
+     * =========================================================================
+     * 1. METODE GENERATE SUMMARY FROM EXCERPT
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menghasilkan ringkasan singkat dari excerpt atau konten.
+     *
+     * Alur Proses:
+     * 1. Menerima excerpt, konten, dan judul.
+     * 2. Membersihkan tag HTML dari excerpt.
+     * 3. Memeriksa apakah excerpt informatif.
+     * 4. Mengambil paragraf pertama jika excerpt tidak informatif.
+     * 5. Memperpendek ringkasan sesuai batas karakter.
+     * 6. Mengembalikan ringkasan yang sudah diproses.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - string
      */
     private function generateSummaryFromExcerpt(string $excerpt, string $content = '', string $title = ''): string
     {
@@ -2675,7 +2879,25 @@ class AdvancedRetrievalService
     }
 
     /**
-     * Strip HTML tags dari teks
+     * =========================================================================
+     * 1. METODE STRIP HTML TAGS
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menghapus tag HTML dari teks.
+     *
+     * Alur Proses:
+     * 1. Menerima teks HTML.
+     * 2. Menghapus tag HTML.
+     * 3. Decode entitas HTML.
+     * 4. Normalisasi whitespace.
+     * 5. Mengembalikan teks bersih.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - string
      */
     private function stripHtmlTags(string $html): string
     {
@@ -2689,7 +2911,24 @@ class AdvancedRetrievalService
     }
 
     /**
-     * Periksa jika teks is too similar ke judul (likely just a description)
+     * =========================================================================
+     * 1. METODE IS TOO SIMILAR TO TITLE
+     * =========================================================================
+     *
+     * Fungsi:
+     * Memeriksa apakah teks terlalu mirip dengan judul.
+     *
+     * Alur Proses:
+     * 1. Menerima teks dan judul.
+     * 2. Memeriksa apakah teks mengandung judul.
+     * 3. Memeriksa panjang teks.
+     * 4. Mengembalikan status kesamaan.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - bool
      */
     private function isTooSimilarToTitle(string $text, string $title): bool
     {
@@ -2714,7 +2953,23 @@ class AdvancedRetrievalService
     }
 
     /**
-     * Extract first paragraph dari teks
+     * =========================================================================
+     * 1. METODE EXTRACT FIRST PARAGRAPH
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil paragraf pertama dari teks.
+     *
+     * Alur Proses:
+     * 1. Menerima teks input.
+     * 2. Memecah teks menjadi paragraf.
+     * 3. Mengembalikan paragraf pertama.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - string
      */
     private function extractFirstParagraph(string $text): string
     {
@@ -2730,7 +2985,24 @@ class AdvancedRetrievalService
     }
 
     /**
-     * Extract N ke M sentences dari teks
+     * =========================================================================
+     * 1. METODE EXTRACT SENTENCES
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil N sampai M kalimat dari teks.
+     *
+     * Alur Proses:
+     * 1. Menerima teks input dan batas kalimat.
+     * 2. Memecah teks menjadi kalimat.
+     * 3. Mengambil kalimat sesuai batas.
+     * 4. Mengembalikan kalimat yang digabung.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - string
      */
     private function extractSentences(string $text, int $min, int $max): string
     {

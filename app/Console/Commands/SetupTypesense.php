@@ -5,24 +5,39 @@ namespace App\Console\Commands;
 use App\Services\Chatbot\TypesenseService;
 use Illuminate\Console\Command;
 
+/**
+ * =========================================================================
+ * COMMAND SETUP TYPESENSE - SETUP TYPESENSE
+ * =========================================================================
+ *
+ * Command ini digunakan untuk setup Typesense collection dan synonym sets.
+ *
+ * Fitur Utama:
+ * - Setup Typesense collection untuk artikel.
+ * - Create intent-level synonym sets.
+ * - Reindex semua artikel dengan opsi --reindex.
+ * - Tampilkan statistik collection.
+ */
 class SetupTypesense extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'typesense:setup {--reindex : Reindex all articles}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Set up Typesense collection, create synonym sets, and optionally index all articles';
 
     private TypesenseService $typesenseService;
 
+    /**
+     * Fungsi:
+     * Menjalankan command setup Typesense.
+     *
+     * Alur Proses:
+     * 1. Cek koneksi ke Typesense server.
+     * 2. Create atau update collection articles.
+     * 3. Create intent-level synonym sets.
+     * 4. Reindex semua artikel jika opsi --reindex.
+     * 5. Tampilkan statistik collection.
+     * 6. Return exit code SUCCESS atau FAILURE.
+     */
     public function handle(TypesenseService $typesenseService): int
     {
         $this->typesenseService = $typesenseService;
@@ -121,7 +136,11 @@ class SetupTypesense extends Command
     }
 
     /**
-     * Format synonym sets for display in table
+     * Fungsi:
+     * Format synonym sets untuk display dalam table.
+     *
+     * Output:
+     * - Array rows untuk table display.
      */
     private function formatSynonymOverview(array $synonymSets): array
     {

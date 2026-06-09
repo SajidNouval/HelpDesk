@@ -4,10 +4,32 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * =========================================================================
+ * MIGRATION TICKET OTPS - TABEL OTP TIKET
+ * =========================================================================
+ *
+ * Migration ini membuat tabel ticket_otps untuk menyimpan data OTP verifikasi tiket.
+ *
+ * Kolom:
+ * - id: ULID primary key
+ * - name: Nama pengirim
+ * - email: Email pengirim
+ * - subject: Subjek tiket
+ * - message: Pesan tiket
+ * - category_id: Foreign key ke tabel categories
+ * - type: Tipe tiket (livechat, report)
+ * - otp_code: Kode OTP 6 digit
+ * - attempts: Jumlah percobaan OTP
+ * - expires_at: Timestamp kedaluwarsa OTP
+ * - token: Token unik untuk tracking
+ * - timestamps: created_at dan updated_at
+ */
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Fungsi:
+     * Menjalankan migration untuk membuat tabel ticket_otps.
      */
     public function up(): void
     {
@@ -30,7 +52,8 @@ return new class extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * Fungsi:
+     * Menghapus tabel ticket_otps.
      */
     public function down(): void
     {

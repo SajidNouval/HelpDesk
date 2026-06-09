@@ -4,10 +4,35 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * =========================================================================
+ * MIGRATION TICKET - TABEL TIKET
+ * =========================================================================
+ *
+ * Migration ini membuat tabel tickets untuk menyimpan tiket helpdesk.
+ *
+ * Kolom:
+ * - id: ULID primary key
+ * - name: Nama pengirim (guest)
+ * - email: Email pengirim
+ * - subject: Subjek tiket
+ * - message: Pesan tiket
+ * - category_id: Foreign key ke tabel categories
+ * - user_id: Foreign key ke tabel users (nullable)
+ * - staff_id: Foreign key ke tabel users untuk staff yang menangani (nullable)
+ * - status: Status tiket (open, assigned, progress, waiting, closed, suspended)
+ * - priority: Priority tiket (low, medium, high)
+ * - assigned_at: Timestamp saat tiket ditugaskan (nullable)
+ * - closed_at: Timestamp saat tiket ditutup (nullable)
+ * - email_verified_at: Timestamp saat email diverifikasi (nullable)
+ * - tracking_token: Token untuk tracking tiket (unique, nullable)
+ * - timestamps: created_at dan updated_at
+ */
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Fungsi:
+     * Menjalankan migration untuk membuat tabel tickets.
      */
     public function up(): void
     {
@@ -62,7 +87,8 @@ return new class extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * Fungsi:
+     * Menghapus tabel tickets.
      */
     public function down(): void
     {

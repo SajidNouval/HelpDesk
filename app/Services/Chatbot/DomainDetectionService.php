@@ -486,55 +486,49 @@ class DomainDetectionService
     }
 
     /**
-     * 1. Fungsi detectDomain()
+     * =========================================================================
+     * 1. METODE DETECT DOMAIN
+     * =========================================================================
      *
-     * Fungsi ini mendeteksi domain IT utama dari query pengguna dan mengembalikan
-     * ID kategori database yang relevan untuk digunakan sebagai filter artikel.
+     * Fungsi:
+     * Mendeteksi domain IT utama dari query pengguna dan mengembalikan ID kategori database yang relevan.
      *
-     * Deteksi domain didasarkan pada pencocokan kata kunci terkurasi. Setiap domain
-     * mendapat skor berdasarkan seberapa banyak kata kunci domain-nya muncul di query.
-     * Domain dengan skor tertinggi (di atas ambang 0.3) dipilih sebagai domain utama.
+     * Alur Proses:
+     * 1. Menerima query mentah dari pengguna.
+     * 2. Normalisasi query dengan koreksi typo dan pemetaan sinonim.
+     * 3. Tokenisasi query menjadi term individual.
+     * 4. Penilaian skor untuk setiap domain berdasarkan pencocokan kata kunci.
+     * 5. Filter domain yang memenuhi ambang kepercayaan.
+     * 6. Ambil ID kategori database untuk domain terpilih.
+     * 7. Mengembalikan hasil deteksi domain.
      *
-     * Alur proses:
-     * 1. Normalisasi query: koreksi typo + pemetaan sinonim.
-     * 2. Tokenisasi query menjadi term individual.
-     * 3. Penilaian skor untuk setiap domain berdasarkan pencocokan kata kunci.
-     * 4. Filter domain yang memenuhi ambang kepercayaan.
-     * 5. Ambil ID kategori database untuk domain terpilih.
+     * Query yang Digunakan:
+     * - Category::whereIn('name', $categoryNames)->pluck('id')->toArray(): Ambil ID kategori berdasarkan nama
+     * - Category::where(function ($query) use ($categoryNames) { ... })->pluck('id')->toArray(): Pencarian case-insensitive
      *
-     * Parameter:
-     * - string $query : Query mentah dari pengguna
-     *
-     * Kembalikan:
-     * - array : [
-     *     'detected'    => bool,           // Apakah domain berhasil terdeteksi
-     *     'domain'      => string|null,    // Nama domain yang terdeteksi
-     *     'category_ids' => array,         // ID kategori database yang relevan
-     *     'confidence'  => float,          // Nilai kepercayaan deteksi (0.0 - 1.0)
-     *     'all_scores'  => array           // Skor semua domain (hanya jika detected)
-     *   ]
+     * Output:
+     * - array ['detected' => bool, 'domain' => string|null, 'category_ids' => array, 'confidence' => float, 'all_scores' => array]
      */
     public function detectDomain(string $query): array
     {
-        // 1.1 Query kosong — tidak ada domain yang bisa dideteksi
+        // Query kosong — tidak ada domain yang bisa dideteksi
         if (empty(trim($query))) {
             return ['detected' => false, 'domain' => null, 'category_ids' => [], 'confidence' => 0.0];
         }
 
-        // 1.2 Normalisasi query dengan koreksi typo menggunakan PreprocessingService
+        // Normalisasi query dengan koreksi typo menggunakan PreprocessingService
         $normalizedQuery = $this->preprocessor->normalizeTypos($query);
 
-        // 1.3 Terapkan pemetaan sinonim untuk toleransi typo tambahan
+        // Terapkan pemetaan sinonim untuk toleransi typo tambahan
         $normalizedQuery = $this->applySynonymMapping($normalizedQuery);
 
-        // 1.4 Tokenisasi query menjadi token individual (tanpa stemming
-        // agar kata kunci domain tetap terjaga bentuk aslinya)
+        // Tokenisasi query menjadi token individual
         $tokens = $this->tokenizeQuery($normalizedQuery);
 
-        // 1.5 Nilai setiap domain berdasarkan pencocokan token dengan kata kunci domain
+        // Nilai setiap domain berdasarkan pencocokan token dengan kata kunci domain
         $domainScores = $this->scoreDomains($tokens);
 
-        // 1.6 Saring domain yang melewati ambang kepercayaan minimum
+        // Saring domain yang melewati ambang kepercayaan minimum
         $threshold      = 0.3;
         $detectedDomains = array_filter($domainScores, fn($score) => $score >= $threshold);
 
@@ -542,13 +536,12 @@ class DomainDetectionService
             return ['detected' => false, 'domain' => null, 'category_ids' => [], 'confidence' => 0.0];
         }
 
-        // 1.7 Pilih domain dengan skor tertinggi sebagai domain utama
+        // Pilih domain dengan skor tertinggi sebagai domain utama
         arsort($detectedDomains);
         $primaryDomain = array_key_first($detectedDomains);
         $confidence    = $detectedDomains[$primaryDomain];
 
-        // 1.8 Query ini mengambil ID kategori dari database berdasarkan nama kategori
-        // yang dipetakan ke domain yang terdeteksi
+        // Ambil ID kategori dari database berdasarkan nama kategori yang dipetakan ke domain
         $categoryIds = $this->getCategoryIdsForDomain($primaryDomain);
 
         return [

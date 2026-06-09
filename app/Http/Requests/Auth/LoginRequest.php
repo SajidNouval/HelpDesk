@@ -9,10 +9,26 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * =========================================================================
+ * REQUEST VALIDATION LOGIN REQUEST
+ * =========================================================================
+ *
+ * Request validation untuk proses login.
+ *
+ * Tanggung Jawab:
+ * - Validasi input email dan password.
+ * - Autentikasi user dengan rate limiting.
+ * - Memastikan user yang login memiliki role admin atau staff.
+ */
 class LoginRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Fungsi:
+     * Menentukan apakah user diizinkan membuat request ini.
+     *
+     * Output:
+     * - Boolean true (semua user diizinkan login).
      */
     public function authorize(): bool
     {
@@ -20,9 +36,11 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Fungsi:
+     * Mendapatkan aturan validasi untuk request login.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
+     * Output:
+     * - Array aturan validasi untuk email dan password.
      */
     public function rules(): array
     {
@@ -33,9 +51,16 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
+     * Fungsi:
+     * Mencoba mengautentikasi kredensial user.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * Alur Proses:
+     * 1. Cek rate limiting.
+     * 2. Coba autentikasi dengan email dan password.
+     * 3. Jika gagal, increment rate limiter dan throw error.
+     * 4. Jika berhasil, cek role user (harus admin atau staff).
+     * 5. Jika role tidak valid, logout dan throw error.
+     * 6. Jika valid, clear rate limiter.
      */
     public function authenticate(): void
     {
@@ -62,9 +87,13 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Ensure the login request is not rate limited.
+     * Fungsi:
+     * Memastikan request login tidak melebihi batas rate limiting.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * Alur Proses:
+     * 1. Cek apakah terlalu banyak percobaan login.
+     * 2. Jika ya, trigger event Lockout dan throw error.
+     * 3. Tampilkan waktu tunggu sebelum bisa mencoba lagi.
      */
     public function ensureIsNotRateLimited(): void
     {
@@ -85,7 +114,11 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Get the rate limiting throttle key for the request.
+     * Fungsi:
+     * Mendapatkan key untuk rate limiting berdasarkan email dan IP.
+     *
+     * Output:
+     * - String key untuk rate limiter.
      */
     public function throttleKey(): string
     {

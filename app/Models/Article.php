@@ -7,6 +7,24 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Searchable;
 
+/**
+ * =========================================================================
+ * MODEL ARTICLE
+ * =========================================================================
+ *
+ * Model ini merepresentasikan tabel articles.
+ *
+ * Tanggung Jawab:
+ * - Menyimpan data artikel.
+ * - Mengelola relasi artikel dengan kategori, staff, dan feedback.
+ * - Menyediakan fitur pencarian dengan Laravel Scout.
+ * - Menyediakan scope dan accessor untuk artikel.
+ *
+ * Relasi:
+ * - belongsTo(Category): Kategori artikel
+ * - belongsTo(User): Penulis artikel (staff)
+ * - hasMany(ArticleFeedback): Feedback artikel
+ */
 class Article extends Model
 {
     use HasFactory, HasUlids, Searchable;
@@ -34,24 +52,48 @@ class Article extends Model
         'views' => 'integer',
     ];
 
-    // Relasi
+    /**
+     * Fungsi:
+     * Mengambil kategori yang dimiliki artikel.
+     *
+     * Output:
+     * - Relasi belongsTo Category.
+     */
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
 
+    /**
+     * Fungsi:
+     * Mengambil staff (penulis) yang membuat artikel.
+     *
+     * Output:
+     * - Relasi belongsTo User.
+     */
     public function staff()
     {
         return $this->belongsTo(User::class, 'staff_id');
     }
 
+    /**
+     * Fungsi:
+     * Mengambil semua feedback yang diberikan pada artikel.
+     *
+     * Output:
+     * - Relasi hasMany ArticleFeedback.
+     */
     public function feedback()
     {
         return $this->hasMany(ArticleFeedback::class, 'article_id');
     }
 
     /**
-     * Scout: tentukan index name
+     * Fungsi:
+     * Menentukan nama index untuk Laravel Scout.
+     *
+     * Output:
+     * - String nama index 'articles'.
      */
     public function searchableAs(): string
     {
@@ -59,7 +101,11 @@ class Article extends Model
     }
 
     /**
-     * Scout: data yang diindex ke Meilisearch
+     * Fungsi:
+     * Menentukan data yang di-index ke search engine.
+     *
+     * Output:
+     * - Array data artikel untuk indexing.
      */
     public function toSearchableArray(): array
     {
@@ -76,7 +122,11 @@ class Article extends Model
     }
 
     /**
-     * Scout: hanya index artikel yang published
+     * Fungsi:
+     * Menentukan apakah artikel harus di-index.
+     *
+     * Output:
+     * - Boolean true jika artikel published.
      */
     public function shouldBeSearchable(): bool
     {

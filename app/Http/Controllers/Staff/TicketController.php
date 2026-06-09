@@ -11,10 +11,57 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * =========================================================================
+ * STAFF TICKET CONTROLLER - PENGELOLAAN TIKET STAFF
+ * =========================================================================
+ *
+ * Controller ini bertanggung jawab untuk mengelola tiket yang ditugaskan
+ * kepada staff helpdesk. Staff dapat melihat, memproses, menyelesaikan,
+ * menolak, dan menangguhkan tiket.
+ *
+ * Fitur Utama:
+ * - Daftar tiket yang ditugaskan ke staff
+ * - Detail tiket dengan pesan dan log
+ * - Update priority tiket
+ * - Mulai mengerjakan tiket (progress)
+ * - Menolak tiket
+ * - Menyelesaikan tiket
+ * - Menangguhkan tiket
+ * - Reassign tiket ke staff lain
+ * - Menambahkan log manual
+ *
+ * Model Terkait:
+ * - Ticket: Model tiket
+ * - StaffProfile: Profil staff
+ * - TicketLog: Log aktivitas tiket
+ */
 class TicketController extends Controller
 {
     /**
-     * 📋 Tampilkan tiket yang ditugaskan ke staff
+     * =========================================================================
+     * 1. METODE INDEX - DAFTAR TIKET STAFF
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menampilkan daftar tiket yang ditugaskan ke staff yang sedang login.
+     *
+     * Alur Proses:
+     * 1. Mengambil data user yang sedang login.
+     * 2. Query tiket yang ditugaskan ke staff ini.
+     * 3. Filter berdasarkan priority jika ada.
+     * 4. Pisahkan tiket berdasarkan status (active, completed, waiting).
+     * 5. Mengembalikan view dengan data tiket.
+     *
+     * Query yang Digunakan:
+     * - Ticket::where('staff_id', $user->id): Filter tiket milik staff
+     * - where('priority', $request->priority): Filter priority
+     * - whereIn('status', ['assigned', 'progress']): Tiket aktif
+     * - where('status', 'closed'): Tiket selesai
+     * - where('status', 'waiting'): Tiket menunggu
+     *
+     * Output:
+     * - View 'staff.tickets.index' dengan data tiket.
      */
     public function index(Request $request): View
     {
@@ -63,7 +110,23 @@ class TicketController extends Controller
     }
 
     /**
-     * 👁️ Lihat detail tiket
+     * =========================================================================
+     * 2. METODE SHOW - DETAIL TIKET
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menampilkan detail tiket beserta pesan dan log.
+     *
+     * Alur Proses:
+     * 1. Cek apakah tiket milik staff yang sedang login.
+     * 2. Load relasi kategori, user, pesan, dan log.
+     * 3. Mengembalikan view detail tiket.
+     *
+     * Query yang Digunakan:
+     * - $ticket->load(['category', 'user', 'messages.sender', 'logs']): Load relasi
+     *
+     * Output:
+     * - View 'staff.tickets.show' dengan data tiket.
      */
     public function show(Ticket $ticket): View
     {
@@ -78,7 +141,26 @@ class TicketController extends Controller
     }
 
     /**
-     * 🎯 Set priority tiket
+     * =========================================================================
+     * 3. METODE UPDATE PRIORITY - UPDATE PRIORITY TIKET
+     * =========================================================================
+     *
+     * Fungsi:
+     * Memperbarui priority tiket.
+     *
+     * Alur Proses:
+     * 1. Cek otorisasi apakah tiket milik staff.
+     * 2. Validasi input priority.
+     * 3. Update priority tiket.
+     * 4. Catat log perubahan priority.
+     * 5. Redirect kembali dengan pesan sukses.
+     *
+     * Query yang Digunakan:
+     * - $ticket->update(['priority' => $request->priority]): Update priority
+     * - TicketLog::create(): Buat log perubahan
+     *
+     * Output:
+     * - Redirect back dengan pesan sukses.
      */
     public function updatePriority(Request $request, Ticket $ticket): RedirectResponse
     {
@@ -107,7 +189,27 @@ class TicketController extends Controller
     }
 
     /**
-     * 🔄 Update status tiket menjadi progress
+     * =========================================================================
+     * 4. METODE START PROGRESS - MULAI MENGERJAKAN TIKET
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengubah status tiket menjadi progress dan meng-assign ke staff.
+     *
+     * Alur Proses:
+     * 1. Jika tiket waiting dan belum di-assign, assign ke staff.
+     * 2. Update status staff menjadi busy.
+     * 3. Catat log bahwa tiket di-claim.
+     * 4. Broadcast event StaffConnected.
+     * 5. Jika tiket sudah di-assign, hanya update status.
+     *
+     * Query yang Digunakan:
+     * - $ticket->update(): Update status tiket
+     * - StaffProfile::where()->update(): Update status staff
+     * - TicketLog::create(): Buat log aktivitas
+     *
+     * Output:
+     * - Redirect back dengan pesan sukses.
      */
     public function startProgress(Ticket $ticket): RedirectResponse
     {
@@ -155,7 +257,29 @@ class TicketController extends Controller
     }
 
     /**
-     * ❌ Tolak tiket (assigned atau waiting)
+     * =========================================================================
+     * 5. METODE REJECT - TOLAK TIKET
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menolak tiket yang ditugaskan ke staff.
+     *
+     * Alur Proses:
+     * 1. Cek otorisasi apakah tiket milik staff.
+     * 2. Cek apakah status tiket assigned atau waiting.
+     * 3. Update status tiket menjadi closed.
+     * 4. Update status staff menjadi tidak busy.
+     * 5. Catat log penolakan.
+     * 6. Kirim email penolakan ke guest/customer.
+     * 7. Broadcast event TicketClosed.
+     *
+     * Query yang Digunakan:
+     * - $ticket->update(): Update status tiket
+     * - StaffProfile::where()->update(): Update status staff
+     * - TicketLog::create(): Buat log penolakan
+     *
+     * Output:
+     * - Redirect ke route('staff.tickets.index') dengan pesan sukses.
      */
     public function reject(Ticket $ticket): RedirectResponse
     {
@@ -202,7 +326,32 @@ class TicketController extends Controller
     }
 
     /**
-     * ✅ Tandai tiket sebagai selesai
+     * =========================================================================
+     * 6. METODE COMPLETE - TANDAI TIKET SELESAI
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menandai tiket sebagai selesai dan mencari tiket waiting berikutnya.
+     *
+     * Alur Proses:
+     * 1. Cek otorisasi apakah tiket milik staff.
+     * 2. Validasi status tiket (progress atau waiting).
+     * 3. Validasi input priority.
+     * 4. Update status tiket menjadi closed.
+     * 5. Update status staff menjadi tidak busy.
+     * 6. Catat log penyelesaian.
+     * 7. Cari tiket waiting dengan kategori yang sama.
+     * 8. Assign tiket waiting ke staff yang paling available.
+     * 9. Broadcast event TicketClosed.
+     *
+     * Query yang Digunakan:
+     * - $ticket->update(): Update status tiket
+     * - StaffProfile::where()->update(): Update status staff
+     * - TicketLog::create(): Buat log penyelesaian
+     * - Ticket::where()->oldest()->first(): Cari tiket waiting
+     *
+     * Output:
+     * - Redirect ke route('staff.tickets.index') dengan pesan sukses.
      */
     public function complete(Request $request, Ticket $ticket): RedirectResponse
     {
@@ -293,7 +442,31 @@ class TicketController extends Controller
     }
 
     /**
-     * ⏸️ Tangguhkan tiket sementara
+     * =========================================================================
+     * 7. METODE SUSPEND - TANGGUHKAN TIKET
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menangguhkan tiket sementara dan mencari tiket waiting berikutnya.
+     *
+     * Alur Proses:
+     * 1. Cek otorisasi apakah tiket milik staff.
+     * 2. Cek apakah tiket sudah closed.
+     * 3. Update status tiket menjadi waiting.
+     * 4. Update status staff menjadi tidak busy.
+     * 5. Catat log penangguhan.
+     * 6. Cari tiket waiting dengan kategori yang sama.
+     * 7. Assign tiket waiting ke staff yang paling available.
+     * 8. Broadcast event TicketClosed.
+     *
+     * Query yang Digunakan:
+     * - $ticket->update(): Update status tiket
+     * - StaffProfile::where()->update(): Update status staff
+     * - TicketLog::create(): Buat log penangguhan
+     * - Ticket::where()->oldest()->first(): Cari tiket waiting
+     *
+     * Output:
+     * - Redirect back dengan pesan sukses.
      */
     public function suspend(Ticket $ticket): RedirectResponse
     {
@@ -373,7 +546,24 @@ class TicketController extends Controller
     }
 
     /**
-     * 📝 Tambah catatan/log manual oleh staff
+     * =========================================================================
+     * 8. METODE STORE LOG - TAMBAH CATATAN MANUAL
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menambahkan catatan/log manual ke tiket.
+     *
+     * Alur Proses:
+     * 1. Cek otorisasi apakah tiket milik staff.
+     * 2. Validasi input description.
+     * 3. Buat log baru dengan action 'staff_update'.
+     * 4. Kembalikan response JSON atau redirect.
+     *
+     * Query yang Digunakan:
+     * - TicketLog::create(): Buat log baru
+     *
+     * Output:
+     * - JSON response atau redirect back dengan pesan sukses.
      */
     public function storeLog(Request $request, Ticket $ticket): \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
     {
@@ -403,7 +593,29 @@ class TicketController extends Controller
     }
 
     /**
-     * 🔄 Reassign tiket ke staff lain
+     * =========================================================================
+     * 9. METODE REASSIGN - REASSIGN TIKET KE STAFF LAIN
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menugaskan ulang tiket ke staff lain dengan beban kerja paling sedikit.
+     *
+     * Alur Proses:
+     * 1. Cek otorisasi apakah tiket milik staff.
+     * 2. Cari staff baru dengan beban kerja paling sedikit di kategori sama.
+     * 3. Update tiket dengan staff baru.
+     * 4. Update status staff lama menjadi tidak busy.
+     * 5. Update status staff baru menjadi busy.
+     * 6. Catat log reassignment.
+     *
+     * Query yang Digunakan:
+     * - StaffProfile::where()->with('user')->get(): Cari staff tersedia
+     * - $ticket->update(): Update staff tiket
+     * - StaffProfile::where()->update(): Update status staff
+     * - TicketLog::create(): Buat log reassignment
+     *
+     * Output:
+     * - Redirect back dengan pesan sukses.
      */
     public function reassign(Request $request, Ticket $ticket): RedirectResponse
     {
@@ -458,7 +670,24 @@ class TicketController extends Controller
     }
 
     /**
-     * 📋 Get ticket logs untuk modal
+     * =========================================================================
+     * 10. METODE GET LOGS - AMBIL LOG TIKET
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil semua log tiket untuk ditampilkan di modal.
+     *
+     * Alur Proses:
+     * 1. Cek otorisasi apakah tiket milik staff.
+     * 2. Query semua log tiket dengan urutan terbaru.
+     * 3. Map log ke format yang sesuai untuk response.
+     * 4. Kembalikan response JSON.
+     *
+     * Query yang Digunakan:
+     * - $ticket->logs()->latest()->get(): Ambil log tiket
+     *
+     * Output:
+     * - JSON response dengan array log tiket.
      */
     public function getLogs(Ticket $ticket): JsonResponse
     {

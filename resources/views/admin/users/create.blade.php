@@ -171,13 +171,33 @@
                                         Batal
                                     </button>
                                 </a>
-                                <button type="submit" class="h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
+                                <button type="button" id="btn-save-staff" class="h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
                                     Simpan Staf
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
+
+                <!-- Confirmation Dialog -->
+                <x-confirm-dialog
+                    id="confirm-add-staff"
+                    title="Tambah Staf"
+                    message="Apakah Anda yakin ingin menambahkan staf ini?"
+                    primaryText="Tambah"
+                    secondaryText="Batal"
+                />
+
+                <script>
+                    document.getElementById('btn-save-staff').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.confirmDialog.open('confirm-add-staff', {
+                            onConfirm: function() {
+                                document.getElementById('staff-form').submit();
+                            }
+                        });
+                    });
+                </script>
             </div>
         </div>
     </div>

@@ -8,18 +8,34 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
+/**
+ * =========================================================================
+ * SEEDER ARTICLE - SEEDER ARTIKEL HELPDESK
+ * =========================================================================
+ *
+ * Seeder ini membuat artikel sample untuk sistem helpdesk.
+ *
+ * Struktur Artikel:
+ * - Setiap artikel EXPLICITLY assigned ke kategori yang benar
+ * - Domain-specific titles dan content (tidak ada generic wording)
+ * - Clear keyword separation antar domain
+ * - Balanced article count per category (5-8 artikel per kategori)
+ * - Domain keamanan diisolasi dengan artikel dedicated
+ * - Tidak ada overlapping topics antar kategori
+ *
+ * Kategori dan Jumlah Artikel:
+ * - Wifi & Jaringan: 6 artikel
+ * - Komputer: 7 artikel
+ * - Printer: 5 artikel
+ * - Email: 5 artikel
+ * - Keamanan Sistem: 8 artikel
+ * - Aplikasi: 5 artikel
+ */
 class ArticleSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
-     * 
-     * ARTICLE SEEDER REFACTOR (TF-IDF Optimization):
-     * - Each article is EXPLICITLY assigned to the correct category (no random assignment)
-     * - Domain-specific titles and content (no generic wording)
-     * - Clear keyword separation between domains
-     * - Balanced article count per category (5-8 articles each)
-     * - Security domain isolated with dedicated articles
-     * - No overlapping topics between categories
+     * Fungsi:
+     * Menjalankan seeder untuk membuat artikel sample.
      */
     public function run(): void
     {

@@ -262,11 +262,11 @@
                 <h2 class="text-xl font-semibold text-gray-900">Live Chat</h2>
                 <p class="text-sm text-gray-600">Chat langsung dengan tim support kami</p>
             </div>
-            <x-secondary-button type="button" data-close-modal class="text-gray-400 hover:text-gray-600 p-0 w-8 h-8 flex items-center justify-center rounded-xl">
+            <!-- <x-secondary-button type="button" data-close-modal class="text-gray-400 hover:text-gray-600 p-0 w-8 h-8 flex items-center justify-center rounded-xl">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
-            </x-secondary-button>
+            </x-secondary-button> -->
         </div>
 
         <form action="#" method="POST" class="p-6 space-y-4" id="liveChatForm"

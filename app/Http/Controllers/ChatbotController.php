@@ -13,22 +13,23 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * =========================================================================
- * CONTROLLER CHATBOT
+ * CHATBOT CONTROLLER - PENGELOLAAN CHATBOT
  * =========================================================================
- * 
- * Controller ini bertugas menangani seluruh interaksi antara pengguna
- * dan sistem chatbot Helpdesk TA.
- * 
- * Tanggung jawab:
- * - Menerima pertanyaan pengguna melalui endpoint chatbot.
- * - Mengelola alur percakapan, klarifikasi, dan eskalasi.
- * - Mendelegasikan permintaan ke layanan retrieval dan format respon.
- * - Menyediakan fungsi bantuan seperti greeting, klarifikasi, dan histori.
- * 
- * Modul terkait:
- * - AdvancedRetrievalService
- * - ChatbotRetrievalService
- * - ConversationFlowService
+ *
+ * Controller ini bertanggung jawab untuk menangani seluruh interaksi antara
+ * pengguna dan sistem chatbot Helpdesk TA.
+ *
+ * Fitur Utama:
+ * - Menerima pertanyaan pengguna melalui endpoint chatbot
+ * - Mengelola alur percakapan, klarifikasi, dan eskalasi
+ * - Mendelegasikan permintaan ke layanan retrieval dan format respon
+ * - Menyediakan fungsi bantuan seperti greeting, klarifikasi, dan histori
+ * - Pembuatan tiket dari chatbot
+ * - Pencarian artikel dan saran topik
+ *
+ * Service Terkait:
+ * - AdvancedRetrievalService: Layanan retrieval artikel
+ * - ConversationFlowService: Layanan alur percakapan
  */
 class ChatbotController extends Controller
 {
@@ -44,37 +45,28 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Main chatbot endpoint - advanced TF-IDF retrieval with refinement features
-     * 
-     * Features integrated:
-     * - Multi-intent splitting
-     * - Result diversification
-     * - Failure escalation
-     * - Conversation memory
-     * - Clarification flow
-     * 
-     * @param Request $request
-     * @return JsonResponse
-     */
-    /**
      * =========================================================================
-     * 1. Metode Mendapatkan Respon Chatbot
+     * 1. METODE GET RESPONSE - DAPATKAN RESPON CHATBOT
      * =========================================================================
-     * 
-     * Metode ini digunakan untuk memproses pertanyaan pengguna melalui chatbot.
-     * 
-     * Alur proses:
-     * 1. Menerima dan memvalidasi input pesan pengguna.
-     * 2. Mendeteksi greeting dan mengembalikan respon salam.
-     * 3. Mengecek kebutuhan klarifikasi untuk pertanyaan ambigu.
-     * 4. Menjalankan retrieval melalui AdvancedRetrievalService.
-     * 5. Menyimpan konteks percakapan dan membentuk respon akhir.
-     * 
-     * Parameter:
-     * Request $request
-     * 
-     * Return:
-     * JsonResponse
+     *
+     * Fungsi:
+     * Memproses pertanyaan pengguna melalui chatbot dengan advanced retrieval.
+     *
+     * Alur Proses:
+     * 1. Validasi input pesan pengguna.
+     * 2. Cek panjang minimum pesan.
+     * 3. Deteksi greeting dan kembalikan respon salam.
+     * 4. Cek kebutuhan klarifikasi untuk pertanyaan ambigu.
+     * 5. Jalankan retrieval melalui AdvancedRetrievalService.
+     * 6. Simpan konteks percakapan.
+     * 7. Format response dengan informasi diversifikasi.
+     *
+     * Query yang Digunakan:
+     * - $this->retrievalService->retrieve(): Retrieval artikel
+     * - $this->retrievalService->formatResponse(): Format response
+     *
+     * Output:
+     * - JsonResponse dengan data artikel dan response chatbot.
      */
     public function getResponse(Request $request): JsonResponse
     {
@@ -165,28 +157,24 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Legacy search endpoint - uses Advanced TF-IDF retrieval
-     * 
-     * @param Request $request
-     * @return JsonResponse
-     */
-    /**
      * =========================================================================
-     * 2. Metode Pencarian Chatbot
+     * 2. METODE CHATBOT SEARCH - PENCARIAN CHATBOT
      * =========================================================================
-     * 
-     * Metode ini menyediakan endpoint pencarian chatbot untuk query manual.
-     * 
-     * Alur proses:
-     * 1. Menerima parameter query dari request.
-     * 2. Memvalidasi input dan memanggil layanan retrieval.
-     * 3. Mengembalikan hasil pencarian dalam format JSON.
-     * 
-     * Parameter:
-     * Request $request
-     * 
-     * Return:
-     * JsonResponse
+     *
+     * Fungsi:
+     * Menyediakan endpoint pencarian chatbot untuk query manual.
+     *
+     * Alur Proses:
+     * 1. Validasi input query.
+     * 2. Panggil layanan retrieval dengan advanced TF-IDF.
+     * 3. Map hasil ke format yang sesuai.
+     * 4. Kembalikan hasil pencarian dalam format JSON.
+     *
+     * Query yang Digunakan:
+     * - $this->retrievalService->retrieve(): Retrieval artikel
+     *
+     * Output:
+     * - JsonResponse dengan hasil pencarian artikel.
      */
     public function chatbotSearch(Request $request): JsonResponse
     {
@@ -217,24 +205,25 @@ class ChatbotController extends Controller
     }
     
     /**
-     * Check if escalation is needed for a query
-     * 
-     * @param Request $request
-     * @return JsonResponse
-     */
-    /**
      * =========================================================================
-     * 3. Metode Memeriksa Eskalasi Chatbot
+     * 3. METODE CHECK ESCALATION - CEK ESKALASI
      * =========================================================================
-     * 
-     * Metode ini menentukan apakah pertanyaan pengguna memerlukan eskalasi
-     * ke tim support atau tiket.
-     * 
-     * Parameter:
-     * Request $request
-     * 
-     * Return:
-     * JsonResponse
+     *
+     * Fungsi:
+     * Menentukan apakah pertanyaan pengguna memerlukan eskalasi ke tim support.
+     *
+     * Alur Proses:
+     * 1. Validasi input pesan.
+     * 2. Cek apakah query perlu eskalasi.
+     * 3. Hitung jumlah failure.
+     * 4. Kembalikan response dengan status eskalasi.
+     *
+     * Query yang Digunakan:
+     * - $this->retrievalService->shouldEscalate(): Cek kebutuhan eskalasi
+     * - $this->retrievalService->getFailureCount(): Hitung failure
+     *
+     * Output:
+     * - JsonResponse dengan status eskalasi dan response eskalasi.
      */
     public function checkEscalation(Request $request): JsonResponse
     {
@@ -257,24 +246,25 @@ class ChatbotController extends Controller
     }
     
     /**
-     * Get clarification for ambiguous query
-     * 
-     * @param Request $request
-     * @return JsonResponse
-     */
-    /**
      * =========================================================================
-     * 4. Metode Mendapatkan Klarifikasi
+     * 4. METODE GET CLARIFICATION - DAPATKAN KLARIFIKASI
      * =========================================================================
-     * 
-     * Metode ini memberikan pertanyaan klarifikasi ketika query pengguna
-     * teridentifikasi sebagai ambigu.
-     * 
-     * Parameter:
-     * Request $request
-     * 
-     * Return:
-     * JsonResponse
+     *
+     * Fungsi:
+     * Memberikan pertanyaan klarifikasi ketika query pengguna ambigu.
+     *
+     * Alur Proses:
+     * 1. Validasi input pesan.
+     * 2. Cek apakah query memerlukan klarifikasi.
+     * 3. Jika ya, kembalikan response klarifikasi.
+     * 4. Jika tidak, kembalikan response tanpa klarifikasi.
+     *
+     * Query yang Digunakan:
+     * - $this->retrievalService->needsClarification(): Cek kebutuhan klarifikasi
+     * - $this->retrievalService->getClarificationResponse(): Dapatkan respon klarifikasi
+     *
+     * Output:
+     * - JsonResponse dengan data klarifikasi.
      */
     public function getClarification(Request $request): JsonResponse
     {
@@ -297,23 +287,23 @@ class ChatbotController extends Controller
     }
     
     /**
-     * Get conversation history
-     * 
-     * @param Request $request
-     * @return JsonResponse
-     */
-    /**
      * =========================================================================
-     * 5. Metode Mendapatkan Histori Percakapan
+     * 5. METODE GET CONVERSATION HISTORY - HISTORI PERCAKAPAN
      * =========================================================================
-     * 
-     * Metode ini mengambil konteks percakapan terakhir dari sesi chatbot.
-     * 
-     * Parameter:
-     * Request $request
-     * 
-     * Return:
-     * JsonResponse
+     *
+     * Fungsi:
+     * Mengambil konteks percakapan terakhir dari sesi chatbot.
+     *
+     * Alur Proses:
+     * 1. Ambil parameter limit dari request.
+     * 2. Ambil history percakapan dari service.
+     * 3. Kembalikan response dengan history percakapan.
+     *
+     * Query yang Digunakan:
+     * - $this->retrievalService->getRecentConversationContext(): Ambil history
+     *
+     * Output:
+     * - JsonResponse dengan array history percakapan.
      */
     public function getConversationHistory(Request $request): JsonResponse
     {
@@ -327,24 +317,22 @@ class ChatbotController extends Controller
     }
     
     /**
-     * Clear conversation history
-     * 
-     * @param Request $request
-     * @return JsonResponse
-     */
-    /**
      * =========================================================================
-     * 6. Metode Menghapus Context Percakapan
+     * 6. METODE CLEAR CONVERSATION - HAPUS PERCAKAPAN
      * =========================================================================
-     * 
-     * Metode ini membersihkan memori percakapan chatbot untuk memulai ulang
-     * sesi interaksi.
-     * 
-     * Parameter:
-     * Request $request
-     * 
-     * Return:
-     * JsonResponse
+     *
+     * Fungsi:
+     * Membersihkan memori percakapan chatbot untuk memulai ulang sesi.
+     *
+     * Alur Proses:
+     * 1. Panggil method clearConversationMemory dari service.
+     * 2. Kembalikan response sukses.
+     *
+     * Query yang Digunakan:
+     * - $this->retrievalService->clearConversationMemory(): Hapus memory
+     *
+     * Output:
+     * - JsonResponse dengan pesan sukses.
      */
     public function clearConversation(Request $request): JsonResponse
     {
@@ -357,7 +345,23 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Show contact form for ticket creation
+     * =========================================================================
+     * 7. METODE SHOW CONTACT FORM - TAMPILKAN FORM KONTAK
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menampilkan form kontak untuk pembuatan tiket dari chatbot.
+     *
+     * Alur Proses:
+     * 1. Ambil semua kategori.
+     * 2. Format form fields untuk response.
+     * 3. Kembalikan response dengan data form.
+     *
+     * Query yang Digunakan:
+     * - Category::select()->orderBy()->get(): Ambil kategori
+     *
+     * Output:
+     * - JsonResponse dengan data form kontak.
      */
     public function showContactForm(): JsonResponse
     {
@@ -398,7 +402,25 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Create ticket and initial message
+     * =========================================================================
+     * 8. METODE CREATE TICKET AND MESSAGE - BUAT TIKET DAN PESAN
+     * =========================================================================
+     *
+     * Fungsi:
+     * Membuat tiket baru dan pesan awal dari chatbot.
+     *
+     * Alur Proses:
+     * 1. Validasi input tiket.
+     * 2. Buat tiket baru dengan status open.
+     * 3. Insert pesan awal dari guest dan bot.
+     * 4. Kembalikan response dengan data tiket.
+     *
+     * Query yang Digunakan:
+     * - Ticket::create(): Buat tiket baru
+     * - Message::insert(): Insert pesan awal
+     *
+     * Output:
+     * - JsonResponse dengan data tiket yang dibuat.
      */
     public function createTicketAndMessage(Request $request): JsonResponse
     {
@@ -445,7 +467,25 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Send message to existing ticket
+     * =========================================================================
+     * 9. METODE SEND MESSAGE - KIRIM PESAN KE TIKET
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengirim pesan ke tiket yang sudah ada.
+     *
+     * Alur Proses:
+     * 1. Validasi input pesan dan ticket_id.
+     * 2. Cek status tiket (tidak boleh closed).
+     * 3. Buat pesan baru dengan sender_type yang sesuai.
+     * 4. Kembalikan response sukses.
+     *
+     * Query yang Digunakan:
+     * - Ticket::findOrFail(): Ambil tiket
+     * - Message::create(): Buat pesan baru
+     *
+     * Output:
+     * - JsonResponse dengan pesan sukses.
      */
     public function sendMessage(Request $request): JsonResponse
     {
@@ -473,7 +513,22 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Get messages for a ticket
+     * =========================================================================
+     * 10. METODE GET TICKET MESSAGES - AMBIL PESAN TIKET
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil semua pesan dalam sebuah tiket.
+     *
+     * Alur Proses:
+     * 1. Query semua pesan dalam tiket dengan urutan ascending.
+     * 2. Kembalikan response dengan data pesan dan tiket.
+     *
+     * Query yang Digunakan:
+     * - $ticket->messages()->orderBy()->get(): Ambil pesan tiket
+     *
+     * Output:
+     * - JsonResponse dengan array pesan dan data tiket.
      */
     public function getTicketMessages(Request $request, Ticket $ticket): JsonResponse
     {
@@ -493,7 +548,24 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Get dynamic topics for greeting
+     * =========================================================================
+     * 11. METODE GET TOPICS - DAPATKAN TOPIK
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil topik dinamis untuk greeting chatbot.
+     *
+     * Alur Proses:
+     * 1. Panggil conversation flow service untuk data greeting.
+     * 2. Ambil greeting response dari retrieval service.
+     * 3. Kembalikan response dengan topik dan greeting.
+     *
+     * Query yang Digunakan:
+     * - $this->conversationFlowService->getGreetingData(): Ambil data greeting
+     * - $this->retrievalService->getGreetingResponse(): Ambil respon greeting
+     *
+     * Output:
+     * - JsonResponse dengan topik dan greeting.
      */
     public function getTopics(): JsonResponse
     {
@@ -508,7 +580,25 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Get subtopics for a category
+     * =========================================================================
+     * 12. METODE GET SUBTOPICS - DAPATKAN SUBTOPIK
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil subtopics untuk kategori tertentu.
+     *
+     * Alur Proses:
+     * 1. Validasi input topik.
+     * 2. Cek curated subtopics dari retrieval service.
+     * 3. Jika tidak ada, gunakan fallback dari conversation flow service.
+     * 4. Kembalikan response dengan subtopics.
+     *
+     * Query yang Digunakan:
+     * - $this->retrievalService->getCuratedSubtopics(): Ambil subtopics
+     * - $this->conversationFlowService->getSearchSuggestions(): Fallback saran
+     *
+     * Output:
+     * - JsonResponse dengan array subtopics.
      */
     public function getSubtopics(Request $request): JsonResponse
     {
@@ -537,7 +627,26 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Get article suggestion
+     * =========================================================================
+     * 13. METODE GET ARTICLE SUGGESTION - DAPATKAN SARAN ARTIKEL
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil saran artikel terkait berdasarkan artikel yang dipilih.
+     *
+     * Alur Proses:
+     * 1. Validasi input article_id.
+     * 2. Query artikel yang published dan approved.
+     * 3. Gunakan retrieval service untuk mencari artikel terkait.
+     * 4. Generate summary dari excerpt atau konten.
+     * 5. Kembalikan response dengan artikel dan artikel terkait.
+     *
+     * Query yang Digunakan:
+     * - Article::where()->with()->find(): Ambil artikel
+     * - $this->retrievalService->retrieve(): Cari artikel terkait
+     *
+     * Output:
+     * - JsonResponse dengan artikel dan artikel terkait.
      */
     public function getArticleSuggestion(Request $request): JsonResponse
     {
@@ -580,9 +689,18 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Rebuild chatbot cache (admin only)
-     * Note: This is a placeholder - actual cache rebuilding would require
-     * rebuilding the TF-IDF index which is handled by the ReindexChatbotArticles command
+     * =========================================================================
+     * 14. METODE REBUILD CACHE - REBUILD CACHE CHATBOT
+     * =========================================================================
+     *
+     * Fungsi:
+     * Placeholder untuk rebuild cache chatbot (admin only).
+     *
+     * Alur Proses:
+     * 1. Kembalikan response dengan instruksi untuk rebuild cache.
+     *
+     * Output:
+     * - JsonResponse dengan instruksi rebuild cache.
      */
     public function rebuildCache(): JsonResponse
     {
@@ -593,7 +711,20 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Clear chatbot cache (admin only)
+     * =========================================================================
+     * 15. METODE CLEAR CACHE - HAPUS CACHE CHATBOT
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menghapus cache chatbot (admin only).
+     *
+     * Alur Proses:
+     * 1. Hapus session-based caches.
+     * 2. Flush application cache.
+     * 3. Kembalikan response sukses.
+     *
+     * Output:
+     * - JsonResponse dengan pesan sukses.
      */
     public function clearCache(): JsonResponse
     {
@@ -611,8 +742,22 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Get greeting with category chips
-     * GET /chatbot/greeting
+     * =========================================================================
+     * 16. METODE GET GREETING - DAPATKAN GREETING
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil greeting dengan kategori chips.
+     *
+     * Alur Proses:
+     * 1. Panggil conversation flow service untuk data greeting.
+     * 2. Kembalikan response dengan greeting dan kategori.
+     *
+     * Query yang Digunakan:
+     * - $this->conversationFlowService->getGreetingData(): Ambil data greeting
+     *
+     * Output:
+     * - JsonResponse dengan greeting dan kategori.
      */
     public function getGreeting(): JsonResponse
     {
@@ -628,8 +773,23 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Get subtopics for a category
-     * POST /chatbot/category-subtopics
+     * =========================================================================
+     * 17. METODE GET CATEGORY SUBTOPICS - DAPATKAN SUBTOPIK KATEGORI
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil subtopics untuk kategori berdasarkan category_id.
+     *
+     * Alur Proses:
+     * 1. Validasi input category_id.
+     * 2. Panggil conversation flow service untuk subtopics.
+     * 3. Cek error dan kembalikan response sesuai.
+     *
+     * Query yang Digunakan:
+     * - $this->conversationFlowService->getCategorySubtopics(): Ambil subtopics
+     *
+     * Output:
+     * - JsonResponse dengan subtopics atau error.
      */
     public function getCategorySubtopics(Request $request): JsonResponse
     {
@@ -657,8 +817,23 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Check if query is ambiguous
-     * POST /chatbot/check-ambiguity
+     * =========================================================================
+     * 18. METODE CHECK AMBIGUITY - CEK AMBIGUITAS
+     * =========================================================================
+     *
+     * Fungsi:
+     * Memeriksa apakah query ambigu.
+     *
+     * Alur Proses:
+     * 1. Validasi input pesan.
+     * 2. Panggil conversation flow service untuk cek ambigu.
+     * 3. Kembalikan response dengan status ambigu.
+     *
+     * Query yang Digunakan:
+     * - $this->conversationFlowService->checkAmbiguity(): Cek ambigu
+     *
+     * Output:
+     * - JsonResponse dengan status ambigu dan klarifikasi.
      */
     public function checkAmbiguity(Request $request): JsonResponse
     {
@@ -679,8 +854,23 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Get search suggestions
-     * GET /chatbot/search-suggestions
+     * =========================================================================
+     * 19. METODE GET SEARCH SUGGESTIONS - DAPATKAN SARAN PENCARIAN
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil saran pencarian berdasarkan query.
+     *
+     * Alur Proses:
+     * 1. Ambil parameter query dari request.
+     * 2. Panggil conversation flow service untuk saran.
+     * 3. Kembalikan response dengan saran pencarian.
+     *
+     * Query yang Digunakan:
+     * - $this->conversationFlowService->getSearchSuggestions(): Ambil saran
+     *
+     * Output:
+     * - JsonResponse dengan array saran pencarian.
      */
     public function getSearchSuggestions(Request $request): JsonResponse
     {
@@ -696,7 +886,18 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Error response helper
+     * =========================================================================
+     * 20. METODE ERROR RESPONSE - RESPONSE ERROR
+     * =========================================================================
+     *
+     * Fungsi:
+     * Membuat response error standar.
+     *
+     * Alur Proses:
+     * 1. Buat response JSON dengan pesan error.
+     *
+     * Output:
+     * - JsonResponse dengan pesan error.
      */
     private function errorResponse(string $message): JsonResponse
     {
@@ -708,7 +909,22 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Generate short summary from excerpt or content (2-4 sentences)
+     * =========================================================================
+     * 21. METODE GENERATE SUMMARY FROM EXCERPT - BUAT RINGKASAN
+     * =========================================================================
+     *
+     * Fungsi:
+     * Membuat ringkasan singkat dari excerpt atau konten artikel.
+     *
+     * Alur Proses:
+     * 1. Strip HTML tags dari excerpt.
+     * 2. Cek apakah excerpt informatif (minimal 2 kalimat).
+     * 3. Gunakan excerpt atau first paragraph dari konten.
+     * 4. Extract 2-4 kalimat untuk ringkasan.
+     * 5. Pastikan ringkasan berakhir dengan tanda baca.
+     *
+     * Output:
+     * - String ringkasan artikel.
      */
     private function generateSummaryFromExcerpt(string $excerpt, string $content = '', string $title = ''): string
     {
@@ -740,7 +956,21 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Strip HTML tags from text
+     * =========================================================================
+     * 22. METODE STRIP HTML TAGS - HAPUS HTML TAGS
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menghapus HTML tags dari teks.
+     *
+     * Alur Proses:
+     * 1. Hapus HTML tags dengan strip_tags.
+     * 2. Decode HTML entities.
+     * 3. Normalize whitespace.
+     * 4. Trim teks.
+     *
+     * Output:
+     * - String teks tanpa HTML tags.
      */
     private function stripHtmlTags(string $html): string
     {
@@ -754,7 +984,20 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Check if text is too similar to title (likely just a description)
+     * =========================================================================
+     * 23. METODE IS TOO SIMILAR TO TITLE - CEK KESAMAAN DENGAN JUDUL
+     * =========================================================================
+     *
+     * Fungsi:
+     * Memeriksa apakah teks terlalu mirip dengan judul.
+     *
+     * Alur Proses:
+     * 1. Cek apakah judul kosong.
+     * 2. Cek apakah teks mengandung judul atau sebaliknya.
+     * 3. Cek apakah teks sangat pendek (< 50 karakter).
+     *
+     * Output:
+     * - Boolean true jika terlalu mirip, false jika tidak.
      */
     private function isTooSimilarToTitle(string $text, string $title): bool
     {
@@ -779,7 +1022,20 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Extract first paragraph from text
+     * =========================================================================
+     * 24. METODE EXTRACT FIRST PARAGRAPH - EKSTRAK PARAGRAF PERTAMA
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil paragraf pertama dari teks.
+     *
+     * Alur Proses:
+     * 1. Split teks berdasarkan double newline.
+     * 2. Ambil paragraf pertama.
+     * 3. Trim dan kembalikan.
+     *
+     * Output:
+     * - String paragraf pertama.
      */
     private function extractFirstParagraph(string $text): string
     {
@@ -795,7 +1051,21 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Extract N to M sentences from text
+     * =========================================================================
+     * 25. METODE EXTRACT SENTENCES - EKSTRAK KALIMAT
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil N sampai M kalimat dari teks.
+     *
+     * Alur Proses:
+     * 1. Split teks menjadi kalimat berdasarkan tanda baca.
+     * 2. Hitung jumlah kalimat yang akan diambil.
+     * 3. Ambil kalimat sesuai batas min dan max.
+     * 4. Join kalimat menjadi string.
+     *
+     * Output:
+     * - String dengan N sampai M kalimat.
      */
     private function extractSentences(string $text, int $min, int $max): string
     {

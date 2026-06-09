@@ -6,12 +6,25 @@ use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * =========================================================================
+ * REQUEST VALIDATION PROFILE UPDATE REQUEST
+ * =========================================================================
+ *
+ * Request validation untuk update profil user.
+ *
+ * Tanggung Jawab:
+ * - Validasi input name dan email.
+ * - Memastikan email unik untuk user (kecuali user sendiri).
+ */
 class ProfileUpdateRequest extends FormRequest
 {
     /**
-     * Get the validation rules that apply to the request.
+     * Fungsi:
+     * Mendapatkan aturan validasi untuk update profil.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
+     * Output:
+     * - Array aturan validasi untuk name dan email.
      */
     public function rules(): array
     {

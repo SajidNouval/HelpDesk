@@ -194,29 +194,16 @@
                                 </div>
                                 <div class="flex items-center gap-2">
                                     @if ($activeTicket->status === 'assigned')
-                                        <form action="{{ route('staff.tickets.start-progress', $activeTicket) }}" method="POST">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="h-9 px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium transition">
-                                                Terima
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('staff.tickets.reject', $activeTicket) }}" method="POST">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="h-9 px-4 rounded-lg border border-red-600 text-red-600 hover:bg-red-50 text-xs font-medium transition">
-                                                Tolak
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="confirmAcceptTicket('{{ route('staff.tickets.start-progress', $activeTicket) }}')" class="h-9 px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium transition">
+                                            Terima
+                                        </button>
+                                        <button type="button" onclick="confirmRejectTicket('{{ route('staff.tickets.reject', $activeTicket) }}')" class="h-9 px-4 rounded-lg border border-red-600 text-red-600 hover:bg-red-50 text-xs font-medium transition">
+                                            Tolak
+                                        </button>
                                     @elseif ($activeTicket->status === 'progress')
-                                        <form action="{{ route('staff.tickets.complete', $activeTicket) }}" method="POST">
-                                            @csrf
-                                            @method('PATCH')
-                                            <input type="hidden" name="priority" value="{{ $activeTicket->priority }}">
-                                            <button type="submit" class="h-9 px-4 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-medium transition">
-                                                Selesai
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="confirmCompleteTicket('{{ route('staff.tickets.complete', $activeTicket) }}', '{{ $activeTicket->priority }}')" class="h-9 px-4 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-medium transition">
+                                            Selesai
+                                        </button>
                                         <a href="{{ route('staff.tickets.show', $activeTicket) }}" class="inline-flex items-center h-9 px-4 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-xs font-medium transition">
                                             Detail
                                         </a>
@@ -438,6 +425,72 @@
 
                         showPage(1);
                     });
+                </script>
+
+                <!-- Confirmation Dialogs -->
+                <x-confirm-dialog
+                    id="confirm-accept-ticket"
+                    title="Terima Tiket"
+                    message="Apakah Anda yakin ingin menerima tiket ini?"
+                    primaryText="Terima"
+                    secondaryText="Batal"
+                />
+
+                <x-confirm-dialog
+                    id="confirm-reject-ticket"
+                    title="Tolak Tiket"
+                    message="Apakah Anda yakin ingin menolak tiket ini?"
+                    primaryText="Tolak"
+                    secondaryText="Batal"
+                />
+
+                <x-confirm-dialog
+                    id="confirm-complete-ticket"
+                    title="Tandai Selesai"
+                    message="Apakah Anda yakin ingin menandai tiket ini sebagai selesai?"
+                    primaryText="Selesai"
+                    secondaryText="Batal"
+                />
+
+                <script>
+                function confirmAcceptTicket(actionUrl) {
+                    window.confirmDialog.open('confirm-accept-ticket', {
+                        onConfirm: function() {
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = actionUrl;
+                            form.innerHTML = '<input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="PATCH">';
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+                }
+
+                function confirmRejectTicket(actionUrl) {
+                    window.confirmDialog.open('confirm-reject-ticket', {
+                        onConfirm: function() {
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = actionUrl;
+                            form.innerHTML = '<input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="PATCH">';
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+                }
+
+                function confirmCompleteTicket(actionUrl, priority) {
+                    window.confirmDialog.open('confirm-complete-ticket', {
+                        onConfirm: function() {
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = actionUrl;
+                            form.innerHTML = '<input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="PATCH"><input type="hidden" name="priority" value="' + priority + '">';
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+                }
                 </script>
 
             </div>

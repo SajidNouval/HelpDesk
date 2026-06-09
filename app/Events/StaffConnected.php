@@ -10,19 +10,30 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
+/**
+ * =========================================================================
+ * EVENT STAFF CONNECTED - STAFF TERHUBUNG KE TIKET
+ * =========================================================================
+ *
+ * Event ini di-trigger ketika staff terhubung ke tiket.
+ * Event ini di-broadcast ke channel tiket untuk notifikasi real-time.
+ */
 class StaffConnected implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
-     * Create a new event instance.
+     * Fungsi:
+     * Membuat instance event baru dengan data tiket dan staff.
      */
     public function __construct(public Ticket $ticket, public User $staff) {}
 
     /**
-     * Get the channels the event should broadcast on.
+     * Fungsi:
+     * Menentukan channel untuk broadcast event.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * Output:
+     * - Array channel untuk broadcast ke tiket terkait.
      */
     public function broadcastOn(): array
     {
@@ -32,7 +43,11 @@ class StaffConnected implements ShouldBroadcast
     }
 
     /**
-     * The event's broadcast name.
+     * Fungsi:
+     * Menentukan nama event untuk broadcast.
+     *
+     * Output:
+     * - String nama event 'StaffConnected'.
      */
     public function broadcastAs(): string
     {
@@ -40,9 +55,11 @@ class StaffConnected implements ShouldBroadcast
     }
 
     /**
-     * Get the data to broadcast.
+     * Fungsi:
+     * Menentukan data yang di-broadcast bersama event.
      *
-     * @return array<string, mixed>
+     * Output:
+     * - Array data tiket dan staff untuk broadcast.
      */
     public function broadcastWith(): array
     {

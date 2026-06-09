@@ -5,15 +5,32 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Category;
 
+/**
+ * =========================================================================
+ * SEEDER CATEGORY - SEEDER KATEGORI ARTIKEL
+ * =========================================================================
+ *
+ * Seeder ini membuat kategori artikel untuk sistem helpdesk.
+ *
+ * Kategori yang Dibuat:
+ * - Wifi & Jaringan: Masalah jaringan wifi, router, koneksi internet
+ * - Komputer: Masalah PC, laptop, performa komputer, hardware, OS
+ * - Printer: Masalah printer, error printer, troubleshooting percetakan
+ * - Email: Masalah email, Gmail, Outlook, konfigurasi email
+ * - Keamanan Sistem: Masalah ransomware, malware, virus, VPN, firewall
+ * - Aplikasi: Masalah software internal, aplikasi perusahaan
+ *
+ * Catatan:
+ * - Struktur kategori direfactor untuk TF-IDF Retrieval
+ * - Clear domain separation untuk mencegah retrieval collision
+ * - Tidak ada overlapping kategori
+ * - Domain keamanan diisolasi untuk mencegah interferensi
+ */
 class CategorySeeder extends Seeder
 {
     /**
-     * Run the database seeds.
-     * 
-     * Category Structure (Refactored for TF-IDF Retrieval):
-     * - Clear domain separation to prevent retrieval collision
-     * - No overlapping categories (removed "Internet" and "Hardware")
-     * - Security domain isolated to prevent interference with other domains
+     * Fungsi:
+     * Menjalankan seeder untuk membuat kategori artikel.
      */
     public function run(): void
     {

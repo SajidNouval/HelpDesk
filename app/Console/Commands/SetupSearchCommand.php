@@ -7,24 +7,39 @@ use Illuminate\Console\Command;
 use MeiliSearch\Client as MeiliSearchClient;
 use Exception;
 
+/**
+ * =========================================================================
+ * COMMAND SETUP SEARCH - SETUP MEILISEARCH
+ * =========================================================================
+ *
+ * Command ini digunakan untuk setup Meilisearch index untuk artikel.
+ *
+ * Fitur Utama:
+ * - Setup Meilisearch index untuk artikel.
+ * - Konfigurasi searchable, filterable, dan sortable attributes.
+ * - Setup ranking rules dan synonyms.
+ * - Import semua artikel ke Meilisearch.
+ */
 class SetupSearchCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'chatbot:setup-search {--fresh : Hapus index lama dan buat ulang}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Setup Meilisearch index untuk artikel dengan settings optimal';
 
     /**
-     * Execute the console command.
+     * Fungsi:
+     * Menjalankan command setup search.
+     *
+     * Alur Proses:
+     * 1. Cek koneksi Meilisearch.
+     * 2. Hapus index lama jika opsi --fresh.
+     * 3. Buat index articles dengan primary key id.
+     * 4. Set searchable, filterable, dan sortable attributes.
+     * 5. Set ranking rules dan synonyms.
+     * 6. Set typo tolerance.
+     * 7. Import semua artikel.
+     * 8. Tampilkan statistik.
+     * 9. Return exit code SUCCESS atau FAILURE.
      */
     public function handle(): int
     {

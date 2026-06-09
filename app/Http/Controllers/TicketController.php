@@ -19,36 +19,47 @@ use Illuminate\Support\Str;
 
 /**
  * =========================================================================
- * CONTROLLER TIKET
+ * TICKET CONTROLLER - PENGELOLAAN TIKET
  * =========================================================================
- * 
+ *
  * Controller ini menangani pembuatan, validasi, dan pelacakan tiket.
- * 
- * Tanggung jawab:
- * - Menyediakan form tiket untuk pengguna tamu.
- * - Menyimpan tiket dan laporan ke database.
- * - Mengelola proses OTP untuk verifikasi tiket.
- * - Menyediakan fitur pelacakan tiket dan pembaruan status.
- * 
- * Modul terkait:
- * - TicketOtp
- * - TicketLog
- * - StaffProfile
+ *
+ * Fitur Utama:
+ * - Menyediakan form tiket untuk pengguna tamu
+ * - Menyimpan tiket dan laporan ke database
+ * - Mengelola proses OTP untuk verifikasi tiket
+ * - Menyediakan fitur pelacakan tiket dan pembaruan status
+ * - Auto-assign tiket ke staff yang tersedia
+ *
+ * Model Terkait:
+ * - Ticket: Model tiket
+ * - TicketOtp: Model OTP verifikasi
+ * - TicketLog: Log aktivitas tiket
+ * - StaffProfile: Profil staff
  */
 class TicketController extends Controller
 {
     /**
-     * 📄 Form input tiket (guest) - Show help page dengan form
-     */
-    /**
      * =========================================================================
-     * 1. Metode Menampilkan Form Tiket
+     * 1. METODE CREATE - TAMPILKAN FORM TIKET
      * =========================================================================
-     * 
-     * Metode ini menampilkan halaman bantuan dengan form untuk membuat tiket.
-     * 
-     * Return:
-     * View
+     *
+     * Fungsi:
+     * Menampilkan halaman bantuan dengan form untuk membuat tiket.
+     *
+     * Alur Proses:
+     * 1. Ambil semua kategori.
+     * 2. Cek status live service.
+     * 3. Generate captcha sederhana.
+     * 4. Simpan captcha ke session.
+     * 5. Kembalikan view form tiket.
+     *
+     * Query yang Digunakan:
+     * - Category::all(): Ambil semua kategori
+     * - Setting::bool(): Cek status live service
+     *
+     * Output:
+     * - View 'guest.help' dengan data kategori dan captcha.
      */
     public function create()
     {
@@ -62,27 +73,29 @@ class TicketController extends Controller
     }
 
     /**
-     * 💾 Store tiket + auto assign + log
-     */
-    /**
      * =========================================================================
-     * 2. Metode Menyimpan Tiket Baru
+     * 2. METODE STORE - SIMPAN TIKET BARU
      * =========================================================================
-     * 
-     * Metode ini membuat tiket baru berdasarkan laporan pengguna.
-     * 
-     * Alur proses:
-     * 1. Memvalidasi input form.
-     * 2. Memeriksa batas permintaan berdasarkan IP dan email.
-     * 3. Menyimpan tiket dan log dalam transaksi.
-     * 4. Menentukan penugasan staff secara otomatis.
-     * 5. Mengembalikan respon JSON atau redirect.
-     * 
-     * Parameter:
-     * Request $request
-     * 
-     * Return:
-     * RedirectResponse|JsonResponse
+     *
+     * Fungsi:
+     * Membuat tiket baru berdasarkan laporan pengguna.
+     *
+     * Alur Proses:
+     * 1. Validasi input form.
+     * 2. Periksa batas permintaan berdasarkan IP dan email.
+     * 3. Cek captcha untuk non-JSON request.
+     * 4. Simpan tiket dan log dalam transaksi.
+     * 5. Auto-assign tiket ke staff yang tersedia.
+     * 6. Simpan ticket ID ke session.
+     * 7. Kembalikan response JSON atau redirect.
+     *
+     * Query yang Digunakan:
+     * - Ticket::create(): Insert tiket baru
+     * - TicketLog::create(): Insert log aktivitas
+     * - $this->assignTicketToAvailableStaff(): Auto-assign staff
+     *
+     * Output:
+     * - RedirectResponse atau JsonResponse dengan data tiket.
      */
     public function store(Request $request)
     {
@@ -190,27 +203,28 @@ class TicketController extends Controller
     }
 
     /**
-     * 📝 Store report dari artikel - dengan status waiting
-     * Auto-assign ke staff dengan waiting tickets paling sedikit
-     */
-    /**
      * =========================================================================
-     * 3. Metode Menyimpan Laporan Artikel
+     * 3. METODE STORE REPORT - SIMPAN LAPORAN ARTIKEL
      * =========================================================================
-     * 
-     * Metode ini membuat tiket laporan dari halaman artikel.
-     * 
-     * Alur proses:
-     * 1. Memvalidasi laporan.
-     * 2. Memeriksa batas permintaan IP dan email.
-     * 3. Menyimpan tiket sebagai status waiting.
-     * 4. Menugaskan staff sesuai beban kerja.
-     * 
-     * Parameter:
-     * Request $request
-     * 
-     * Return:
-     * RedirectResponse|JsonResponse
+     *
+     * Fungsi:
+     * Membuat tiket laporan dari halaman artikel dengan status waiting.
+     *
+     * Alur Proses:
+     * 1. Validasi input laporan.
+     * 2. Periksa batas permintaan IP dan email.
+     * 3. Simpan tiket sebagai status waiting.
+     * 4. Auto-assign ke staff dengan waiting tickets paling sedikit.
+     * 5. Simpan ticket ID ke session.
+     * 6. Kembalikan response JSON atau redirect.
+     *
+     * Query yang Digunakan:
+     * - Ticket::create(): Insert tiket laporan
+     * - TicketLog::create(): Insert log aktivitas
+     * - $this->assignReportToStaff(): Auto-assign staff
+     *
+     * Output:
+     * - RedirectResponse atau JsonResponse dengan data tiket.
      */
     public function storeReport(Request $request)
     {
@@ -532,7 +546,29 @@ class TicketController extends Controller
     }
 
     /**
-     * 🎯 Assign tiket ke staff dengan load balancing yang lebih deterministik
+     * =========================================================================
+     * 7. METODE ASSIGN TICKET TO AVAILABLE STAFF - ASSIGN TIKET KE STAFF
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menugaskan tiket ke staff yang tersedia dengan load balancing.
+     *
+     * Alur Proses:
+     * 1. Query staff profiles yang tersedia di kategori tiket.
+     * 2. Hitung active tickets dan waiting reports per staff.
+     * 3. Sort staff berdasarkan beban kerja terendah.
+     * 4. Assign tiket ke staff terbaik.
+     * 5. Update status staff menjadi busy.
+     * 6. Catat log penugasan.
+     *
+     * Query yang Digunakan:
+     * - StaffProfile::where()->with()->lockForUpdate(): Cari staff tersedia
+     * - $profile->user->tickets()->count(): Hitung tiket staff
+     * - $ticket->update(): Update tiket
+     * - $bestStaff->update(): Update status staff
+     *
+     * Output:
+     * - StaffProfile atau null jika tidak ada staff tersedia.
      */
     private function assignTicketToAvailableStaff(Ticket $ticket): ?StaffProfile
     {
@@ -595,7 +631,28 @@ class TicketController extends Controller
         });
     }
 
-    /**     * 🎯 Assign report ke staff sebagai tiket waiting tanpa live chat
+    /**
+     * =========================================================================
+     * 8. METODE ASSIGN REPORT TO STAFF - ASSIGN LAPORAN KE STAFF
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menugaskan laporan ke staff sebagai tiket waiting tanpa live chat.
+     *
+     * Alur Proses:
+     * 1. Query staff profiles di kategori tiket.
+     * 2. Hitung waiting tickets per staff.
+     * 3. Sort staff berdasarkan beban waiting terendah.
+     * 4. Assign tiket ke staff terbaik.
+     * 5. Catat log penugasan.
+     *
+     * Query yang Digunakan:
+     * - StaffProfile::where()->with()->get(): Cari staff
+     * - $profile->user->tickets()->count(): Hitung waiting tickets
+     * - $ticket->update(): Update tiket
+     *
+     * Output:
+     * - StaffProfile atau null jika tidak ada staff tersedia.
      */
     private function assignReportToStaff(Ticket $ticket): ?StaffProfile
     {
@@ -646,17 +703,23 @@ class TicketController extends Controller
     }
 
     /**
-     * 📋 Admin lihat semua tiket
-     */
-    /**
      * =========================================================================
-     * 7. Metode Daftar Tiket Admin
+     * 9. METODE INDEX - DAFTAR TIKET ADMIN
      * =========================================================================
-     * 
-     * Metode ini menampilkan daftar tiket untuk admin/staff.
-     * 
-     * Return:
-     * View
+     *
+     * Fungsi:
+     * Menampilkan daftar tiket untuk admin/staff.
+     *
+     * Alur Proses:
+     * 1. Query semua tiket dengan relasi kategori dan staff.
+     * 2. Pagination 20 item per halaman.
+     * 3. Kembalikan view daftar tiket.
+     *
+     * Query yang Digunakan:
+     * - Ticket::with()->latest()->paginate(): Ambil tiket dengan relasi
+     *
+     * Output:
+     * - View 'tickets.index' dengan data tiket.
      */
     public function index()
     {
@@ -666,20 +729,22 @@ class TicketController extends Controller
     }
 
     /**
-     * 🔍 Detail tiket + chat
-     */
-    /**
      * =========================================================================
-     * 8. Metode Detail Tiket
+     * 10. METODE SHOW - DETAIL TIKET
      * =========================================================================
-     * 
-     * Metode ini menampilkan detail tiket beserta pesan dan log terkait.
-     * 
-     * Parameter:
-     * mixed $id
-     * 
-     * Return:
-     * View
+     *
+     * Fungsi:
+     * Menampilkan detail tiket beserta pesan dan log terkait.
+     *
+     * Alur Proses:
+     * 1. Query tiket dengan relasi kategori, staff, pesan, dan log.
+     * 2. Kembalikan view detail tiket.
+     *
+     * Query yang Digunakan:
+     * - Ticket::with()->findOrFail(): Ambil tiket dengan relasi
+     *
+     * Output:
+     * - View 'tickets.show' dengan data tiket.
      */
     public function show($id)
     {
@@ -689,21 +754,27 @@ class TicketController extends Controller
     }
 
     /**
-     * 🔄 Update status tiket oleh staff
-     */
-    /**
      * =========================================================================
-     * 9. Metode Memperbarui Status Tiket
+     * 11. METODE UPDATE STATUS - PERBARUI STATUS TIKET
      * =========================================================================
-     * 
-     * Metode ini memungkinkan staff mengubah status tiket.
-     * 
-     * Parameter:
-     * Request $request
-     * mixed $id
-     * 
-     * Return:
-     * RedirectResponse
+     *
+     * Fungsi:
+     * Memperbarui status tiket oleh staff.
+     *
+     * Alur Proses:
+     * 1. Cek apakah staff adalah pemilik tiket.
+     * 2. Validasi input status.
+     * 3. Update status tiket.
+     * 4. Jika status closed, update closed_at dan set staff tidak busy.
+     * 5. Catat log perubahan status.
+     *
+     * Query yang Digunakan:
+     * - $ticket->update(): Update status tiket
+     * - StaffProfile::where()->update(): Update status staff
+     * - TicketLog::create(): Buat log aktivitas
+     *
+     * Output:
+     * - Redirect back dengan pesan sukses.
      */
     public function updateStatus(Request $request, $id)
     {

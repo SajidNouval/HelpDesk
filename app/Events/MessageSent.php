@@ -9,12 +9,31 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
+/**
+ * =========================================================================
+ * EVENT MESSAGE SENT - PESAN TIKET TERKIRIM
+ * =========================================================================
+ *
+ * Event ini di-trigger ketika pesan baru dikirim dalam tiket.
+ * Event ini di-broadcast ke channel tiket terkait untuk real-time update.
+ */
 class MessageSent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    /**
+     * Fungsi:
+     * Membuat instance event baru dengan data pesan.
+     */
     public function __construct(public Message $message) {}
 
+    /**
+     * Fungsi:
+     * Menentukan channel untuk broadcast event.
+     *
+     * Output:
+     * - Array channel untuk broadcast ke tiket terkait.
+     */
     public function broadcastOn(): array
     {
         return [
@@ -23,13 +42,24 @@ class MessageSent implements ShouldBroadcast
     }
 
     /**
-     * The event's broadcast name.
+     * Fungsi:
+     * Menentukan nama event untuk broadcast.
+     *
+     * Output:
+     * - String nama event 'MessageSent'.
      */
     public function broadcastAs(): string
     {
         return 'MessageSent';
     }
 
+    /**
+     * Fungsi:
+     * Menentukan data yang di-broadcast bersama event.
+     *
+     * Output:
+     * - Array data pesan untuk broadcast.
+     */
     public function broadcastWith(): array
     {
         return [

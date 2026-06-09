@@ -291,17 +291,8 @@
                                     </div>
                                     <h3 class="text-base font-semibold text-gray-900">Tindakan Cepat</h3>
                                 </div>
-                                <form action="{{ route('staff.tickets.suspend', $ticket) }}" method="POST" class="space-y-3">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="w-full h-10 px-4 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition">Tangguhkan</button>
-                                </form>
-                                <form action="{{ route('staff.tickets.complete', $ticket) }}" method="POST" class="space-y-3">
-                                    @csrf
-                                    @method('PATCH')
-                                    <input type="hidden" name="priority" value="{{ $ticket->priority }}">
-                                    <button type="submit" class="w-full h-10 px-5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition">Tandai Selesai</button>
-                                </form>
+                                <button type="button" onclick="confirmSuspendTicket('{{ route('staff.tickets.suspend', $ticket) }}')" class="w-full h-10 px-4 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition mb-3">Tangguhkan</button>
+                                <button type="button" onclick="confirmCompleteTicket('{{ route('staff.tickets.complete', $ticket) }}', '{{ $ticket->priority }}')" class="w-full h-10 px-5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition mb-3">Tandai Selesai</button>
                                 <form action="{{ route('staff.tickets.update-priority', $ticket) }}" method="POST" class="space-y-3">
                                     @csrf
                                     @method('PATCH')
@@ -349,17 +340,8 @@
                                     <h3 class="text-base font-semibold text-gray-900">Tindakan Cepat</h3>
                                 </div>
                                 <div class="space-y-3">
-                                    <form action="{{ route('staff.tickets.complete', $ticket) }}" method="POST">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="priority" value="{{ $ticket->priority }}">
-                                        <button type="submit" class="w-full h-10 px-5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition">Tandai Selesai</button>
-                                    </form>
-                                    <form action="{{ route('staff.tickets.reject', $ticket) }}" method="POST">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="w-full h-10 px-4 rounded-lg border border-red-600 text-red-600 hover:bg-red-50 text-sm font-medium transition">Tolak</button>
-                                    </form>
+                                    <button type="button" onclick="confirmCompleteTicket('{{ route('staff.tickets.complete', $ticket) }}', '{{ $ticket->priority }}')" class="w-full h-10 px-5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition">Tandai Selesai</button>
+                                    <button type="button" onclick="confirmRejectTicket('{{ route('staff.tickets.reject', $ticket) }}')" class="w-full h-10 px-4 rounded-lg border border-red-600 text-red-600 hover:bg-red-50 text-sm font-medium transition">Tolak</button>
                                     <form action="{{ route('staff.tickets.update-priority', $ticket) }}" method="POST" class="space-y-3">
                                         @csrf
                                         @method('PATCH')
@@ -386,4 +368,70 @@
     </div>
 
     <div id="ticket-data" data-ticket-id="{{ $ticket->id }}" class="hidden"></div>
+
+    <!-- Confirmation Dialogs -->
+    <x-confirm-dialog
+        id="confirm-suspend-ticket"
+        title="Tangguhkan Tiket"
+        message="Apakah Anda yakin ingin menangguhkan tiket ini?"
+        primaryText="Tangguhkan"
+        secondaryText="Batal"
+    />
+
+    <x-confirm-dialog
+        id="confirm-complete-ticket"
+        title="Tandai Selesai"
+        message="Apakah Anda yakin ingin menandai tiket ini sebagai selesai?"
+        primaryText="Selesai"
+        secondaryText="Batal"
+    />
+
+    <x-confirm-dialog
+        id="confirm-reject-ticket"
+        title="Tolak Tiket"
+        message="Apakah Anda yakin ingin menolak tiket ini?"
+        primaryText="Tolak"
+        secondaryText="Batal"
+    />
+
+    <script>
+    function confirmSuspendTicket(actionUrl) {
+        window.confirmDialog.open('confirm-suspend-ticket', {
+            onConfirm: function() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = actionUrl;
+                form.innerHTML = '<input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="PATCH">';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
+    function confirmCompleteTicket(actionUrl, priority) {
+        window.confirmDialog.open('confirm-complete-ticket', {
+            onConfirm: function() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = actionUrl;
+                form.innerHTML = '<input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="PATCH"><input type="hidden" name="priority" value="' + priority + '">';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
+    function confirmRejectTicket(actionUrl) {
+        window.confirmDialog.open('confirm-reject-ticket', {
+            onConfirm: function() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = actionUrl;
+                form.innerHTML = '<input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="PATCH">';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+    </script>
 </x-app-layout>

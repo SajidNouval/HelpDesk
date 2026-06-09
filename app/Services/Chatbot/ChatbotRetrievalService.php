@@ -121,57 +121,27 @@ class ChatbotRetrievalService
     }
 
     /**
-     * 1. Fungsi ambil()
-     *
-     * Fungsi ini merupakan entry point utama proses pencarian artikel chatbot.
-     * Pipeline yang dijalankan menggabungkan Typesense (85%) dan TF-IDF (15%).
-     *
-     * Tahapan pipeline:
-     * 1. Normalisasi query (koreksi typo dasar).
-     * 2. Deteksi domain untuk penyaringan kategori opsional.
-     * 3. [FASE A] Retrieval via Typesense sebagai sumber kandidat utama.
-     * 4. [FASE B] Pengambilan artikel untuk keperluan TF-IDF reranking.
-     * 5. [FASE C] Perhitungan TF-IDF ringan dan boosting judul.
-     * 6. [FASE D] Penggabungan skor Typesense + TF-IDF (85% + 15%).
-     * 7. [FASE E] Pembangunan hasil akhir dengan filter ambang.
-     *
-     * Parameter:
-     * - string $query : Query mentah dari pengguna
-     * - int    $batas : Jumlah maksimal artikel yang dikembalikan (default: 5)
-     *
-     * Kembalikan:
-     * - array : [
-     *     'hasil'            => array,  // Daftar artikel terurut dengan skor
-     *     'query'              => string, // Query asli
-     *     'normalized_query'   => string, // Query setelah normalisasi
-     *     'total'              => int,    // Jumlah hasil
-     *     'threshold_met'      => bool,   // Apakah ada hasil di atas ambang
-     *     'max_similarity'     => float,  // Skor tertinggi dari hasil
-     *     'domain_detected'    => bool,   // Apakah domain berhasil terdeteksi
-     *     'detected_domain'    => string|null, // Domain yang terdeteksi
-     *     'typesense_used'     => bool,   // Apakah Typesense berhasil digunakan
-     *     'typesense_candidates' => int,  // Jumlah kandidat dari Typesense
-     *     'debug'              => array|null  // Info debug (hanya di mode debug)
-     *   ]
-     */
-    /**
      * =========================================================================
-     * 1. METODE Retrieve
+     * 1. METODE RETRIEVE
      * =========================================================================
      *
      * Fungsi:
-     * Melakukan operasi retrieve di dalam service.
+     * Melakukan pencarian artikel chatbot dengan menggabungkan Typesense (85%) dan TF-IDF (15%).
      *
      * Alur Proses:
-     * 1. Memproses input sesuai tujuan method.
-     * 1. Mengambil atau mengubah data internal.
-     * 1. Mengembalikan hasil sesuai tipe return.
+     * 1. Menormalisasi query dan mendeteksi domain.
+     * 2. Melakukan retrieval via Typesense sebagai sumber kandidat utama.
+     * 3. Mengambil artikel untuk keperluan TF-IDF reranking.
+     * 4. Menghitung TF-IDF ringan dan boosting judul.
+     * 5. Menggabungkan skor Typesense + TF-IDF.
+     * 6. Membangun hasil akhir dengan filter ambang.
      *
      * Query yang Digunakan:
-     * - Tidak ada query SQL langsung
+     * - Article::whereIn('id', $candidateIds)->where('is_published', true)->where('publish_status', 'approved')->with('category')->get(): Ambil artikel berdasarkan ID kandidat
+     * - Article::where('is_published', true)->where('publish_status', 'approved')->with('category')->get(): Ambil artikel fallback
      *
      * Output:
-     * - TOP_K_RESULTS
+     * - array dengan hasil artikel terurut, query, normalized_query, total, threshold_met, max_similarity, domain_detected, detected_domain, typesense_used, typesense_candidates, debug
      */
     public function retrieve(string $query, int $limit = self::TOP_K_RESULTS): array
     {
@@ -288,35 +258,23 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: normalizeQuery() [private]
-     *
-     * Melakukan normalisasi dasar pada query pengguna (koreksi typo).
-     * Normalisasi yang lebih dalam dilakukan oleh PreprocessingService.
-     *
-     * Parameter:
-     * - string $query : Query mentah dari pengguna
-     *
-     * Kembalikan:
-     * - string : Query yang sudah dinormalisasi
-     */
-    /**
      * =========================================================================
-     * 1. METODE Normalize Query
+     * 1. METODE NORMALIZE QUERY
      * =========================================================================
      *
      * Fungsi:
-     * Menormalisasi normalize query agar konsisten di seluruh pipeline.
+     * Menormalisasi query pengguna untuk koreksi typo dasar.
      *
      * Alur Proses:
-     * 1. Membersihkan teks/kata dari variasi atau typo.
-     * 1. Mengubah format ke bentuk standar.
-     * 1. Mengembalikan string atau token yang dinormalisasi.
+     * 1. Menerima query mentah dari pengguna.
+     * 2. Memanggil PreprocessingService untuk koreksi typo.
+     * 3. Mengembalikan query yang sudah dinormalisasi.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - string
+     * - string query yang sudah dinormalisasi
      */
     private function normalizeQuery(string $query): string
     {
@@ -324,42 +282,25 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: getArticlesForReranking() [private]
-     *
-     * Mengambil artikel untuk keperluan TF-IDF reranking.
-     * Prioritas utama: gunakan kandidat dari Typesense.
-     * Fallback: ambil dari database dengan filter domain jika tersedia.
-     *
-     * Menggunakan kandidat Typesense lebih disukai karena:
-     * - Artikel sudah dipilih berdasarkan relevansi Typesense
-     * - Reranking TF-IDF hanya dilakukan pada subset yang relevan
-     * - Mengurangi beban komputasi TF-IDF
-     *
-     * Parameter:
-     * - array $typesenseCandidates : Kandidat dari Typesense [['id', ...], ...]
-     * - array $domainInfo          : Hasil deteksi domain dari DomainDetectionService
-     *
-     * Kembalikan:
-     * - Koleksi : Koleksi objek Article untuk diproses TF-IDF
-     */
-    /**
      * =========================================================================
-     * 1. METODE Get Articles For Reranking
+     * 1. METODE GET ARTICLES FOR RERANKING
      * =========================================================================
      *
      * Fungsi:
-     * Mengambil data get articles for reranking untuk keperluan logika service.
+     * Mengambil artikel untuk keperluan TF-IDF reranking dengan prioritas kandidat Typesense.
      *
      * Alur Proses:
-     * 1. Menentukan sumber data untuk get articles for reranking.
-     * 1. Mengambil atau memformat data.
-     * 1. Mengembalikan hasil dalam struktur yang sesuai.
+     * 1. Menggunakan kandidat dari Typesense jika tersedia.
+     * 2. Mengambil artikel dari database berdasarkan ID kandidat.
+     * 3. Fallback ke database dengan filter domain jika Typesense tidak tersedia.
+     * 4. Mengembalikan koleksi artikel untuk diproses TF-IDF.
      *
      * Query yang Digunakan:
-     * - Tidak ada query SQL langsung
+     * - Article::whereIn('id', $candidateIds)->where('is_published', true)->where('publish_status', 'approved')->with('category')->get(): Ambil artikel berdasarkan ID kandidat
+     * - Article::where('is_published', true)->where('publish_status', 'approved')->with('category')->get(): Ambil artikel fallback
      *
      * Output:
-     * - Collection
+     * - Collection objek Article untuk diproses TF-IDF
      */
     private function getArticlesForReranking(array $typesenseCandidates, array $domainInfo): Collection
     {
@@ -389,38 +330,24 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: buildTypesenseOnlyResults() [private]
-     *
-     * Membangun hasil akhir menggunakan ranking Typesense semata ketika
-     * TF-IDF tidak menghasilkan vektor query (query tidak cocok dengan IDF).
-     * Skor dinormalisasi relatif terhadap skor kandidat tertinggi.
-     *
-     * Parameter:
-     * - array      $typesenseCandidates : Kandidat dari Typesense
-     * - Koleksi $articles            : Koleksi artikel dari database
-     * - int        $batas               : Jumlah maksimal hasil
-     *
-     * Kembalikan:
-     * - array : Daftar artikel terformat dengan skor Typesense
-     */
-    /**
      * =========================================================================
-     * 1. METODE Build Typesense Only Results
+     * 1. METODE BUILD TYPESENSE ONLY RESULTS
      * =========================================================================
      *
      * Fungsi:
-     * Membangun objek/struktur build typesense only results untuk pipeline retrieval.
+     * Membangun hasil akhir menggunakan ranking Typesense semata ketika TF-IDF tidak menghasilkan vektor query.
      *
      * Alur Proses:
-     * 1. Mempersiapkan data awal untuk build typesense only results.
-     * 1. Menggabungkan atribut penting.
-     * 1. Mengembalikan objek atau array yang siap dipakai.
+     * 1. Menerima kandidat dari Typesense dan koleksi artikel.
+     * 2. Menormalisasi skor Typesense relatif terhadap skor tertinggi.
+     * 3. Memformat artikel dengan skor yang dinormalisasi.
+     * 4. Mengembalikan hasil terbatas sesuai limit.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - array
+     * - array daftar artikel terformat dengan skor Typesense
      */
     private function buildTypesenseOnlyResults(array $typesenseCandidates, Collection $articles, int $limit): array
     {
@@ -460,36 +387,24 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: normalizeTypesenseScore() [private]
-     *
-     * Menormalisasi skor Typesense ke rentang 0-1 relatif terhadap
-     * skor kandidat tertinggi dalam batch yang sama.
-     *
-     * Parameter:
-     * - float $skor      : Skor Typesense mentah dari satu kandidat
-     * - array $candidates : Seluruh kandidat untuk menentukan skor maksimal
-     *
-     * Kembalikan:
-     * - float : Skor ternormalisasi dalam rentang [0, 1]
-     */
-    /**
      * =========================================================================
-     * 1. METODE Normalize Typesense Score
+     * 1. METODE NORMALIZE TYPESENSE SCORE
      * =========================================================================
      *
      * Fungsi:
-     * Menormalisasi normalize typesense score agar konsisten di seluruh pipeline.
+     * Menormalisasi skor Typesense ke rentang 0-1 relatif terhadap skor tertinggi.
      *
      * Alur Proses:
-     * 1. Membersihkan teks/kata dari variasi atau typo.
-     * 1. Mengubah format ke bentuk standar.
-     * 1. Mengembalikan string atau token yang dinormalisasi.
+     * 1. Menerima skor mentah dan semua kandidat.
+     * 2. Menentukan skor maksimal dari semua kandidat.
+     * 3. Membagi skor dengan skor maksimal.
+     * 4. Mengembalikan skor ternormalisasi.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - float
+     * - float skor ternormalisasi dalam rentang [0, 1]
      */
     private function normalizeTypesenseScore(float $score, array $candidates): float
     {
@@ -502,37 +417,23 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: calculateTfidfSimilarities() [private]
-     *
-     * Menghitung nilai Cosine Similarity antara vektor query TF-IDF
-     * dan vektor setiap dokumen kandidat. Hasilnya digunakan sebagai
-     * sinyal reranking ringan (15%).
-     *
-     * Parameter:
-     * - array $queryVector     : Vektor TF-IDF dari query pengguna
-     * - array $documentVectors : Vektor TF-IDF setiap dokumen [docId => vector]
-     *
-     * Kembalikan:
-     * - array : [docId => float similarity]
-     */
-    /**
      * =========================================================================
-     * 1. METODE Calculate Tfidf Similarities
+     * 1. METODE CALCULATE TFIDF SIMILARITIES
      * =========================================================================
      *
      * Fungsi:
-     * Menghitung nilai calculate tfidf similarities berdasarkan input yang diberikan.
+     * Menghitung Cosine Similarity antara vektor query TF-IDF dan vektor dokumen kandidat.
      *
      * Alur Proses:
-     * 1. Memproses input untuk menghitung calculate tfidf similarities.
-     * 1. Menerapkan rumus atau bobot relevansi.
-     * 1. Mengembalikan nilai numerik atau vektor.
+     * 1. Menerima vektor query dan vektor dokumen.
+     * 2. Menghitung similarity untuk setiap dokumen.
+     * 3. Mengembalikan array similarity per dokumen.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - array
+     * - array [docId => float similarity]
      */
     private function calculateTfidfSimilarities(array $queryVector, array $documentVectors): array
     {
@@ -546,41 +447,24 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: applyLightBoosting() [private]
-     *
-     * Menerapkan bonus kecil pada skor TF-IDF untuk dokumen yang judulnya
-     * cocok dengan query. Pengaruhnya dibatasi agar tidak mengalahkan sinyal Typesense.
-     *
-     * Dua jenis boost yang diterapkan:
-     * - Judul overlap boost : Proporsi term query yang muncul di judul artikel
-     * - Exact frasa boost  : Bonus jika judul artikel mengandung frasa exact dari query
-     *
-     * Parameter:
-     * - array $similarities : [docId => similarity] sebelum boosting
-     * - array $dokumen    : Data dokumen termasuk judul dan token judul
-     * - array $queryVector  : Vektor TF-IDF query untuk mengambil term query
-     *
-     * Kembalikan:
-     * - array : [docId => similarity] setelah boosting diterapkan
-     */
-    /**
      * =========================================================================
-     * 1. METODE Apply Light Boosting
+     * 1. METODE APPLY LIGHT BOOSTING
      * =========================================================================
      *
      * Fungsi:
-     * Menerapkan transformasi atau boost pada data apply light boosting.
+     * Menerapkan bonus kecil pada skor TF-IDF untuk dokumen dengan judul yang cocok query.
      *
      * Alur Proses:
-     * 1. Menerima input dasar dan aturan boosting.
-     * 1. Menghitung nilai tambahan berdasarkan kondisi.
-     * 1. Mengembalikan data dengan penyesuaian yang diterapkan.
+     * 1. Menerima similarity, dokumen, dan vektor query.
+     * 2. Menghitung judul overlap boost berdasarkan proporsi kecocokan.
+     * 3. Menghitung exact frasa boost jika judul mengandung frasa exact.
+     * 4. Mengembalikan similarity setelah boosting diterapkan.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - array
+     * - array [docId => similarity] setelah boosting diterapkan
      */
     private function applyLightBoosting(array $similarities, array $documents, array $queryVector): array
     {
@@ -621,40 +505,24 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: combineScores() [private]
-     *
-     * Menggabungkan skor Typesense dan TF-IDF dengan bobot yang telah ditentukan.
-     * Sebelum digabungkan, kedua skor dinormalisasi ke rentang 0-1 agar
-     * perbandingan bersifat adil.
-     *
-     * Formula penggabungan:
-     * skor_final = (skor_typesense_normalized × 85%) + (skor_tfidf_normalized × 15%)
-     *
-     * Parameter:
-     * - array $typesenseCandidates : Kandidat dari Typesense dengan skor mentah
-     * - array $tfidfSimilarities   : Skor TF-IDF [docId => similarity]
-     *
-     * Kembalikan:
-     * - array : [docId => combined_score] sudah diurutkan descending
-     */
-    /**
      * =========================================================================
-     * 1. METODE Combine Scores
+     * 1. METODE COMBINE SCORES
      * =========================================================================
      *
      * Fungsi:
-     * Melakukan operasi combine scores di dalam service.
+     * Menggabungkan skor Typesense dan TF-IDF dengan bobot 85% dan 15%.
      *
      * Alur Proses:
-     * 1. Memproses input sesuai tujuan method.
-     * 1. Mengambil atau mengubah data internal.
-     * 1. Mengembalikan hasil sesuai tipe return.
+     * 1. Menerima kandidat Typesense dan similarity TF-IDF.
+     * 2. Menormalisasi kedua skor ke rentang 0-1.
+     * 3. Menggabungkan dengan formula: (Typesense × 85%) + (TF-IDF × 15%).
+     * 4. Mengurutkan hasil descending dan mengembalikan.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - array
+     * - array [docId => combined_score] sudah diurutkan descending
      */
     private function combineScores(array $typesenseCandidates, array $tfidfSimilarities): array
     {
@@ -699,38 +567,24 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: buildFinalResults() [private]
-     *
-     * Membangun array hasil akhir dari skor gabungan yang sudah diurutkan.
-     * Artikel dengan skor di bawah ambang dilewati untuk menjaga
-     * kualitas hasil yang ditampilkan ke pengguna.
-     *
-     * Parameter:
-     * - array      $combinedScores : Skor gabungan [docId => skor] sudah terurut
-     * - Koleksi $articles       : Koleksi artikel dari database
-     * - int        $batas          : Jumlah maksimal hasil
-     *
-     * Kembalikan:
-     * - array : Daftar artikel terformat dengan skor dan confidence level
-     */
-    /**
      * =========================================================================
-     * 1. METODE Build Final Results
+     * 1. METODE BUILD FINAL RESULTS
      * =========================================================================
      *
      * Fungsi:
-     * Membangun objek/struktur build final results untuk pipeline retrieval.
+     * Membangun array hasil akhir dari skor gabungan yang sudah diurutkan.
      *
      * Alur Proses:
-     * 1. Mempersiapkan data awal untuk build final results.
-     * 1. Menggabungkan atribut penting.
-     * 1. Mengembalikan objek atau array yang siap dipakai.
+     * 1. Menerima skor gabungan terurut dan koleksi artikel.
+     * 2. Melewati artikel dengan skor di bawah threshold.
+     * 3. Memformat artikel dengan skor dan confidence level.
+     * 4. Mengembalikan hasil terbatas sesuai limit.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - array
+     * - array daftar artikel terformat dengan skor dan confidence level
      */
     private function buildFinalResults(array $combinedScores, Collection $articles, int $limit): array
     {
@@ -771,40 +625,23 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: getConfidenceLevel() [private]
-     *
-     * Mengklasifikasikan skor similarity ke dalam tiga level kepercayaan
-     * yang digunakan untuk menentukan tampilan antarmuka chatbot.
-     *
-     * Level confidence menentukan:
-     * - 'high'   : Sistem sangat yakin, tampilkan artikel langsung
-     * - 'medium' : Cukup relevan, tampilkan dengan indikasi "mungkin membantu"
-     * - 'low'    : Kurang relevan, tampilkan tombol "Hubungi Staff"
-     *
-     * Parameter:
-     * - float $similarity : Skor similarity gabungan
-     *
-     * Kembalikan:
-     * - string : 'high', 'medium', atau 'low'
-     */
-    /**
      * =========================================================================
-     * 1. METODE Get Confidence Level
+     * 1. METODE GET CONFIDENCE LEVEL
      * =========================================================================
      *
      * Fungsi:
-     * Mengambil data get confidence level untuk keperluan logika service.
+     * Mengklasifikasikan skor similarity ke dalam level kepercayaan.
      *
      * Alur Proses:
-     * 1. Menentukan sumber data untuk get confidence level.
-     * 1. Mengambil atau memformat data.
-     * 1. Mengembalikan hasil dalam struktur yang sesuai.
+     * 1. Menerima skor similarity.
+     * 2. Memeriksa skor terhadap threshold.
+     * 3. Mengembalikan level confidence: high, medium, atau low.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - string
+     * - string 'high', 'medium', atau 'low'
      */
     private function getConfidenceLevel(float $similarity): string
     {
@@ -817,35 +654,22 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: emptyResult() [private]
-     *
-     * Mengembalikan struktur array kosong yang konsisten ketika tidak ada
-     * artikel yang dapat diambil dari database atau Typesense.
-     *
-     * Parameter:
-     * - string $query : Query asli yang dikirim pengguna
-     *
-     * Kembalikan:
-     * - array : Struktur hasil kosong dengan status threshold_met = false
-     */
-    /**
      * =========================================================================
-     * 1. METODE Empty Result
+     * 1. METODE EMPTY RESULT
      * =========================================================================
      *
      * Fungsi:
-     * Melakukan operasi empty result di dalam service.
+     * Mengembalikan struktur array kosong ketika tidak ada artikel yang ditemukan.
      *
      * Alur Proses:
-     * 1. Memproses input sesuai tujuan method.
-     * 1. Mengambil atau mengubah data internal.
-     * 1. Mengembalikan hasil sesuai tipe return.
+     * 1. Menerima query asli.
+     * 2. Mengembalikan struktur hasil kosong dengan status threshold_met = false.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - array
+     * - array struktur hasil kosong
      */
     private function emptyResult(string $query): array
     {
@@ -859,41 +683,25 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: prepareDocuments() [private]
-     *
-     * Menyiapkan representasi dokumen untuk keperluan perhitungan TF-IDF.
-     * Setiap artikel diubah menjadi gabungan token dari judul, excerpt, kata kunci,
-     * dan konten. Judul mendapat bobot ganda dengan cara token-nya diduplikasi.
-     *
-     * Alur proses:
-     * 1. Preprocessing setiap field artikel (judul, excerpt, kata kunci, konten).
-     * 2. Duplikasi token judul untuk meningkatkan bobotnya.
-     * 3. Gabungkan semua token dan hitung frekuensi term.
-     *
-     * Parameter:
-     * - Koleksi $articles : Koleksi objek Article
-     *
-     * Kembalikan:
-     * - array : [docId => ['teks', 'frequency', 'judul', 'title_tokens', ...]]
-     */
-    /**
      * =========================================================================
-     * 1. METODE Prepare Documents
+     * 1. METODE PREPARE DOCUMENTS
      * =========================================================================
      *
      * Fungsi:
-     * Melakukan operasi prepare documents di dalam service.
+     * Menyiapkan representasi dokumen untuk perhitungan TF-IDF.
      *
      * Alur Proses:
-     * 1. Memproses input sesuai tujuan method.
-     * 1. Mengambil atau mengubah data internal.
-     * 1. Mengembalikan hasil sesuai tipe return.
+     * 1. Menerima koleksi artikel.
+     * 2. Preprocessing setiap field artikel (judul, excerpt, kata kunci, konten).
+     * 3. Duplikasi token judul untuk meningkatkan bobot.
+     * 4. Menggabungkan semua token dan menghitung frekuensi term.
+     * 5. Mengembalikan array dokumen yang disiapkan.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - array
+     * - array [docId => ['text', 'frequency', 'title', 'title_tokens', ...]]
      */
     private function prepareDocuments(Collection $articles): array
     {
@@ -931,36 +739,25 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: buildOrRetrieveVectors() [private]
-     *
-     * Membangun vektor TF-IDF dari dokumen atau mengambilnya dari cache
-     * jika sudah tersimpan sebelumnya. Cache key di-generate berdasarkan
-     * MD5 dari kumpulan ID dokumen untuk validasi kecocokan data.
-     *
-     * Parameter:
-     * - array $dokumen : Dokumen yang sudah dipersiapkan oleh prepareDocuments()
-     *
-     * Kembalikan:
-     * - array : ['vectors' => [...], 'idf' => [...], 'docCount' => int]
-     */
-    /**
      * =========================================================================
-     * 1. METODE Build Or Retrieve Vectors
+     * 1. METODE BUILD OR RETRIEVE VECTORS
      * =========================================================================
      *
      * Fungsi:
-     * Membangun objek/struktur build or retrieve vectors untuk pipeline retrieval.
+     * Membangun vektor TF-IDF dari dokumen atau mengambilnya dari cache.
      *
      * Alur Proses:
-     * 1. Mempersiapkan data awal untuk build or retrieve vectors.
-     * 1. Menggabungkan atribut penting.
-     * 1. Mengembalikan objek atau array yang siap dipakai.
+     * 1. Menerima dokumen yang sudah dipersiapkan.
+     * 2. Generate cache key berdasarkan MD5 dari ID dokumen.
+     * 3. Cek cache dan kembalikan jika tersedia.
+     * 4. Hitung IDF dan vektor TF-IDF jika tidak ada di cache.
+     * 5. Simpan ke cache dan kembalikan hasil.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - array
+     * - array ['vectors' => [...], 'idf' => [...], 'docCount' => int]
      */
     private function buildOrRetrieveVectors(array $documents): array
     {
@@ -1002,32 +799,19 @@ class ChatbotRetrievalService
     }
 
     /**
-     * 2. Fungsi clearCache()
-     *
-     * Fungsi ini menghapus semua cache yang digunakan oleh ChatbotRetrievalService.
-     * Perlu dipanggil ketika ada perubahan data artikel agar cache tidak menjadi basi.
-     *
-     * Cache yang dibersihkan:
-     * - Cache vektor TF-IDF dokumen
-     * - Cache nilai IDF korpus
-     * - Cache topik dinamis
-     * - Cache IDF di TfidfService
-     *
-     * Kembalikan:
-     * - void
-     */
-    /**
      * =========================================================================
-     * 1. METODE Clear Cache
+     * 1. METODE CLEAR CACHE
      * =========================================================================
      *
      * Fungsi:
-     * Menghapus data atau status internal untuk clear cache.
+     * Menghapus semua cache yang digunakan oleh ChatbotRetrievalService.
      *
      * Alur Proses:
-     * 1. Menentukan data/entitas yang akan dihapus.
-     * 1. Melakukan operasi penghapusan.
-     * 1. Mengembalikan status operasional jika perlu.
+     * 1. Menghapus cache vektor TF-IDF dokumen.
+     * 2. Menghapus cache nilai IDF korpus.
+     * 3. Menghapus cache topik dinamis.
+     * 4. Menghapus cache IDF di TfidfService.
+     * 5. Mencatat aktivitas penghapusan ke log.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
@@ -1046,43 +830,25 @@ class ChatbotRetrievalService
     }
 
     /**
-     * 3. Fungsi rebuildCache()
-     *
-     * Fungsi ini membersihkan cache lama dan membangun ulang statistik IDF
-     * dari seluruh artikel yang sudah dipublikasi dan disetujui.
-     *
-     * Biasanya dipanggil secara manual oleh admin setelah:
-     * - Penambahan artikel dalam jumlah banyak
-     * - Penghapusan banyak artikel
-     * - Perubahan signifikan pada konten artikel
-     *
-     * Alur proses:
-     * 1. Hapus cache lama.
-     * 2. Ambil semua artikel aktif dari database.
-     * 3. Siapkan representasi dokumen.
-     * 4. Hitung IDF dari seluruh korpus.
-     *
-     * Kembalikan:
-     * - array : ['success' => bool, 'dokumen' => int, 'terms' => int]
-     */
-    /**
      * =========================================================================
-     * 1. METODE Rebuild Cache
+     * 1. METODE REBUILD CACHE
      * =========================================================================
      *
      * Fungsi:
-     * Melakukan operasi rebuild cache di dalam service.
+     * Membersihkan cache lama dan membangun ulang statistik IDF dari seluruh artikel.
      *
      * Alur Proses:
-     * 1. Memproses input sesuai tujuan method.
-     * 1. Mengambil atau mengubah data internal.
-     * 1. Mengembalikan hasil sesuai tipe return.
+     * 1. Menghapus semua cache lama.
+     * 2. Mengambil semua artikel aktif dari database.
+     * 3. Menyiapkan representasi dokumen.
+     * 4. Menghitung IDF dari seluruh korpus.
+     * 5. Mengembalikan hasil rebuild cache.
      *
      * Query yang Digunakan:
-     * - Tidak ada query SQL langsung
+     * - Article::where('is_published', true)->where('publish_status', 'approved')->get(): Ambil semua artikel aktif
      *
      * Output:
-     * - array
+     * - array ['success' => bool, 'documents' => int, 'terms' => int]
      */
     public function rebuildCache(): array
     {
@@ -1111,54 +877,25 @@ class ChatbotRetrievalService
     }
 
     /**
-     * 4. Fungsi formatResponse()
-     *
-     * Fungsi ini mengubah hasil retrieval mentah menjadi format respon
-     * yang siap ditampilkan di antarmuka widget chatbot.
-     *
-     * Format respon mencakup:
-     * - Teks respon utama (summary dari artikel teratas)
-     * - Daftar artikel yang relevan
-     * - Tombol kontak staff (muncul jika confidence rendah)
-     * - Level confidence keseluruhan
-     *
-     * Alur proses:
-     * 1. Cek apakah ada hasil — jika tidak, kembalikan respon "tidak ditemukan".
-     * 2. Ambil artikel teratas dan jumlah total hasil.
-     * 3. Generate teks respon dari excerpt atau konten artikel.
-     * 4. Bangun struktur respon lengkap.
-     *
-     * Parameter:
-     * - array $retrievalResult : Hasil dari fungsi ambil()
-     *
-     * Kembalikan:
-     * - array : [
-     *     'success'             => bool,
-     *     'response'            => string, // Teks respon chatbot
-     *     'articles'            => array,  // Daftar artikel relevan
-     *     'show_contact_button' => bool,   // Tampilkan tombol kontak staff?
-     *     'contact_button_text' => string,
-     *     'confidence'          => string  // 'high', 'medium', 'low', atau 'none'
-     *   ]
-     */
-    /**
      * =========================================================================
-     * 1. METODE Format Response
+     * 1. METODE FORMAT RESPONSE
      * =========================================================================
      *
      * Fungsi:
-     * Melakukan operasi format response di dalam service.
+     * Mengubah hasil retrieval mentah menjadi format respon untuk antarmuka chatbot.
      *
      * Alur Proses:
-     * 1. Memproses input sesuai tujuan method.
-     * 1. Mengambil atau mengubah data internal.
-     * 1. Mengembalikan hasil sesuai tipe return.
+     * 1. Menerima hasil retrieval mentah.
+     * 2. Cek apakah ada hasil - jika tidak, kembalikan respon tidak ditemukan.
+     * 3. Ambil artikel teratas dan jumlah total hasil.
+     * 4. Generate teks respon dari excerpt atau konten artikel.
+     * 5. Bangun struktur respon lengkap dengan tombol kontak jika confidence rendah.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - array
+     * - array dengan success, response, articles, show_contact_button, contact_button_text, confidence
      */
     public function formatResponse(array $retrievalResult): array
     {
@@ -1183,32 +920,22 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: noResultsResponse() [private]
-     *
-     * Menghasilkan respon standar ketika tidak ada artikel yang ditemukan.
-     * Menampilkan pilihan teks secara acak agar chatbot tidak terkesan monoton.
-     *
-     * Kembalikan:
-     * - array : Struktur respon dengan articles kosong dan show_contact_button = true
-     */
-    /**
      * =========================================================================
-     * 1. METODE No Results Response
+     * 1. METODE NO RESULTS RESPONSE
      * =========================================================================
      *
      * Fungsi:
-     * Melakukan operasi no results response di dalam service.
+     * Menghasilkan respon standar ketika tidak ada artikel yang ditemukan.
      *
      * Alur Proses:
-     * 1. Memproses input sesuai tujuan method.
-     * 1. Mengambil atau mengubah data internal.
-     * 1. Mengembalikan hasil sesuai tipe return.
+     * 1. Memilih teks respon secara acak dari pilihan yang tersedia.
+     * 2. Mengembalikan struktur respon dengan articles kosong dan show_contact_button = true.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - array
+     * - array struktur respon tidak ditemukan
      */
     private function noResultsResponse(): array
     {
@@ -1229,38 +956,24 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: generateResponseText() [private]
-     *
-     * Menghasilkan teks respon chatbot berdasarkan artikel teratas yang ditemukan.
-     * Teks terdiri dari ringkasan singkat dari excerpt atau konten artikel,
-     * diikuti ajakan untuk membaca artikel terkait.
-     *
-     * Parameter:
-     * - array  $topArticle   : Data artikel dengan skor tertinggi
-     * - int    $totalResults : Total jumlah artikel yang ditemukan
-     * - string $confidence   : Level kepercayaan hasil retrieval
-     *
-     * Kembalikan:
-     * - string : Teks respon yang siap ditampilkan
-     */
-    /**
      * =========================================================================
-     * 1. METODE Generate Response Text
+     * 1. METODE GENERATE RESPONSE TEXT
      * =========================================================================
      *
      * Fungsi:
-     * Melakukan operasi generate response text di dalam service.
+     * Menghasilkan teks respon chatbot berdasarkan artikel teratas yang ditemukan.
      *
      * Alur Proses:
-     * 1. Memproses input sesuai tujuan method.
-     * 1. Mengambil atau mengubah data internal.
-     * 1. Mengembalikan hasil sesuai tipe return.
+     * 1. Menerima artikel teratas, total hasil, dan level confidence.
+     * 2. Generate ringkasan dari excerpt atau konten artikel.
+     * 3. Gabungkan ringkasan dengan ajakan membaca artikel terkait.
+     * 4. Mengembalikan teks respon yang siap ditampilkan.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - string
+     * - string teks respon yang siap ditampilkan
      */
     private function generateResponseText(array $topArticle, int $totalResults, string $confidence): string
     {
@@ -1276,38 +989,25 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: generateSummaryFromExcerpt() [private]
-     *
-     * Menghasilkan ringkasan 2-4 kalimat dari excerpt atau konten artikel.
-     * Excerpt diprioritaskan jika cukup informatif dan tidak terlalu mirip judul.
-     * Jika tidak, diambil dari paragraf pertama konten.
-     *
-     * Parameter:
-     * - string $excerpt : Excerpt artikel (bisa mengandung HTML)
-     * - string $konten : Konten lengkap artikel (bisa mengandung HTML)
-     * - string $judul   : Judul artikel untuk perbandingan kesamaan
-     *
-     * Kembalikan:
-     * - string : Ringkasan teks 2-4 kalimat yang sudah dibersihkan dari HTML
-     */
-    /**
      * =========================================================================
-     * 1. METODE Generate Summary From Excerpt
+     * 1. METODE GENERATE SUMMARY FROM EXCERPT
      * =========================================================================
      *
      * Fungsi:
-     * Melakukan operasi generate summary from excerpt di dalam service.
+     * Menghasilkan ringkasan 2-4 kalimat dari excerpt atau konten artikel.
      *
      * Alur Proses:
-     * 1. Memproses input sesuai tujuan method.
-     * 1. Mengambil atau mengubah data internal.
-     * 1. Mengembalikan hasil sesuai tipe return.
+     * 1. Menerima excerpt, konten, dan judul artikel.
+     * 2. Membersihkan excerpt dari HTML dan memecah menjadi kalimat.
+     * 3. Gunakan excerpt jika memiliki minimal 2 kalimat dan tidak terlalu mirip judul.
+     * 4. Gunakan paragraf pertama konten jika excerpt tidak informatif.
+     * 5. Mengembalikan ringkasan 2-4 kalimat yang sudah dibersihkan.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - string
+     * - string ringkasan teks 2-4 kalimat yang sudah dibersihkan dari HTML
      */
     private function generateSummaryFromExcerpt(string $excerpt, string $content = '', string $title = ''): string
     {
@@ -1337,35 +1037,25 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: stripHtmlTags() [private]
-     *
-     * Membersihkan teks dari tag HTML, mendekode HTML entities,
-     * dan menormalisasi whitespace agar teks bersih untuk ditampilkan.
-     *
-     * Parameter:
-     * - string $html : Teks yang mungkin mengandung tag HTML
-     *
-     * Kembalikan:
-     * - string : Teks bersih tanpa HTML
-     */
-    /**
      * =========================================================================
-     * 1. METODE Strip Html Tags
+     * 1. METODE STRIP HTML TAGS
      * =========================================================================
      *
      * Fungsi:
-     * Melakukan operasi strip html tags di dalam service.
+     * Membersihkan teks dari tag HTML dan menormalisasi whitespace.
      *
      * Alur Proses:
-     * 1. Memproses input sesuai tujuan method.
-     * 1. Mengambil atau mengubah data internal.
-     * 1. Mengembalikan hasil sesuai tipe return.
+     * 1. Menerima teks yang mungkin mengandung tag HTML.
+     * 2. Menghapus semua tag HTML.
+     * 3. Mendekode HTML entities.
+     * 4. Menormalisasi whitespace dan trim.
+     * 5. Mengembalikan teks bersih tanpa HTML.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - string
+     * - string teks bersih tanpa HTML
      */
     private function stripHtmlTags(string $html): string
     {
@@ -1376,41 +1066,24 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: isTooSimilarToTitle() [private]
-     *
-     * Memeriksa apakah teks excerpt terlalu mirip dengan judul artikel.
-     * Jika terlalu mirip, excerpt dianggap tidak informatif dan konten artikel
-     * yang digunakan sebagai sumber ringkasan.
-     *
-     * Dua kondisi yang dianggap "terlalu mirip":
-     * 1. Teks mengandung judul atau judul mengandung teks.
-     * 2. Teks terlalu pendek (kurang dari 50 karakter).
-     *
-     * Parameter:
-     * - string $teks  : Teks excerpt yang akan diperiksa
-     * - string $judul : Judul artikel sebagai pembanding
-     *
-     * Kembalikan:
-     * - bool : true jika teks terlalu mirip judul (tidak informatif)
-     */
-    /**
      * =========================================================================
-     * 1. METODE Is Too Similar To Title
+     * 1. METODE IS TOO SIMILAR TO TITLE
      * =========================================================================
      *
      * Fungsi:
-     * Memeriksa kondisi is too similar to title berdasarkan input.
+     * Memeriksa apakah teks excerpt terlalu mirip dengan judul artikel.
      *
      * Alur Proses:
-     * 1. Menilai kondisi yang diminta.
-     * 1. Mengecek kondisi pada data input.
-     * 1. Mengembalikan boolean.
+     * 1. Menerima teks excerpt dan judul artikel.
+     * 2. Memeriksa apakah teks mengandung judul atau sebaliknya.
+     * 3. Memeriksa apakah teks terlalu pendek (kurang dari 50 karakter).
+     * 4. Mengembalikan true jika terlalu mirip atau terlalu pendek.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - bool
+     * - bool true jika teks terlalu mirip judul
      */
     private function isTooSimilarToTitle(string $text, string $title): bool
     {
@@ -1433,35 +1106,23 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: extractFirstParagraph() [private]
-     *
-     * Mengekstraksi paragraf pertama dari teks panjang.
-     * Paragraf dipisahkan oleh baris kosong (double newline).
-     *
-     * Parameter:
-     * - string $teks : Teks panjang yang akan diambil paragraf pertamanya
-     *
-     * Kembalikan:
-     * - string : Paragraf pertama yang sudah dibersihkan
-     */
-    /**
      * =========================================================================
-     * 1. METODE Extract First Paragraph
+     * 1. METODE EXTRACT FIRST PARAGRAPH
      * =========================================================================
      *
      * Fungsi:
-     * Melakukan operasi extract first paragraph di dalam service.
+     * Mengekstraksi paragraf pertama dari teks panjang.
      *
      * Alur Proses:
-     * 1. Memproses input sesuai tujuan method.
-     * 1. Mengambil atau mengubah data internal.
-     * 1. Mengembalikan hasil sesuai tipe return.
+     * 1. Menerima teks panjang.
+     * 2. Memisahkan teks menjadi paragraf berdasarkan baris kosong.
+     * 3. Mengembalikan paragraf pertama yang sudah dibersihkan.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - string
+     * - string paragraf pertama yang sudah dibersihkan
      */
     private function extractFirstParagraph(string $text): string
     {
@@ -1475,37 +1136,24 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: extractSentences() [private]
-     *
-     * Mengekstraksi sejumlah kalimat dari teks berdasarkan batas minimum dan maksimum.
-     * Kalimat dipisahkan berdasarkan tanda baca akhir kalimat (.!?).
-     *
-     * Parameter:
-     * - string $teks : Teks sumber
-     * - int    $min  : Jumlah minimum kalimat
-     * - int    $max  : Jumlah maksimum kalimat
-     *
-     * Kembalikan:
-     * - string : Gabungan kalimat terpilih
-     */
-    /**
      * =========================================================================
-     * 1. METODE Extract Sentences
+     * 1. METODE EXTRACT SENTENCES
      * =========================================================================
      *
      * Fungsi:
-     * Melakukan operasi extract sentences di dalam service.
+     * Mengekstraksi sejumlah kalimat dari teks berdasarkan batas minimum dan maksimum.
      *
      * Alur Proses:
-     * 1. Memproses input sesuai tujuan method.
-     * 1. Mengambil atau mengubah data internal.
-     * 1. Mengembalikan hasil sesuai tipe return.
+     * 1. Menerima teks sumber, batas minimum, dan batas maksimum.
+     * 2. Memisahkan teks menjadi kalimat berdasarkan tanda baca akhir.
+     * 3. Mengambil sejumlah kalimat sesuai batas min-max.
+     * 4. Mengembalikan gabungan kalimat terpilih.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - string
+     * - string gabungan kalimat terpilih
      */
     private function extractSentences(string $text, int $min, int $max): string
     {
@@ -1523,40 +1171,24 @@ class ChatbotRetrievalService
     }
 
     /**
-     * 5. Fungsi isGreeting()
-     *
-     * Fungsi ini mendeteksi apakah query pengguna merupakan sebuah sapaan.
-     * Jika terdeteksi sebagai sapaan, chatbot merespons dengan greeting yang sesuai
-     * alih-alih melakukan retrieval artikel.
-     *
-     * Deteksi dilakukan dua cara:
-     * 1. Pencocokan substring langsung pada query yang sudah di-lowercase.
-     * 2. Pencocokan token hasil preprocessing.
-     *
-     * Parameter:
-     * - string $query : Query dari pengguna
-     *
-     * Kembalikan:
-     * - bool : true jika query terdeteksi sebagai sapaan
-     */
-    /**
      * =========================================================================
-     * 1. METODE Is Greeting
+     * 1. METODE IS GREETING
      * =========================================================================
      *
      * Fungsi:
-     * Memeriksa kondisi is greeting berdasarkan input.
+     * Mendeteksi apakah query pengguna merupakan sebuah sapaan.
      *
      * Alur Proses:
-     * 1. Menilai kondisi yang diminta.
-     * 1. Mengecek kondisi pada data input.
-     * 1. Mengembalikan boolean.
+     * 1. Menerima query dari pengguna.
+     * 2. Mencocokkan substring langsung pada query yang sudah di-lowercase.
+     * 3. Mencocokan token hasil preprocessing sebagai fallback.
+     * 4. Mengembalikan true jika query terdeteksi sebagai sapaan.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - bool
+     * - bool true jika query terdeteksi sebagai sapaan
      */
     public function isGreeting(string $query): bool
     {
@@ -1582,38 +1214,24 @@ class ChatbotRetrievalService
     }
 
     /**
-     * 6. Fungsi getGreetingResponse()
-     *
-     * Fungsi ini menghasilkan teks sapaan yang disesuaikan dengan waktu saat ini.
-     * Respons dipilih secara acak dari beberapa pilihan agar tidak monoton.
-     *
-     * Segmentasi waktu:
-     * - Sebelum jam 11 : Pagi
-     * - Jam 11 - 14    : Siang
-     * - Jam 14 - 18    : Sore
-     * - Setelah jam 18 : Malam
-     *
-     * Kembalikan:
-     * - string : Teks sapaan yang sesuai waktu
-     */
-    /**
      * =========================================================================
-     * 1. METODE Get Greeting Response
+     * 1. METODE GET GREETING RESPONSE
      * =========================================================================
      *
      * Fungsi:
-     * Mengambil data get greeting response untuk keperluan logika service.
+     * Menghasilkan teks sapaan yang disesuaikan dengan waktu saat ini.
      *
      * Alur Proses:
-     * 1. Menentukan sumber data untuk get greeting response.
-     * 1. Mengambil atau memformat data.
-     * 1. Mengembalikan hasil dalam struktur yang sesuai.
+     * 1. Menentukan waktu saat ini.
+     * 2. Memilih sapaan berdasarkan segmentasi waktu (pagi, siang, sore, malam).
+     * 3. Menambahkan pilihan sapaan generik sebagai cadangan.
+     * 4. Mengembalikan sapaan yang dipilih secara acak.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - string
+     * - string teks sapaan yang sesuai waktu
      */
     public function getGreetingResponse(): string
     {
@@ -1636,43 +1254,24 @@ class ChatbotRetrievalService
     }
 
     /**
-     * 7. Fungsi getDynamicTopics()
-     *
-     * Fungsi ini mengambil topik-topik dinamis berdasarkan kategori artikel
-     * yang memiliki artikel paling banyak, untuk ditampilkan sebagai
-     * pilihan awal di antarmuka chatbot.
-     *
-     * Data di-cache selama 1 jam untuk mengurangi query berulang ke database.
-     *
-     * Alur proses:
-     * 1. Cek cache — kembalikan jika tersedia.
-     * 2. Query kategori yang memiliki artikel aktif, urutkan berdasarkan jumlah artikel.
-     * 3. Format dan simpan ke cache.
-     *
-     * Parameter:
-     * - int $batas : Jumlah topik maksimal (default: 5)
-     *
-     * Kembalikan:
-     * - array : [['id', 'type', 'label', 'count'], ...]
-     */
-    /**
      * =========================================================================
-     * 1. METODE Get Dynamic Topics
+     * 1. METODE GET DYNAMIC TOPICS
      * =========================================================================
      *
      * Fungsi:
-     * Mengambil data get dynamic topics untuk keperluan logika service.
+     * Mengambil topik-topik dinamis berdasarkan kategori artikel dengan artikel terbanyak.
      *
      * Alur Proses:
-     * 1. Menentukan sumber data untuk get dynamic topics.
-     * 1. Mengambil atau memformat data.
-     * 1. Mengembalikan hasil dalam struktur yang sesuai.
+     * 1. Cek cache dan kembalikan jika tersedia.
+     * 2. Query kategori yang memiliki artikel aktif, urutkan berdasarkan jumlah artikel.
+     * 3. Format topik dan simpan ke cache selama 1 jam.
+     * 4. Mengembalikan array topik dinamis.
      *
      * Query yang Digunakan:
-     * - Tidak ada query SQL langsung
+     * - Category::whereHas('articles', function ($query) { $query->where('is_published', true)->where('publish_status', 'approved'); })->withCount(['articles as article_count' => function ($query) { $query->where('is_published', true)->where('publish_status', 'approved'); }])->orderByDesc('article_count')->limit($limit)->get(['id', 'name']): Ambil kategori dengan artikel terbanyak
      *
      * Output:
-     * - array
+     * - array [['id', 'type', 'label', 'count'], ...]
      */
     public function getDynamicTopics(int $limit = 5): array
     {
@@ -1713,37 +1312,24 @@ class ChatbotRetrievalService
     }
 
     /**
-     * 8. Fungsi getSubtopics()
-     *
-     * Fungsi ini mengambil subtopik artikel yang relevan berdasarkan label topik.
-     * Subtopik didapatkan dengan menjalankan retrieval menggunakan label topik
-     * sebagai query, lalu mengambil artikel teratas sebagai subtopik.
-     *
-     * Parameter:
-     * - string $topicLabel : Label topik (nama kategori) sebagai query retrieval
-     * - int    $batas      : Jumlah subtopik maksimal (default: 4)
-     *
-     * Kembalikan:
-     * - array : [['id', 'type', 'label', 'excerpt', 'slug', 'url'], ...]
-     */
-    /**
      * =========================================================================
-     * 1. METODE Get Subtopics
+     * 1. METODE GET SUBTOPICS
      * =========================================================================
      *
      * Fungsi:
-     * Mengambil data get subtopics untuk keperluan logika service.
+     * Mengambil subtopik artikel yang relevan berdasarkan label topik.
      *
      * Alur Proses:
-     * 1. Menentukan sumber data untuk get subtopics.
-     * 1. Mengambil atau memformat data.
-     * 1. Mengembalikan hasil dalam struktur yang sesuai.
+     * 1. Menerima label topik dan batas jumlah subtopik.
+     * 2. Menjalankan retrieval menggunakan label topik sebagai query.
+     * 3. Mengambil artikel teratas sebagai subtopik.
+     * 4. Memformat dan mengembalikan array subtopik.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - array
+     * - array [['id', 'type', 'label', 'excerpt', 'slug', 'url'], ...]
      */
     public function getSubtopics(string $topicLabel, int $limit = 4): array
     {
@@ -1767,39 +1353,24 @@ class ChatbotRetrievalService
     }
 
     /**
-     * 9. Fungsi getArticleSuggestion()
-     *
-     * Fungsi ini mengambil detail satu artikel berdasarkan ID untuk
-     * ditampilkan sebagai kartu saran kepada pengguna chatbot.
-     *
-     * Artikel hanya dikembalikan jika statusnya dipublikasikan dan approved,
-     * untuk menjamin kualitas konten yang ditampilkan.
-     *
-     * Parameter:
-     * - int $articleId : ID artikel yang ingin ditampilkan
-     *
-     * Kembalikan:
-     * - array : ['success' => bool, 'article' => array, 'response' => string]
-     *         atau ['success' => false, 'pesan' => string] jika tidak ditemukan
-     */
-    /**
      * =========================================================================
-     * 1. METODE Get Article Suggestion
+     * 1. METODE GET ARTICLE SUGGESTION
      * =========================================================================
      *
      * Fungsi:
-     * Mengambil data get article suggestion untuk keperluan logika service.
+     * Mengambil detail satu artikel berdasarkan ID untuk ditampilkan sebagai kartu saran.
      *
      * Alur Proses:
-     * 1. Menentukan sumber data untuk get article suggestion.
-     * 1. Mengambil atau memformat data.
-     * 1. Mengembalikan hasil dalam struktur yang sesuai.
+     * 1. Menerima ID artikel.
+     * 2. Query artikel berdasarkan ID dengan filter published dan approved.
+     * 3. Memformat artikel dengan detail yang diperlukan.
+     * 4. Mengembalikan array artikel atau pesan tidak ditemukan.
      *
      * Query yang Digunakan:
-     * - Tidak ada query SQL langsung
+     * - Article::where('is_published', true)->where('publish_status', 'approved')->with('category')->find($articleId): Ambil artikel berdasarkan ID
      *
      * Output:
-     * - array
+     * - array ['success' => bool, 'article' => array, 'response' => string] atau ['success' => false, 'message' => string]
      */
     public function getArticleSuggestion(int $articleId): array
     {
@@ -1831,40 +1402,25 @@ class ChatbotRetrievalService
     }
 
     /**
-     * 10. Fungsi getRelatedArticles()
-     *
-     * Fungsi ini mengambil artikel-artikel yang berkaitan dengan sebuah artikel
-     * dengan cara menjalankan retrieval menggunakan judul dan excerpt artikel
-     * tersebut sebagai query.
-     *
-     * Artikel yang sedang dilihat (berdasarkan $articleId) dilewati
-     * agar tidak muncul sebagai rekomendasi untuk dirinya sendiri.
-     *
-     * Parameter:
-     * - int $articleId : ID artikel sumber yang ingin dicari artikel terkaitnya
-     * - int $batas     : Jumlah artikel terkait maksimal (default: 3)
-     *
-     * Kembalikan:
-     * - array : Daftar artikel terkait atau array kosong jika tidak ditemukan
-     */
-    /**
      * =========================================================================
-     * 1. METODE Get Related Articles
+     * 1. METODE GET RELATED ARTICLES
      * =========================================================================
      *
      * Fungsi:
-     * Mengambil data get related articles untuk keperluan logika service.
+     * Mengambil artikel-artikel yang berkaitan dengan sebuah artikel.
      *
      * Alur Proses:
-     * 1. Menentukan sumber data untuk get related articles.
-     * 1. Mengambil atau memformat data.
-     * 1. Mengembalikan hasil dalam struktur yang sesuai.
+     * 1. Menerima ID artikel sumber dan batas jumlah artikel terkait.
+     * 2. Query artikel sumber berdasarkan ID.
+     * 3. Jalankan retrieval menggunakan judul dan excerpt sebagai query.
+     * 4. Lewati artikel itu sendiri dan batasi hasil sesuai limit.
+     * 5. Mengembalikan daftar artikel terkait.
      *
      * Query yang Digunakan:
-     * - Tidak ada query SQL langsung
+     * - Article::find($articleId): Ambil artikel sumber berdasarkan ID
      *
      * Output:
-     * - array
+     * - array daftar artikel terkait atau array kosong jika tidak ditemukan
      */
     public function getRelatedArticles(int $articleId, int $limit = 3): array
     {
@@ -1889,37 +1445,24 @@ class ChatbotRetrievalService
     }
 
     /**
-     * Fungsi pembantu: truncateText() [private]
-     *
-     * Memotong teks hingga panjang maksimal yang ditentukan dan menambahkan
-     * elipsis (...) jika teks dipotong. Menggunakan mb_strlen dan mb_substr
-     * untuk mendukung karakter multibyte (Unicode/UTF-8).
-     *
-     * Parameter:
-     * - string $teks   : Teks yang akan dipotong
-     * - int    $length : Panjang maksimal karakter
-     *
-     * Kembalikan:
-     * - string : Teks yang sudah dipotong (dengan '...' jika diperlukan)
-     */
-    /**
      * =========================================================================
-     * 1. METODE Truncate Text
+     * 1. METODE TRUNCATE TEXT
      * =========================================================================
      *
      * Fungsi:
-     * Memangkas teks agar sesuai batas panjang yang ditentukan.
+     * Memotong teks hingga panjang maksimal yang ditentukan dan menambahkan elipsis.
      *
      * Alur Proses:
-     * 1. Menerima teks panjang dan batas karakter.
-     * 1. Memangkas teks sesuai aturan.
-     * 1. Mengembalikan teks yang dipotong.
+     * 1. Menerima teks dan panjang maksimal.
+     * 2. Memeriksa panjang teks menggunakan mb_strlen untuk dukungan Unicode.
+     * 3. Jika teks lebih panjang dari batas, potong menggunakan mb_substr dan tambahkan '...'.
+     * 4. Mengembalikan teks yang sudah dipotong atau teks asli jika tidak perlu dipotong.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
      *
      * Output:
-     * - string
+     * - string teks yang sudah dipotong (dengan '...' jika diperlukan)
      */
     private function truncateText(string $text, int $length): string
     {
@@ -1931,27 +1474,17 @@ class ChatbotRetrievalService
     }
 
     /**
-     * 11. Fungsi clearAllCaches()
-     *
-     * Fungsi ini menghapus seluruh cache yang terkait dengan layanan
-     * retrieval chatbot, termasuk cache di TfidfService.
-     * Memanggil clearCache() dan mencatat aktivitas penghapusan ke log.
-     *
-     * Kembalikan:
-     * - void
-     */
-    /**
      * =========================================================================
-     * 1. METODE Clear All Caches
+     * 1. METODE CLEAR ALL CACHES
      * =========================================================================
      *
      * Fungsi:
-     * Menghapus data atau status internal untuk clear all caches.
+     * Menghapus seluruh cache yang terkait dengan layanan retrieval chatbot.
      *
      * Alur Proses:
-     * 1. Menentukan data/entitas yang akan dihapus.
-     * 1. Melakukan operasi penghapusan.
-     * 1. Mengembalikan status operasional jika perlu.
+     * 1. Memanggil clearCache() untuk menghapus cache di service ini.
+     * 2. Mencatat aktivitas penghapusan ke log.
+     * 3. Mengembalikan void.
      *
      * Query yang Digunakan:
      * - Tidak ada query SQL langsung
