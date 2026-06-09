@@ -125,8 +125,8 @@ class CategoryController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:categories,name'],
-            'description' => ['nullable', 'string', 'max:1000'],
+            'name' => ['required', 'string', 'max:100', 'unique:categories,name'],
+            'description' => ['nullable', 'string'],
         ]);
 
         Category::create($validated);
@@ -218,8 +218,8 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:categories,name,' . $category->id],
-            'description' => ['nullable', 'string', 'max:1000'],
+            'name' => ['required', 'string', 'max:100', 'unique:categories,name,' . $category->id],
+            'description' => ['nullable', 'string'],
         ]);
 
         $category->update($validated);

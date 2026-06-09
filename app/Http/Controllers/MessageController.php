@@ -72,7 +72,7 @@ class MessageController extends Controller
     {
         $request->validate([
             'ticket_id' => 'required|exists:tickets,id',
-            'message' => 'required|string|max:1000',
+            'message' => 'required|string',
         ]);
 
         $ticket = Ticket::findOrFail($request->ticket_id);

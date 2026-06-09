@@ -572,7 +572,7 @@ class TicketController extends Controller
         }
 
         $request->validate([
-            'description' => 'required|string|max:2000',
+            'description' => 'required|string',
         ]);
 
         $log = TicketLog::create([

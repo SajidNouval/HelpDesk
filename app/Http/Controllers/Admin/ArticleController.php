@@ -360,7 +360,7 @@ class ArticleController extends Controller
     public function storeRejectionNote(Article $article): RedirectResponse|JsonResponse
     {
         request()->validate([
-            'rejection_note' => 'required|string|max:1000',
+            'rejection_note' => 'required|string',
         ]);
 
         $article->update([

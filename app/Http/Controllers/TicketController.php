@@ -101,9 +101,9 @@ class TicketController extends Controller
     {
         // ✅ Validasi
         $validationRules = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email',
-            'subject' => 'required|string|max:255',
+            'name' => 'required|string|max:50',
+            'email' => 'required|email|max:50',
+            'subject' => 'required|string|max:200',
             'message' => 'required|string',
             'category_id' => 'required|exists:categories,id',
         ];
@@ -230,9 +230,9 @@ class TicketController extends Controller
     {
         // ✅ Validasi
         $validationRules = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email',
-            'subject' => 'required|string|max:255',
+            'name' => 'required|string|max:50',
+            'email' => 'required|email|max:50',
+            'subject' => 'required|string|max:200',
             'message' => 'required|string',
             'category_id' => 'required|exists:categories,id',
         ];
@@ -336,9 +336,9 @@ class TicketController extends Controller
     public function requestOtp(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'subject' => 'required|string|max:255',
+            'name' => 'required|string|max:50',
+            'email' => 'required|email|max:50',
+            'subject' => 'required|string|max:200',
             'message' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'type' => 'required|in:livechat,report',

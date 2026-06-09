@@ -154,11 +154,11 @@ class UserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'name' => ['required', 'string', 'max:50'],
+            'email' => ['required', 'email', 'max:50', 'unique:users,email'],
             'role' => ['required', Rule::in(['staff'])],
             'status' => ['required', Rule::in(['active', 'inactive'])],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:8', 'max:255', 'confirmed'],
             'categories' => ['nullable', 'array'],
             'categories.*' => ['exists:categories,id'],
         ]);
@@ -231,11 +231,11 @@ class UserController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'name' => ['required', 'string', 'max:50'],
+            'email' => ['required', 'email', 'max:50', Rule::unique('users', 'email')->ignore($user->id)],
             'role' => ['required', Rule::in(['admin', 'staff'])],
             'status' => ['required', Rule::in(['active', 'inactive'])],
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'password' => ['nullable', 'string', 'min:8', 'max:255', 'confirmed'],
             'categories' => ['nullable', 'array'],
             'categories.*' => ['exists:categories,id'],
         ]);

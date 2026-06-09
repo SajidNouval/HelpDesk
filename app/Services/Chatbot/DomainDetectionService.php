@@ -554,43 +554,32 @@ class DomainDetectionService
     }
 
     /**
-     * 2. Fungsi detectOutOfDomain()
+     * =========================================================================
+     * 1. METODE DETECT OUT OF DOMAIN
+     * =========================================================================
      *
-     * Fungsi ini menentukan apakah query pengguna berada di luar domain IT/support.
-     * Jika query termasuk out-of-domain, sistem harus menolaknya dengan pesan informatif
-     * daripada mencoba mencari artikel yang tidak relevan.
+     * Fungsi:
+     * Menentukan apakah query pengguna berada di luar domain IT/support.
      *
-     * Logika evaluasi (berurutan dari yang paling kritis):
-     * 1. Jika query mengandung token "never reject" → SELALU diterima (di-domain)
-     * 2. Jika query mengandung kata kunci non-IT eksplisit → DITOLAK (out-of-domain)
-     * 3. Jika tidak ada token IT sama sekali → DITOLAK
-     * 4. Jika ada token IT + overlap vocabulary cukup → DITERIMA
-     * 5. Jika overlap rendah + confidence domain rendah → DITOLAK
-     * 6. Default: lebih baik menerima query borderline daripada menolak yang valid
+     * Alur Proses:
+     * 1. Menerima query mentah dari pengguna.
+     * 2. Normalisasi dan tokenisasi query.
+     * 3. Cek kata kunci non-IT eksplisit untuk penolakan langsung.
+     * 4. Hitung jumlah token IT dalam query.
+     * 5. Hitung rasio overlap vocabulary IT.
+     * 6. Cek confidence deteksi domain.
+     * 7. Evaluasi gabungan semua sinyal untuk keputusan final.
+     * 8. Mengembalikan hasil evaluasi out-of-domain.
      *
-     * Alur proses:
-     * 1. Normalisasi dan tokenisasi query.
-     * 2. Cek kata kunci non-IT eksplisit (penolakan langsung).
-     * 3. Hitung jumlah token IT dalam query.
-     * 4. Hitung rasio overlap vocabulary IT.
-     * 5. Cek confidence deteksi domain.
-     * 6. Evaluasi gabungan semua sinyal untuk keputusan final.
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
      *
-     * Parameter:
-     * - string $query : Query mentah dari pengguna
-     *
-     * Kembalikan:
-     * - array : [
-     *     'is_out_of_domain'  => bool,    // true jika query di luar domain IT
-     *     'reason'            => string,  // Alasan keputusan
-     *     'it_token_count'    => int,     // Jumlah token IT yang ditemukan
-     *     'vocabulary_overlap' => float,  // Rasio overlap dengan kosakata IT
-     *     'domain_confidence'  => float   // Confidence deteksi domain (jika detected)
-     *   ]
+     * Output:
+     * - array ['is_out_of_domain' => bool, 'reason' => string, 'it_token_count' => int, 'vocabulary_overlap' => float, 'domain_confidence' => float]
      */
     public function detectOutOfDomain(string $query): array
     {
-        // 2.1 Query kosong langsung ditolak
+        // Query kosong langsung ditolak
         if (empty(trim($query))) {
             return [
                 'is_out_of_domain'   => true,
@@ -600,7 +589,7 @@ class DomainDetectionService
             ];
         }
 
-        // 2.2 Normalisasi dan tokenisasi query
+        // Normalisasi dan tokenisasi query
         $normalizedQuery = $this->preprocessor->normalizeTypos($query);
         $normalizedQuery = $this->applySynonymMapping($normalizedQuery);
         $tokens          = $this->tokenizeQuery($normalizedQuery);
@@ -614,8 +603,7 @@ class DomainDetectionService
             ];
         }
 
-        // 2.3 Cek kata kunci non-IT eksplisit — jika ada, tolak langsung
-        // tanpa perlu evaluasi lebih lanjut
+        // Cek kata kunci non-IT eksplisit — jika ada, tolak langsung
         $hasExplicitOutOfDomain = $this->hasExplicitOutOfDomainKeywords($tokens);
         if ($hasExplicitOutOfDomain) {
             return [
@@ -626,17 +614,17 @@ class DomainDetectionService
             ];
         }
 
-        // 2.4 Hitung jumlah token yang termasuk kosakata IT
+        // Hitung jumlah token yang termasuk kosakata IT
         $itTokenCount = $this->countITDomainTokens($tokens);
 
-        // 2.5 Hitung rasio overlap kosakata IT terhadap total token bermakna
+        // Hitung rasio overlap kosakata IT terhadap total token bermakna
         $vocabularyOverlap = $this->calculateVocabularyOverlap($tokens);
 
-        // 2.6 Ambil confidence deteksi domain sebagai sinyal tambahan
+        // Ambil confidence deteksi domain sebagai sinyal tambahan
         $domainInfo      = $this->detectDomain($query);
         $domainConfidence = $domainInfo['confidence'] ?? 0.0;
 
-        // 2.7 Evaluasi gabungan semua sinyal untuk keputusan final
+        // Evaluasi gabungan semua sinyal untuk keputusan final
         $isOutOfDomain = $this->evaluateOutOfDomain(
             $tokens,
             $itTokenCount,
@@ -658,16 +646,23 @@ class DomainDetectionService
     }
 
     /**
-     * Fungsi pembantu: hasExplicitOutOfDomainKeywords() [private]
+     * =========================================================================
+     * 1. METODE HAS EXPLICIT OUT OF DOMAIN KEYWORDS
+     * =========================================================================
      *
-     * Memeriksa apakah ada token dalam query yang secara eksplisit
-     * merupakan kata kunci non-IT (dari daftar outOfDomainKeywords).
+     * Fungsi:
+     * Memeriksa apakah ada token dalam query yang merupakan kata kunci non-IT.
      *
-     * Parameter:
-     * - array $token : Token-token dari query yang sudah dinormalisasi
+     * Alur Proses:
+     * 1. Menerima token-token dari query yang sudah dinormalisasi.
+     * 2. Iterasi setiap token dan cek apakah ada di daftar outOfDomainKeywords.
+     * 3. Mengembalikan true jika ditemukan kata kunci non-IT.
      *
-     * Kembalikan:
-     * - bool : true jika ada kata kunci non-IT eksplisit
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - bool true jika ada kata kunci non-IT eksplisit
      */
     private function hasExplicitOutOfDomainKeywords(array $tokens): bool
     {
@@ -681,16 +676,24 @@ class DomainDetectionService
     }
 
     /**
-     * Fungsi pembantu: countITDomainTokens() [private]
+     * =========================================================================
+     * 1. METODE COUNT IT DOMAIN TOKENS
+     * =========================================================================
      *
-     * Menghitung berapa banyak token dalam query yang termasuk dalam
-     * kosakata IT (itDomainVocabulary), dengan mengecualikan term generik.
+     * Fungsi:
+     * Menghitung berapa banyak token dalam query yang termasuk dalam kosakata IT.
      *
-     * Parameter:
-     * - array $token : Token-token dari query yang sudah dinormalisasi
+     * Alur Proses:
+     * 1. Menerima token-token dari query yang sudah dinormalisasi.
+     * 2. Iterasi setiap token dan lewati term generik.
+     * 3. Hitung token yang ada dalam kosakata IT.
+     * 4. Mengembalikan jumlah token IT.
      *
-     * Kembalikan:
-     * - int : Jumlah token yang dikenali sebagai kosakata IT
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - int jumlah token yang dikenali sebagai kosakata IT
      */
     private function countITDomainTokens(array $tokens): int
     {
@@ -710,21 +713,24 @@ class DomainDetectionService
     }
 
     /**
-     * Fungsi pembantu: calculateVocabularyOverlap() [private]
+     * =========================================================================
+     * 1. METODE CALCULATE VOCABULARY OVERLAP
+     * =========================================================================
      *
+     * Fungsi:
      * Menghitung rasio antara token IT yang ditemukan dengan total token bermakna.
-     * Rasio ini mengindikasikan seberapa banyak query berkaitan dengan domain IT.
      *
-     * Pencocokan dilakukan dua arah:
-     * - Exact cocok: token persis sama dengan kosakata IT (bobot 1.0)
-     * - Partial cocok (kosakata mengandung token): bobot 0.5
-     * - Partial cocok (token mengandung kosakata): bobot 0.3
+     * Alur Proses:
+     * 1. Menerima token-token dari query yang sudah dinormalisasi.
+     * 2. Lewati term generik yang tidak bermakna.
+     * 3. Hitung exact match dan partial match dengan kosakata IT.
+     * 4. Mengembalikan rasio overlap.
      *
-     * Parameter:
-     * - array $token : Token-token dari query yang sudah dinormalisasi
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
      *
-     * Kembalikan:
-     * - float : Rasio overlap [0.0, 1.0]
+     * Output:
+     * - float rasio overlap [0.0, 1.0]
      */
     private function calculateVocabularyOverlap(array $tokens): float
     {
@@ -767,27 +773,28 @@ class DomainDetectionService
     }
 
     /**
-     * Fungsi pembantu: evaluateOutOfDomain() [private]
+     * =========================================================================
+     * 1. METODE EVALUATE OUT OF DOMAIN
+     * =========================================================================
      *
-     * Mengevaluasi apakah query termasuk out-of-domain berdasarkan kombinasi
-     * beberapa sinyal: token IT, overlap kosakata, dan confidence domain.
+     * Fungsi:
+     * Mengevaluasi apakah query termasuk out-of-domain berdasarkan kombinasi sinyal.
      *
-     * Logika berurutan (dari prioritas tertinggi):
-     * 1. Jika ada token "never reject" → SELALU di-domain (kembalikan false)
-     * 2. Jika tidak ada token IT → out-of-domain (kembalikan true)
-     * 3. Jika ada token IT + overlap memadai → di-domain (kembalikan false)
-     * 4. Jika overlap rendah + confidence domain rendah → out-of-domain (kembalikan true)
-     * 5. Jika domain confidence memadai → di-domain (kembalikan false)
-     * 6. Default: terima jika ada minimal 1 token IT
+     * Alur Proses:
+     * 1. Menerima token, jumlah token IT, overlap vocabulary, dan confidence domain.
+     * 2. Cek token "never reject" untuk selalu menerima.
+     * 3. Cek jika tidak ada token IT untuk menolak.
+     * 4. Cek overlap vocabulary memadai untuk menerima.
+     * 5. Cek overlap rendah dan confidence rendah untuk menolak.
+     * 6. Cek confidence memadai untuk menerima.
+     * 7. Default: terima jika ada minimal 1 token IT.
+     * 8. Mengembalikan keputusan out-of-domain.
      *
-     * Parameter:
-     * - array $token           : Token-token dari query
-     * - int   $itTokenCount     : Jumlah token IT
-     * - float $vocabularyOverlap : Rasio overlap kosakata IT
-     * - float $domainConfidence : Confidence deteksi domain
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
      *
-     * Kembalikan:
-     * - bool : true jika out-of-domain, false jika di-domain
+     * Output:
+     * - bool true jika out-of-domain, false jika di-domain
      */
     private function evaluateOutOfDomain(array $tokens, int $itTokenCount, float $vocabularyOverlap, float $domainConfidence): bool
     {
@@ -825,17 +832,24 @@ class DomainDetectionService
     }
 
     /**
-     * Fungsi pembantu: containsNeverRejectToken() [private]
+     * =========================================================================
+     * 1. METODE CONTAINS NEVER REJECT TOKEN
+     * =========================================================================
      *
+     * Fungsi:
      * Memeriksa apakah query mengandung token yang tidak boleh pernah ditolak.
-     * Pengecekan dilakukan secara exact cocok maupun partial cocok untuk
-     * menangani typo seperti "virussss" yang mengandung "virus".
      *
-     * Parameter:
-     * - array $token : Token-token dari query yang sudah dinormalisasi
+     * Alur Proses:
+     * 1. Menerima token-token dari query yang sudah dinormalisasi.
+     * 2. Cek exact match dengan token never-reject.
+     * 3. Cek partial match untuk menangani typo.
+     * 4. Mengembalikan true jika ditemukan token never-reject.
      *
-     * Kembalikan:
-     * - bool : true jika ditemukan token "never reject"
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - bool true jika ditemukan token never-reject
      */
     private function containsNeverRejectToken(array $tokens): bool
     {
@@ -866,18 +880,25 @@ class DomainDetectionService
     }
 
     /**
-     * Fungsi pembantu: getOutOfDomainReason() [private]
+     * =========================================================================
+     * 1. METODE GET OUT OF DOMAIN REASON
+     * =========================================================================
      *
+     * Fungsi:
      * Menentukan alasan spesifik mengapa query diklasifikasikan sebagai out-of-domain.
-     * Alasan ini berguna untuk debugging dan pemantauan kualitas sistem.
      *
-     * Parameter:
-     * - int   $itTokenCount     : Jumlah token IT dalam query
-     * - float $vocabularyOverlap : Rasio overlap kosakata IT
-     * - float $domainConfidence : Confidence deteksi domain
+     * Alur Proses:
+     * 1. Menerima jumlah token IT, overlap vocabulary, dan confidence domain.
+     * 2. Cek jika token IT kurang dari minimum.
+     * 3. Cek jika overlap vocabulary rendah.
+     * 4. Cek jika confidence domain rendah.
+     * 5. Mengembalikan kode alasan penolakan.
      *
-     * Kembalikan:
-     * - string : Kode alasan penolakan
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - string kode alasan penolakan
      */
     private function getOutOfDomainReason(int $itTokenCount, float $vocabularyOverlap, float $domainConfidence): string
     {
@@ -894,17 +915,24 @@ class DomainDetectionService
     }
 
     /**
-     * Fungsi pembantu: applySynonymMapping() [private]
+     * =========================================================================
+     * 1. METODE APPLY SYNONYM MAPPING
+     * =========================================================================
      *
+     * Fungsi:
      * Menerapkan normalisasi sinonim pada query sebelum tokenisasi.
-     * Memastikan variasi penulisan yang berbeda (termasuk typo umum)
-     * diubah ke bentuk standar yang dikenali oleh sistem deteksi domain.
      *
-     * Parameter:
-     * - string $query : Query yang akan dinormalisasi
+     * Alur Proses:
+     * 1. Menerima query yang akan dinormalisasi.
+     * 2. Iterasi setiap mapping sinonim.
+     * 3. Ganti typo dengan bentuk standar jika ditemukan.
+     * 4. Mengembalikan query yang sudah dinormalisasi.
      *
-     * Kembalikan:
-     * - string : Query yang sudah dinormalisasi sinonimnya
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - string query yang sudah dinormalisasi sinonimnya
      */
     private function applySynonymMapping(string $query): string
     {
@@ -918,17 +946,25 @@ class DomainDetectionService
     }
 
     /**
-     * Fungsi pembantu: tokenizeQuery() [private]
+     * =========================================================================
+     * 1. METODE TOKENIZE QUERY
+     * =========================================================================
      *
-     * Memecah query menjadi token-token individual menggunakan pemisah
-     * whitespace dan tanda baca. Hanya token dengan panjang > 1 karakter
-     * yang dipertahankan untuk menghindari noise dari karakter tunggal.
+     * Fungsi:
+     * Memecah query menjadi token-token individual.
      *
-     * Parameter:
-     * - string $query : Query yang akan ditokenisasi
+     * Alur Proses:
+     * 1. Menerima query yang akan ditokenisasi.
+     * 2. Konversi ke huruf kecil.
+     * 3. Pecah query menggunakan pemisah whitespace dan tanda baca.
+     * 4. Filter token dengan panjang > 1 karakter.
+     * 5. Mengembalikan array token.
      *
-     * Kembalikan:
-     * - array : Array token hasil tokenisasi dalam huruf kecil
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array token hasil tokenisasi dalam huruf kecil
      */
     private function tokenizeQuery(string $query): array
     {
@@ -938,23 +974,26 @@ class DomainDetectionService
     }
 
     /**
-     * Fungsi pembantu: scoreDomains() [private]
+     * =========================================================================
+     * 1. METODE SCORE DOMAINS
+     * =========================================================================
      *
-     * Memberikan skor kepercayaan untuk setiap domain berdasarkan
-     * seberapa banyak kata kunci domain muncul dalam token query.
+     * Fungsi:
+     * Memberikan skor kepercayaan untuk setiap domain berdasarkan pencocokan kata kunci.
      *
-     * Pencocokan dilakukan dua cara:
-     * - Exact cocok antara token dan kata kunci domain: skor +1.0
-     * - Partial cocok (kata kunci mengandung token): skor +0.5
+     * Alur Proses:
+     * 1. Menerima token-token dari query yang sudah dinormalisasi.
+     * 2. Iterasi setiap domain dan kata kuncinya.
+     * 3. Hitung exact match dan partial match.
+     * 4. Normalisasi skor berdasarkan jumlah kata kunci domain.
+     * 5. Normalisasi relatif jika beberapa domain terdeteksi.
+     * 6. Mengembalikan array skor domain.
      *
-     * Skor dinormalisasi agar berada di rentang 0.0 - 1.0.
-     * Jika beberapa domain terdeteksi, skor dinormalisasi relatif terhadap skor tertinggi.
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
      *
-     * Parameter:
-     * - array $token : Token-token dari query yang sudah dinormalisasi
-     *
-     * Kembalikan:
-     * - array : Array asosiatif [domain => skor_kepercayaan]
+     * Output:
+     * - array [domain => skor_kepercayaan]
      */
     private function scoreDomains(array $tokens): array
     {
@@ -1008,20 +1047,26 @@ class DomainDetectionService
     }
 
     /**
-     * Fungsi pembantu: getCategoryIdsForDomain() [private]
+     * =========================================================================
+     * 1. METODE GET CATEGORY IDS FOR DOMAIN
+     * =========================================================================
      *
-     * Mengambil ID kategori dari database berdasarkan nama kategori yang
-     * dipetakan ke domain yang terdeteksi.
+     * Fungsi:
+     * Mengambil ID kategori dari database berdasarkan nama kategori yang dipetakan ke domain.
      *
-     * Pencarian dilakukan dua tahap:
-     * 1. Pencarian exact (case-sensitive) berdasarkan nama kategori.
-     * 2. Jika tidak ditemukan, pencarian case-insensitive dengan TRIM.
+     * Alur Proses:
+     * 1. Menerima nama domain yang terdeteksi.
+     * 2. Ambil konfigurasi domain keywords.
+     * 3. Query database untuk ID kategori berdasarkan nama.
+     * 4. Jika tidak ditemukan, coba pencarian case-insensitive.
+     * 5. Mengembalikan array ID kategori yang relevan.
      *
-     * Parameter:
-     * - string $domain : Nama domain yang terdeteksi (misalnya: 'wifi', 'printer')
+     * Query yang Digunakan:
+     * - Category::whereIn('name', $categoryNames)->pluck('id')->toArray(): Ambil ID kategori berdasarkan nama
+     * - Category::where(function ($query) use ($categoryNames) { ... })->pluck('id')->toArray(): Pencarian case-insensitive
      *
-     * Kembalikan:
-     * - array : Array ID kategori yang relevan
+     * Output:
+     * - array ID kategori yang relevan
      */
     private function getCategoryIdsForDomain(string $domain): array
     {
@@ -1048,13 +1093,22 @@ class DomainDetectionService
     }
 
     /**
-     * 3. Fungsi getAllDomains()
+     * =========================================================================
+     * 1. METODE GET ALL DOMAINS
+     * =========================================================================
      *
-     * Fungsi ini mengembalikan daftar semua nama domain IT yang dikenali oleh sistem.
-     * Berguna untuk keperluan debugging, referensi internal, dan pengujian.
+     * Fungsi:
+     * Mengembalikan daftar semua nama domain IT yang dikenali oleh sistem.
      *
-     * Kembalikan:
-     * - array : Array nama domain yang tersedia (misalnya: ['wifi', 'internet', ...])
+     * Alur Proses:
+     * 1. Mengambil keys dari array domainKeywords.
+     * 2. Mengembalikan array nama domain.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array nama domain yang tersedia
      */
     public function getAllDomains(): array
     {
@@ -1062,16 +1116,23 @@ class DomainDetectionService
     }
 
     /**
-     * 4. Fungsi getDomainKeywords()
+     * =========================================================================
+     * 1. METODE GET DOMAIN KEYWORDS
+     * =========================================================================
      *
-     * Fungsi ini mengembalikan kata kunci yang terkurasi untuk domain tertentu.
-     * Berguna untuk inspeksi konfigurasi dan pengujian sistem deteksi.
+     * Fungsi:
+     * Mengembalikan kata kunci yang terkurasi untuk domain tertentu.
      *
-     * Parameter:
-     * - string $domain : Nama domain yang ingin diperiksa kata kuncinya
+     * Alur Proses:
+     * 1. Menerima nama domain yang ingin diperiksa.
+     * 2. Ambil kata kunci dari konfigurasi domainKeywords.
+     * 3. Mengembalikan array kata kunci domain.
      *
-     * Kembalikan:
-     * - array : Array kata kunci domain, atau array kosong jika domain tidak ditemukan
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array kata kunci domain, atau array kosong jika domain tidak ditemukan
      */
     public function getDomainKeywords(string $domain): array
     {
@@ -1079,13 +1140,21 @@ class DomainDetectionService
     }
 
     /**
-     * 5. Fungsi clearCache()
+     * =========================================================================
+     * 1. METODE CLEAR CACHE
+     * =========================================================================
      *
-     * Fungsi ini menghapus cache saran domain yang tersimpan.
-     * Perlu dipanggil ketika ada perubahan kategori di database
-     * agar cache tidak menampilkan data yang sudah usang.
+     * Fungsi:
+     * Menghapus cache saran domain yang tersimpan.
      *
-     * Kembalikan:
+     * Alur Proses:
+     * 1. Menghapus cache menggunakan Cache::forget.
+     * 2. Mengembalikan void.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
      * - void
      */
     public function clearCache(): void
@@ -1094,31 +1163,29 @@ class DomainDetectionService
     }
 
     /**
-     * 6. Fungsi getCleanDomainSuggestions()
+     * =========================================================================
+     * 1. METODE GET CLEAN DOMAIN SUGGESTIONS
+     * =========================================================================
      *
-     * Fungsi ini mengembalikan saran domain yang bersih dan terverifikasi
-     * untuk ditampilkan kepada pengguna sebagai pilihan topik.
+     * Fungsi:
+     * Mengembalikan saran domain yang bersih dan terverifikasi untuk ditampilkan kepada pengguna.
      *
-     * Data saran berasal dari dua sumber yang valid:
-     * 1. Domain terkurasi dari konfigurasi sistem (domainKeywords).
-     * 2. Kategori aktif dari database yang memiliki artikel yang dipublikasi.
-     *
-     * Deduplikasi dilakukan untuk menghindari tampilan yang berulang.
-     * Hasil di-cache selama 1 jam untuk efisiensi.
-     *
-     * Alur proses:
-     * 1. Cek cache — kembalikan langsung jika tersedia.
+     * Alur Proses:
+     * 1. Cek cache dan kembalikan langsung jika tersedia.
      * 2. Bangun saran dari konfigurasi domain terkurasi.
-     * 3. Tambahkan kategori dari database yang memiliki artikel aktif.
+     * 3. Query database untuk kategori yang memiliki artikel aktif.
      * 4. Deduplikasi untuk menghindari saran ganda.
      * 5. Simpan ke cache dan kembalikan.
      *
-     * Kembalikan:
-     * - array : Array saran domain [['id', 'type', 'label', 'kata kunci?'], ...]
+     * Query yang Digunakan:
+     * - Category::whereHas('articles', function ($query) { ... })->orderBy('name')->get(['id', 'name']): Ambil kategori dengan artikel aktif
+     *
+     * Output:
+     * - array saran domain [['id', 'type', 'label', 'kata kunci?'], ...]
      */
     public function getCleanDomainSuggestions(): array
     {
-        // 6.1 Cek cache terlebih dahulu untuk menghemat query database
+        // Cek cache terlebih dahulu untuk menghemat query database
         $cached = Cache::get(self::DOMAIN_CACHE_KEY);
         if ($cached !== null) {
             return $cached;
@@ -1126,7 +1193,7 @@ class DomainDetectionService
 
         $suggestions = [];
 
-        // 6.2 Bangun saran dari domain terkurasi (tidak dari input pengguna)
+        // Bangun saran dari domain terkurasi
         foreach ($this->domainKeywords as $domain => $config) {
             $suggestions[] = [
                 'id'       => $domain,
@@ -1136,8 +1203,7 @@ class DomainDetectionService
             ];
         }
 
-        // 6.3 Query ini mengambil kategori dari database yang memiliki artikel aktif
-        // sebagai sumber saran tambahan yang valid
+        // Query database untuk kategori yang memiliki artikel aktif
         $categories = Category::whereHas('articles', function ($query) {
             $query->where('is_published', true)
                   ->where('publish_status', 'approved');
@@ -1145,7 +1211,7 @@ class DomainDetectionService
         ->orderBy('name')
         ->get(['id', 'name']);
 
-        // 6.4 Tambahkan kategori database, hindari duplikat dengan saran domain
+        // Tambahkan kategori database, hindari duplikat dengan saran domain
         foreach ($categories as $category) {
             $isDuplicate = false;
             foreach ($suggestions as $suggestion) {
@@ -1165,20 +1231,28 @@ class DomainDetectionService
             }
         }
 
-        // 6.5 Simpan ke cache selama 1 jam agar tidak berulang query ke database
+        // Simpan ke cache selama 1 jam
         Cache::put(self::DOMAIN_CACHE_KEY, $suggestions, self::DOMAIN_CACHE_TTL);
 
         return $suggestions;
     }
 
     /**
-     * 7. Fungsi getITDomainVocabulary()
+     * =========================================================================
+     * 1. METODE GET IT DOMAIN VOCABULARY
+     * =========================================================================
      *
-     * Fungsi ini mengembalikan seluruh kosakata IT yang digunakan untuk
-     * deteksi out-of-domain. Berguna untuk debugging dan pengujian cakupan kosakata.
+     * Fungsi:
+     * Mengembalikan seluruh kosakata IT yang digunakan untuk deteksi out-of-domain.
      *
-     * Kembalikan:
-     * - array : Array seluruh term IT yang dikenali sistem
+     * Alur Proses:
+     * 1. Mengembalikan array itDomainVocabulary.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array seluruh term IT yang dikenali sistem
      */
     public function getITDomainVocabulary(): array
     {
@@ -1186,14 +1260,21 @@ class DomainDetectionService
     }
 
     /**
-     * 8. Fungsi getOutOfDomainKeywords()
+     * =========================================================================
+     * 1. METODE GET OUT OF DOMAIN KEYWORDS
+     * =========================================================================
      *
-     * Fungsi ini mengembalikan daftar kata kunci non-IT yang menyebabkan
-     * penolakan langsung (immediate rejection). Berguna untuk debugging
-     * dan pemeriksaan daftar kata kunci yang diblokir.
+     * Fungsi:
+     * Mengembalikan daftar kata kunci non-IT yang menyebabkan penolakan langsung.
      *
-     * Kembalikan:
-     * - array : Array kata kunci yang menandakan query di luar domain IT
+     * Alur Proses:
+     * 1. Mengembalikan array outOfDomainKeywords.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array kata kunci yang menandakan query di luar domain IT
      */
     public function getOutOfDomainKeywords(): array
     {

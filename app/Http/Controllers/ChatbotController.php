@@ -72,7 +72,7 @@ class ChatbotController extends Controller
     {
         // Validate input
         $request->validate([
-            'message' => 'required|string|max:1000',
+            'message' => 'required|string',
         ]);
 
         $userMessage = trim($request->input('message'));
@@ -179,7 +179,7 @@ class ChatbotController extends Controller
     public function chatbotSearch(Request $request): JsonResponse
     {
         $request->validate([
-            'q' => 'required|string|min:3|max:255',
+            'q' => 'required|string|min:3',
         ]);
 
         $keyword = $request->q;
@@ -269,7 +269,7 @@ class ChatbotController extends Controller
     public function getClarification(Request $request): JsonResponse
     {
         $request->validate([
-            'message' => 'required|string|max:500',
+            'message' => 'required|string',
         ]);
 
         $message = trim($request->input('message'));
@@ -425,10 +425,10 @@ class ChatbotController extends Controller
     public function createTicketAndMessage(Request $request): JsonResponse
     {
         $request->validate([
-            'title'       => 'required|string|max:255',
-            'message'     => 'required|string|max:2000',
+            'title'       => 'required|string|max:200',
+            'message'     => 'required|string',
             'category_id' => 'required|exists:categories,id',
-            'email'       => 'nullable|email|max:255',
+            'email'       => 'nullable|email|max:50',
         ]);
 
         $ticket = Ticket::create([
@@ -491,7 +491,7 @@ class ChatbotController extends Controller
     {
         $request->validate([
             'ticket_id' => 'required|exists:tickets,id',
-            'message'   => 'required|string|max:2000',
+            'message'   => 'required|string',
         ]);
 
         $ticket = Ticket::findOrFail($request->ticket_id);
@@ -603,7 +603,7 @@ class ChatbotController extends Controller
     public function getSubtopics(Request $request): JsonResponse
     {
         $request->validate([
-            'topic' => 'required|string|max:255',
+            'topic' => 'required|string',
         ]);
 
         // Map topic to category or use curated subtopics

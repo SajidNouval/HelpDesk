@@ -160,37 +160,36 @@ class ConversationFlowService
     ];
 
     /**
-     * 1. Fungsi getGreetingData()
+     * =========================================================================
+     * 1. METODE GET GREETING DATA
+     * =========================================================================
      *
-     * Fungsi ini menyiapkan data untuk pesan greeting awal chatbot.
-     * Data yang dikembalikan mencakup:
-     * - Teks pesan sapaan dari chatbot SiMinfo.
-     * - 5 kategori acak dari database beserta artikel populer masing-masing.
+     * Fungsi:
+     * Menyiapkan data untuk pesan greeting awal chatbot.
      *
-     * Data ini digunakan untuk menampilkan tombol kategori di antarmuka chatbot
-     * sehingga pengguna dapat memilih topik masalah dengan mudah.
-     *
-     * Alur proses:
+     * Alur Proses:
      * 1. Ambil 5 kategori acak dari database.
-     * 2. Untuk setiap kategori, ambil 3 artikel paling banyak dilihat (views).
+     * 2. Untuk setiap kategori, ambil 3 artikel paling banyak dilihat.
      * 3. Gabungkan dan kembalikan sebagai data greeting terstruktur.
      *
-     * Kembalikan:
-     * - array : ['greeting' => string, 'kategori' => array]
+     * Query yang Digunakan:
+     * - Category::inRandomOrder()->limit(5)->get(['id', 'name', 'description']): Ambil 5 kategori acak
+     * - Article::where('category_id', $category->id)->where('is_published', true)->orderBy('views', 'desc')->limit(3)->get(['id', 'title', 'slug']): Ambil 3 artikel terpopuler per kategori
+     *
+     * Output:
+     * - array ['greeting' => string, 'categories' => array]
      */
     public function getGreetingData(): array
     {
-        // 1.1 Query ini mengambil 5 kategori secara acak dari database
-        // untuk ditampilkan sebagai pilihan topik di greeting chatbot
+        // Ambil 5 kategori acak dari database
         $categories = Category::inRandomOrder()
             ->limit(5)
             ->get(['id', 'name', 'description']);
 
-        // 1.2 Ambil artikel paling populer untuk setiap kategori yang dipilih
+        // Ambil artikel paling populer untuk setiap kategori yang dipilih
         $categoryArticles = [];
         foreach ($categories as $category) {
-            // 1.3 Query ini mengambil 3 artikel terpopuler (berdasarkan views)
-            // dari setiap kategori yang berstatus dipublikasikan
+            // Ambil 3 artikel terpopuler berdasarkan views
             $articles = Article::where('category_id', $category->id)
                 ->where('is_published', true)
                 ->orderBy('views', 'desc')
@@ -212,51 +211,48 @@ class ConversationFlowService
     }
 
     /**
-     * 2. Fungsi getCategorySubtopics()
+     * =========================================================================
+     * 1. METODE GET CATEGORY SUBTOPICS
+     * =========================================================================
      *
-     * Fungsi ini mengambil subtopik relevan dari sebuah kategori berdasarkan
-     * judul-judul artikel paling populer dalam kategori tersebut.
+     * Fungsi:
+     * Mengambil subtopik relevan dari sebuah kategori berdasarkan judul artikel populer.
      *
-     * Subtopik diekstraksi dari judul artikel dengan memotong teks sebelum kata
-     * penghubung seperti "dengan", "saat", "ketika", "pada" — mengambil bagian
-     * masalah utamanya saja.
-     *
-     * Alur proses:
+     * Alur Proses:
      * 1. Validasi keberadaan kategori di database.
      * 2. Ambil 8 artikel terpopuler dari kategori tersebut.
      * 3. Ekstraksi frasa kunci dari setiap judul artikel.
      * 4. Deduplikasi dan batasi hingga 6 subtopik.
+     * 5. Mengembalikan hasil subtopik.
      *
-     * Parameter:
-     * - string $categoryId : ID kategori yang dicari subtopiknya
+     * Query yang Digunakan:
+     * - Category::find($categoryId): Cari kategori berdasarkan ID
+     * - Article::where('category_id', $categoryId)->where('is_published', true)->orderBy('views', 'desc')->limit(8)->get(['id', 'title', 'slug']): Ambil 8 artikel terpopuler
      *
-     * Kembalikan:
-     * - array : ['kategori' => nama, 'question' => pertanyaan, 'subtopics' => array]
-     *         atau ['error' => pesan] jika kategori tidak ditemukan
+     * Output:
+     * - array ['category' => nama, 'question' => pertanyaan, 'subtopics' => array] atau ['error' => pesan]
      */
     public function getCategorySubtopics(string $categoryId): array
     {
-        // 2.1 Query ini mencari kategori berdasarkan ID yang diberikan
+        // Cari kategori berdasarkan ID
         $category = Category::find($categoryId);
         if (!$category) {
             return ['error' => 'Kategori tidak ditemukan'];
         }
 
-        // 2.2 Query ini mengambil 8 artikel terpopuler dari kategori yang dipilih
-        // untuk dijadikan sumber ekstraksi subtopik
+        // Ambil 8 artikel terpopuler dari kategori yang dipilih
         $articles = Article::where('category_id', $categoryId)
             ->where('is_published', true)
             ->orderBy('views', 'desc')
             ->limit(8)
             ->get(['id', 'title', 'slug']);
 
-        // 2.3 Ekstraksi frasa kunci dari judul artikel menggunakan pola regex
+        // Ekstraksi frasa kunci dari judul artikel menggunakan pola regex
         $subtopics = [];
         foreach ($articles as $article) {
             $title = $article->title;
 
             // Pola regex untuk memotong judul sebelum kata penghubung
-            // Tujuan: mengambil inti masalah dari judul yang panjang
             $patterns = ['/^(.+?)\s+dengan/i', '/^(.+?)\s+saat/i', '/^(.+?)\s+ketika/i', '/^(.+?)\s+pada/i'];
             $extracted = $title;
 
@@ -267,8 +263,7 @@ class ConversationFlowService
                 }
             }
 
-            // 2.4 Hanya tambahkan subtopik yang bermakna (lebih dari 3 karakter)
-            // dan belum ada di daftar sebelumnya (deduplikasi)
+            // Hanya tambahkan subtopik yang bermakna dan belum ada di daftar
             if (strlen($extracted) > 3 && !in_array($extracted, array_column($subtopics, 'label'))) {
                 $subtopics[] = [
                     'id'         => $article->id,
@@ -279,7 +274,7 @@ class ConversationFlowService
             }
         }
 
-        // 2.5 Batasi tampilan subtopik hingga 6 item agar tidak terlalu panjang
+        // Batasi tampilan subtopik hingga 6 item
         $subtopics = array_slice($subtopics, 0, 6);
 
         return [
@@ -290,27 +285,31 @@ class ConversationFlowService
     }
 
     /**
-     * 3. Fungsi isContextualQuery() [private]
+     * =========================================================================
+     * 1. METODE IS CONTEXTUAL QUERY
+     * =========================================================================
      *
-     * Fungsi pembantu internal yang memeriksa apakah sebuah query mengandung
-     * kombinasi domain term DAN issue term sekaligus, sehingga dianggap kontekstual.
+     * Fungsi:
+     * Memeriksa apakah query mengandung kombinasi domain term dan issue term.
      *
-     * Query kontekstual tidak perlu klarifikasi karena sudah cukup spesifik.
-     * Contoh kontekstual: "wifi lemot" (domain: wifi + issue: lemot)
-     * Contoh tidak kontekstual: "lemot" saja (hanya issue, tidak ada domain)
+     * Alur Proses:
+     * 1. Menerima query pengguna dalam huruf kecil.
+     * 2. Periksa apakah query mengandung domain term.
+     * 3. Periksa apakah query mengandung issue term.
+     * 4. Mengembalikan true jika keduanya ada.
      *
-     * Parameter:
-     * - string $query : Query pengguna dalam huruf kecil
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
      *
-     * Kembalikan:
-     * - bool : true jika query mengandung domain + issue (kontekstual)
+     * Output:
+     * - bool true jika query mengandung domain + issue (kontekstual)
      */
     private function isContextualQuery(string $query): bool
     {
         $hasDomain = false;
         $hasIssue  = false;
 
-        // 3.1 Periksa apakah query mengandung salah satu domain term
+        // Periksa apakah query mengandung salah satu domain term
         foreach ($this->domainTerms as $term) {
             if (strpos($query, $term) !== false) {
                 $hasDomain = true;
@@ -318,7 +317,7 @@ class ConversationFlowService
             }
         }
 
-        // 3.2 Periksa apakah query mengandung salah satu issue term
+        // Periksa apakah query mengandung salah satu issue term
         foreach ($this->issueTerms as $term) {
             if (strpos($query, $term) !== false) {
                 $hasIssue = true;
@@ -326,64 +325,58 @@ class ConversationFlowService
             }
         }
 
-        // 3.3 Dianggap kontekstual hanya jika KEDUANYA ada (domain + issue)
+        // Dianggap kontekstual hanya jika KEDUANYA ada (domain + issue)
         return $hasDomain && $hasIssue;
     }
 
     /**
-     * 4. Fungsi checkAmbiguity()
+     * =========================================================================
+     * 1. METODE CHECK AMBIGUITY
+     * =========================================================================
      *
-     * Fungsi ini memeriksa apakah query pengguna bersifat ambigu dan memerlukan
-     * pertanyaan klarifikasi sebelum dilakukan retrieval artikel.
+     * Fungsi:
+     * Memeriksa apakah query pengguna bersifat ambigu dan memerlukan klarifikasi.
      *
-     * Logika deteksi ambiguitas:
-     * 1. Query kontekstual (domain + issue) → TIDAK ambigu, langsung ke retrieval.
-     * 2. Query mengandung pola ambigu TAPI ada kata signifikan lain → TIDAK ambigu.
-     * 3. Query hanya berisi pola ambigu tanpa konteks → AMBIGU, perlu klarifikasi.
-     * 4. Query sangat pendek (< 5 karakter, hanya huruf) → AMBIGU.
-     *
-     * Alur proses:
+     * Alur Proses:
      * 1. Normalisasi query ke huruf kecil.
      * 2. Lewati pengecekan jika query sudah kontekstual (domain + issue).
      * 3. Cek apakah query mengandung pola ambigu yang berdiri sendiri.
      * 4. Cek apakah query terlalu pendek dan terlalu generik.
+     * 5. Mengembalikan hasil pengecekan ambiguitas.
      *
-     * Parameter:
-     * - string $query : Query mentah dari pengguna
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
      *
-     * Kembalikan:
-     * - array : ['is_ambiguous' => bool] atau
-     *           ['is_ambiguous' => true, 'query' => string, 'clarification' => array]
+     * Output:
+     * - array ['is_ambiguous' => bool] atau ['is_ambiguous' => true, 'query' => string, 'clarification' => array]
      */
     public function checkAmbiguity(string $query): array
     {
         $query = strtolower(trim($query));
 
-        // 4.1 Query yang mengandung kombinasi domain + issue tidak perlu klarifikasi
-        // Contoh: "wifi lemot" → langsung ke retrieval tanpa tanya balik
+        // Query yang mengandung kombinasi domain + issue tidak perlu klarifikasi
         if ($this->isContextualQuery($query)) {
             return ['is_ambiguous' => false];
         }
 
-        // 4.2 Periksa apakah query mengandung pola ambigu yang berdiri sendiri
+        // Periksa apakah query mengandung pola ambigu yang berdiri sendiri
         foreach ($this->ambiguousPatterns as $pattern) {
             if (strpos($query, $pattern) !== false) {
                 $patternPos    = strpos($query, $pattern);
                 $beforePattern = trim(substr($query, 0, $patternPos));
                 $afterPattern  = trim(substr($query, $patternPos + strlen($pattern)));
 
-                // 4.3 Hitung kata signifikan (lebih dari 2 karakter) di luar pola ambigu
-                // Jika ada kata signifikan lain, query tidak sepenuhnya ambigu
+                // Hitung kata signifikan di luar pola ambigu
                 $extraWords = 0;
                 if (strlen($beforePattern) > 2) $extraWords++;
                 if (strlen($afterPattern) > 2) $extraWords++;
 
-                // 4.4 Ada kata signifikan lain → query kontekstual, tidak ambigu
+                // Ada kata signifikan lain → query kontekstual, tidak ambigu
                 if ($extraWords > 0) {
                     return ['is_ambiguous' => false];
                 }
 
-                // 4.5 Pola ambigu berdiri sendiri → perlu klarifikasi
+                // Pola ambigu berdiri sendiri → perlu klarifikasi
                 return [
                     'is_ambiguous'  => true,
                     'query'         => $query,
@@ -392,7 +385,7 @@ class ConversationFlowService
             }
         }
 
-        // 4.6 Query sangat pendek (< 5 karakter, hanya huruf) → terlalu generik
+        // Query sangat pendek → terlalu generik
         if (strlen($query) < 5 && preg_match('/^[a-z]+$/', $query)) {
             return [
                 'is_ambiguous'  => true,
@@ -408,23 +401,28 @@ class ConversationFlowService
     }
 
     /**
-     * 5. Fungsi getClarificationForQuery() [private]
+     * =========================================================================
+     * 1. METODE GET CLARIFICATION FOR QUERY
+     * =========================================================================
      *
-     * Fungsi pembantu internal yang menyusun pertanyaan klarifikasi yang tepat
-     * berdasarkan kata kunci ambigu dalam query pengguna.
+     * Fungsi:
+     * Menyusun pertanyaan klarifikasi yang tepat berdasarkan kata kunci ambigu.
      *
-     * Pemetaan dilakukan dari kata kunci ambigu ke pertanyaan yang lebih personal.
-     * Misalnya: "lemot" → "Yang sedang lemot apa ya? 😊"
+     * Alur Proses:
+     * 1. Menerima query ambigu yang perlu diklarifikasi.
+     * 2. Peta dari kata ambigu ke pertanyaan klarifikasi yang sesuai.
+     * 3. Cari pertanyaan yang paling sesuai berdasarkan kata kunci.
+     * 4. Mengembalikan pertanyaan dan saran kategori.
      *
-     * Parameter:
-     * - string $query : Query ambigu yang perlu diklarifikasi
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
      *
-     * Kembalikan:
-     * - array : ['question' => string, 'suggestions' => array]
+     * Output:
+     * - array ['question' => string, 'suggestions' => array]
      */
     private function getClarificationForQuery(string $query): array
     {
-        // 5.1 Peta dari kata ambigu ke pertanyaan klarifikasi yang sesuai
+        // Peta dari kata ambigu ke pertanyaan klarifikasi yang sesuai
         $categoryMap = [
             'lemot'     => 'Yang sedang lemot apa ya? 😊',
             'lambat'    => 'Yang sedang lambat apa ya? 😊',
@@ -441,7 +439,7 @@ class ConversationFlowService
             'kosong'    => 'Yang kosong apa? 😊',
         ];
 
-        // 5.2 Cari pertanyaan yang paling sesuai berdasarkan kata kunci
+        // Cari pertanyaan yang paling sesuai berdasarkan kata kunci
         $question = 'Bisa lebih spesifik? 😊';
         foreach ($categoryMap as $keyword => $q) {
             if (strpos($query, $keyword) !== false) {
@@ -457,31 +455,33 @@ class ConversationFlowService
     }
 
     /**
-     * 6. Fungsi getCategorySuggestions() [private]
+     * =========================================================================
+     * 1. METODE GET CATEGORY SUGGESTIONS
+     * =========================================================================
      *
-     * Fungsi pembantu internal yang mengambil 4 kategori acak dari database
-     * untuk ditampilkan sebagai pilihan saran ketika query ambigu.
+     * Fungsi:
+     * Mengambil 4 kategori acak dari database untuk ditampilkan sebagai pilihan saran.
      *
-     * Deduplikasi dilakukan untuk menghindari kategori dengan nama sama
-     * ditampilkan dua kali (meskipun memiliki ID berbeda).
-     *
-     * Alur proses:
+     * Alur Proses:
      * 1. Ambil 4 kategori acak dari database.
      * 2. Deduplikasi berdasarkan nama (case-insensitive).
      * 3. Format sebagai array saran.
+     * 4. Mengembalikan array saran kategori.
      *
-     * Kembalikan:
-     * - array : Array saran kategori [['id', 'label', 'type'], ...]
+     * Query yang Digunakan:
+     * - Category::inRandomOrder()->limit(4)->get(['id', 'name']): Ambil 4 kategori acak
+     *
+     * Output:
+     * - array saran kategori [['id', 'label', 'type'], ...]
      */
     private function getCategorySuggestions(): array
     {
-        // 6.1 Query ini mengambil 4 kategori secara acak untuk ditampilkan
-        // sebagai pilihan saran klarifikasi kepada pengguna
+        // Ambil 4 kategori acak dari database
         $categories = Category::inRandomOrder()
             ->limit(4)
             ->get(['id', 'name']);
 
-        // 6.2 Deduplikasi berdasarkan nama agar tidak ada kategori ganda
+        // Deduplikasi berdasarkan nama agar tidak ada kategori ganda
         $seen   = [];
         $unique = [];
         foreach ($categories as $cat) {
@@ -500,77 +500,92 @@ class ConversationFlowService
     }
 
     /**
-     * 7. Fungsi storeContext()
+     * =========================================================================
+     * 1. METODE STORE CONTEXT
+     * =========================================================================
      *
-     * Fungsi ini menyimpan konteks percakapan ke dalam session Laravel.
-     * Konteks digunakan untuk memahami pertanyaan lanjutan dari pengguna
-     * dalam percakapan multi-turn.
+     * Fungsi:
+     * Menyimpan konteks percakapan ke dalam session Laravel.
      *
-     * Hanya 5 interaksi terakhir yang disimpan untuk mencegah session membengkak
-     * (session bloat) yang dapat memperlambat performa.
+     * Alur Proses:
+     * 1. Menerima tipe konteks dan data konteks.
+     * 2. Ambil riwayat percakapan yang sudah tersimpan di session.
+     * 3. Tambahkan konteks baru beserta timestamp.
+     * 4. Potong array agar hanya 5 interaksi terakhir yang disimpan.
+     * 5. Simpan kembali ke session.
      *
-     * Alur proses:
-     * 1. Ambil riwayat percakapan yang sudah tersimpan di session.
-     * 2. Tambahkan konteks baru beserta timestamp.
-     * 3. Potong array agar hanya 5 interaksi terakhir yang disimpan.
-     * 4. Simpan kembali ke session.
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
      *
-     * Parameter:
-     * - string $context : Tipe konteks percakapan (misalnya: 'kategori', 'article')
-     * - mixed  $data    : Data konteks yang ingin disimpan
-     *
-     * Kembalikan:
+     * Output:
      * - void
      */
     public function storeContext(string $context, mixed $data): void
     {
-        // 7.1 Ambil riwayat percakapan yang sudah ada di session
+        // Ambil riwayat percakapan yang sudah ada di session
         $conversationHistory = Session::get('chatbot_conversation', []);
 
-        // 7.2 Tambahkan entri konteks baru dengan timestamp
+        // Tambahkan entri konteks baru dengan timestamp
         $conversationHistory[] = [
             'context'   => $context,
             'data'      => $data,
             'timestamp' => now()->timestamp,
         ];
 
-        // 7.3 Batasi hanya 5 interaksi terakhir untuk mencegah session membengkak
+        // Batasi hanya 5 interaksi terakhir untuk mencegah session membengkak
         $conversationHistory = array_slice($conversationHistory, -5);
 
         Session::put('chatbot_conversation', $conversationHistory);
     }
 
     /**
-     * 8. Fungsi getCurrentContext()
+     * =========================================================================
+     * 1. METODE GET CURRENT CONTEXT
+     * =========================================================================
      *
-     * Fungsi ini mengambil konteks percakapan paling terakhir dari session.
-     * Konteks ini digunakan untuk memahami topik percakapan sebelumnya
-     * saat pengguna mengirim pertanyaan lanjutan.
+     * Fungsi:
+     * Mengambil konteks percakapan paling terakhir dari session.
      *
-     * Kembalikan:
-     * - array|null : Konteks terakhir atau null jika tidak ada riwayat
+     * Alur Proses:
+     * 1. Ambil seluruh riwayat percakapan dari session.
+     * 2. Kembalikan entri paling terakhir sebagai konteks aktif.
+     * 3. Mengembalikan null jika tidak ada riwayat.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
+     * - array|null konteks terakhir atau null jika tidak ada riwayat
      */
     public function getCurrentContext(): ?array
     {
-        // 8.1 Ambil seluruh riwayat percakapan dari session
+        // Ambil seluruh riwayat percakapan dari session
         $conversationHistory = Session::get('chatbot_conversation', []);
 
         if (empty($conversationHistory)) {
             return null;
         }
 
-        // 8.2 Kembalikan entri paling terakhir sebagai konteks aktif
+        // Kembalikan entri paling terakhir sebagai konteks aktif
         return end($conversationHistory);
     }
 
     /**
-     * 9. Fungsi clearContext()
+     * =========================================================================
+     * 1. METODE CLEAR CONTEXT
+     * =========================================================================
      *
-     * Fungsi ini menghapus seluruh riwayat percakapan dari session.
-     * Dipanggil ketika sesi percakapan baru dimulai atau pengguna
-     * meminta reset percakapan.
+     * Fungsi:
+     * Menghapus seluruh riwayat percakapan dari session.
      *
-     * Kembalikan:
+     * Alur Proses:
+     * 1. Menghapus session chatbot_conversation.
+     * 2. Mengembalikan void.
+     *
+     * Query yang Digunakan:
+     * - Tidak ada query SQL langsung
+     *
+     * Output:
      * - void
      */
     public function clearContext(): void
@@ -579,45 +594,42 @@ class ConversationFlowService
     }
 
     /**
-     * 10. Fungsi getSearchSuggestions()
+     * =========================================================================
+     * 1. METODE GET SEARCH SUGGESTIONS
+     * =========================================================================
      *
-     * Fungsi ini menyediakan saran pencarian berdasarkan partial query pengguna.
-     * Saran diambil dari judul artikel yang sudah dipublikasi dan diurutkan
-     * berdasarkan popularitas (views).
+     * Fungsi:
+     * Menyediakan saran pencarian berdasarkan partial query pengguna.
      *
-     * Fungsi ini digunakan untuk fitur autocomplete/typeahead di antarmuka chatbot.
-     * Query minimum adalah 2 karakter untuk menghindari terlalu banyak hasil.
-     *
-     * Alur proses:
+     * Alur Proses:
      * 1. Validasi panjang query minimum (2 karakter).
      * 2. Cari artikel yang judulnya mengandung substring query.
      * 3. Format hasil sebagai array saran.
+     * 4. Mengembalikan array saran.
      *
-     * Parameter:
-     * - string $query : Partial query dari pengguna (minimum 2 karakter)
-     * - int    $batas : Jumlah saran maksimal yang dikembalikan (default: 5)
+     * Query yang Digunakan:
+     * - Article::where('is_published', true)->where('title', 'LIKE', "%{$query}%")->orderBy('views', 'desc')->limit($limit)->get(['id', 'title', 'slug']): Cari artikel berdasarkan judul
      *
-     * Kembalikan:
-     * - array : Array saran [['id', 'label', 'slug', 'type'], ...] atau array kosong
+     * Output:
+     * - array saran [['id', 'label', 'slug', 'type'], ...] atau array kosong
      */
     public function getSearchSuggestions(string $query, int $limit = 5): array
     {
         $query = trim(strtolower($query));
 
-        // 10.1 Tidak tampilkan saran jika query terlalu pendek (kurang dari 2 karakter)
+        // Tidak tampilkan saran jika query terlalu pendek
         if (strlen($query) < 2) {
             return [];
         }
 
-        // 10.2 Query ini mencari artikel yang judulnya mengandung kata kunci pengguna
-        // dan mengurutkannya berdasarkan jumlah tampilan (views) terbanyak
+        // Cari artikel yang judulnya mengandung kata kunci pengguna
         $articles = Article::where('is_published', true)
             ->where('title', 'LIKE', "%{$query}%")
             ->orderBy('views', 'desc')
             ->limit($limit)
             ->get(['id', 'title', 'slug']);
 
-        // 10.3 Format hasil sebagai array saran autocomplete
+        // Format hasil sebagai array saran autocomplete
         return $articles->map(fn($article) => [
             'id'    => $article->id,
             'label' => $article->title,
@@ -627,76 +639,75 @@ class ConversationFlowService
     }
 
     /**
-     * 11. Fungsi refineQuery()
+     * =========================================================================
+     * 1. METODE REFINE QUERY
+     * =========================================================================
      *
-     * Fungsi ini memperkaya query pengguna dengan informasi konteks dari percakapan
-     * sebelumnya. Jika konteks menyebut kategori atau subtopik tertentu,
-     * nama tersebut ditambahkan di depan query baru.
+     * Fungsi:
+     * Memperkaya query pengguna dengan informasi konteks dari percakapan sebelumnya.
      *
-     * Contoh:
-     * - Konteks sebelumnya: pengguna memilih kategori "WiFi"
-     * - Query baru: "lemot"
-     * - Query yang diperhalus: "WiFi lemot"
+     * Alur Proses:
+     * 1. Menerima query baru dan konteks percakapan sebelumnya.
+     * 2. Jika konteks adalah kategori, tambahkan nama kategori di depan query.
+     * 3. Jika konteks adalah subtopik, tambahkan nama subtopik di depan query.
+     * 4. Mengembalikan query yang sudah diperkaya.
      *
-     * Parameter:
-     * - string $query   : Query baru dari pengguna
-     * - array  $context : Konteks percakapan sebelumnya dari getCurrentContext()
+     * Query yang Digunakan:
+     * - Category::find($context['data']['category_id']): Cari kategori berdasarkan ID dari konteks
      *
-     * Kembalikan:
-     * - string : Query yang sudah diperkaya dengan konteks
+     * Output:
+     * - string query yang sudah diperkaya dengan konteks
      */
     public function refineQuery(string $query, array $context): string
     {
-        // 11.1 Jika konteks sebelumnya adalah pemilihan kategori, tambahkan nama kategori
+        // Jika konteks sebelumnya adalah pemilihan kategori, tambahkan nama kategori
         if (isset($context['data']['category_id'])) {
-            // Query ini mencari nama kategori berdasarkan ID dari konteks percakapan
+            // Cari nama kategori berdasarkan ID dari konteks percakapan
             $category = Category::find($context['data']['category_id']);
             if ($category) {
                 return "{$category->name} {$query}";
             }
         }
 
-        // 11.2 Jika konteks sebelumnya adalah subtopik, tambahkan nama subtopik
+        // Jika konteks sebelumnya adalah subtopik, tambahkan nama subtopik
         if (isset($context['data']['subtopic'])) {
             return "{$context['data']['subtopic']} {$query}";
         }
 
-        // 11.3 Tidak ada konteks relevan — kembalikan query asli tanpa perubahan
+        // Tidak ada konteks relevan — kembalikan query asli tanpa perubahan
         return $query;
     }
 
     /**
-     * 12. Fungsi getRelatedArticles()
+     * =========================================================================
+     * 1. METODE GET RELATED ARTICLES
+     * =========================================================================
      *
-     * Fungsi ini mengambil artikel-artikel terkait dari kategori yang sama
-     * dengan artikel yang sedang dilihat, untuk ditampilkan sebagai rekomendasi.
+     * Fungsi:
+     * Mengambil artikel-artikel terkait dari kategori yang sama dengan artikel yang sedang dilihat.
      *
-     * Artikel yang ditampilkan adalah artikel dengan views terbanyak
-     * dalam kategori yang sama, selain artikel saat ini.
-     *
-     * Alur proses:
+     * Alur Proses:
      * 1. Temukan artikel sumber berdasarkan ID.
      * 2. Ambil artikel lain dari kategori yang sama dengan views tertinggi.
      * 3. Format sebagai array rekomendasi.
+     * 4. Mengembalikan array artikel terkait.
      *
-     * Parameter:
-     * - int $articleId : ID artikel sumber
-     * - int $batas     : Jumlah artikel terkait yang dikembalikan (default: 3)
+     * Query yang Digunakan:
+     * - Article::find($articleId): Cari artikel sumber berdasarkan ID
+     * - Article::where('category_id', $article->category_id)->where('id', '!=', $articleId)->where('is_published', true)->orderBy('views', 'desc')->limit($limit)->get(['id', 'title', 'slug', 'excerpt']): Ambil artikel terkait
      *
-     * Kembalikan:
-     * - array : Array artikel terkait [['id', 'judul', 'slug', 'excerpt', 'category_name'], ...]
-     *         atau array kosong jika artikel tidak ditemukan
+     * Output:
+     * - array artikel terkait [['id', 'title', 'slug', 'excerpt', 'category_name'], ...] atau array kosong
      */
     public function getRelatedArticles(int $articleId, int $limit = 3): array
     {
-        // 12.1 Query ini mencari artikel sumber berdasarkan ID
+        // Cari artikel sumber berdasarkan ID
         $article = Article::find($articleId);
         if (!$article) {
             return [];
         }
 
-        // 12.2 Query ini mengambil artikel terkait dari kategori yang sama
-        // dengan jumlah views terbanyak, kecuali artikel yang sedang dilihat
+        // Ambil artikel terkait dari kategori yang sama dengan views terbanyak
         $related = Article::where('category_id', $article->category_id)
             ->where('id', '!=', $articleId)
             ->where('is_published', true)
@@ -704,7 +715,7 @@ class ConversationFlowService
             ->limit($limit)
             ->get(['id', 'title', 'slug', 'excerpt']);
 
-        // 12.3 Format hasil dengan nama kategori untuk konteks yang lebih jelas
+        // Format hasil dengan nama kategori untuk konteks yang lebih jelas
         return $related->map(fn($art) => [
             'id'            => $art->id,
             'title'         => $art->title,
