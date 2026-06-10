@@ -18,9 +18,8 @@ Dokumentasi ini menjelaskan struktur database lengkap sistem HelpDesk TA, termas
 8. **ticket_logs** - Tabel log aktivitas tiket
 9. **notifications** - Tabel notifikasi sistem
 10. **chatbot** - Tabel knowledge base chatbot
-11. **article_keyword_index** - Tabel indeks keyword artikel (TF-IDF)
-12. **ticket_otps** - Tabel OTP verifikasi tiket
-13. **settings** - Tabel pengaturan sistem
+11. **ticket_otps** - Tabel OTP verifikasi tiket
+12. **settings** - Tabel pengaturan sistem
 
 ---
 
@@ -269,32 +268,7 @@ Dokumentasi ini menjelaskan struktur database lengkap sistem HelpDesk TA, termas
 
 ---
 
-## 11. Tabel article_keyword_index
-
-**Fungsi:** Menyimpan indeks keyword artikel untuk sistem pencarian TF-IDF (Term Frequency-Inverse Document Frequency) yang digunakan oleh chatbot.
-
-### Atribut
-
-| Nama Kolom | Tipe Data | Panjang | Nullable | Default | Keterangan |
-|------------|-----------|---------|----------|---------|------------|
-| id | ULID | 26 | NO | - | Primary Key |
-| article_id | ULID | 26 | NO | - | Foreign Key ke articles (cascade delete) |
-| keyword | VARCHAR | - | NO | - | Keyword individual |
-| tf | FLOAT | - | NO | 0 | Term Frequency (frekuensi keyword dalam artikel) |
-| field_boosts | JSON | - | YES | NULL | Boost factor per field: {'title': 3, 'content': 1} |
-| created_at | TIMESTAMP | - | YES | NULL | Timestamp pembuatan record |
-| updated_at | TIMESTAMP | - | YES | NULL | Timestamp update terakhir |
-
-### Index
-- PRIMARY: id
-- UNIQUE: (article_id, keyword) - mencegah duplikasi keyword per artikel
-- INDEX: keyword
-- INDEX: (keyword, article_id) - untuk lookup cepat
-- FOREIGN KEY: article_id → articles(id)
-
----
-
-## 12. Tabel ticket_otps
+## 11. Tabel ticket_otps
 
 **Fungsi:** Menyimpan data OTP (One-Time Password) untuk verifikasi email sebelum membuat tiket, mencegah spam.
 
@@ -323,7 +297,7 @@ Dokumentasi ini menjelaskan struktur database lengkap sistem HelpDesk TA, termas
 
 ---
 
-## 13. Tabel settings
+## 12. Tabel settings
 
 **Fungsi:** Menyimpan pengaturan sistem secara dinamis (key-value pairs) untuk konfigurasi yang dapat diubah tanpa mengubah kode.
 
@@ -475,17 +449,6 @@ Dokumentasi ini menjelaskan struktur database lengkap sistem HelpDesk TA, termas
 └─────────────────┘
 
 ┌─────────────────┐
-│article_keyword  │
-│    _index       │
-├─────────────────┤
-│ id (PK)         │
-│ article_id (FK) │
-│ keyword         │
-│ tf              │
-│ field_boosts    │
-└─────────────────┘
-
-┌─────────────────┐
 │  ticket_otps    │
 ├─────────────────┤
 │ id (PK)         │
@@ -533,7 +496,6 @@ Dokumentasi ini menjelaskan struktur database lengkap sistem HelpDesk TA, termas
 - **Many-to-One** → categories
 - **Many-to-One** → users (staff)
 - **One-to-Many** → article_feedback
-- **One-to-Many** → article_keyword_index
 
 ### tickets
 - **Many-to-One** → categories
