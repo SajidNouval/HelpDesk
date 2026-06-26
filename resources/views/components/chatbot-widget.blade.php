@@ -1419,40 +1419,63 @@ document.addEventListener('DOMContentLoaded', function() {
         const storedEmail    = localStorage.getItem('guest_livechat_email');
         const storedMode     = localStorage.getItem('guest_livechat_mode');
 
-        if (storedTicketId && storedMode) {
-            console.log('[CHATBOT] Restoring active live chat session:', { storedTicketId, storedMode });
-            activeLiveChatTicketId = storedTicketId;
-            activeLiveChatEmail    = storedEmail;
+        // Tidak ada sesi tersimpan - tidak perlu buka widget
+        if (!storedTicketId || !storedMode) return;
 
+        console.log('[CHATBOT] Checking active live chat session:', { storedTicketId, storedMode });
+
+        activeLiveChatTicketId = storedTicketId;
+        activeLiveChatEmail    = storedEmail;
+
+        try {
+            const response = await fetch(`/api/tickets/${storedTicketId}/status`, {
+                headers: { 'Accept': 'application/json' }
+            });
+
+            // Jika ticket tidak ditemukan (404) atau error server - cleanup dan jangan buka widget
+            if (!response.ok) {
+                console.log('[CHATBOT] Stored ticket not found or error, cleaning up session');
+                cleanupLiveChatSession();
+                return;
+            }
+
+            const data = await response.json();
+
+            // Ticket sudah closed/completed - cleanup dan jangan buka widget
+            if (['closed', 'completed'].includes(data.status)) {
+                console.log('[CHATBOT] Stored ticket is closed/completed, cleaning up');
+                cleanupLiveChatSession();
+                return;
+            }
+
+            // Ticket waiting tapi sudah ada staff - cleanup (edge case)
+            if (data.status === 'waiting' && data.assigned_staff) {
+                cleanupLiveChatSession();
+                return;
+            }
+
+            // Status valid: baru sekarang buka widget
             widget.classList.add('show');
             toggle.classList.add('hide');
 
             const greeting = document.getElementById('chatbot-greeting');
             if (greeting) greeting.classList.add('hidden');
 
-            try {
-                const response = await fetch(`/api/tickets/${storedTicketId}/status`, {
-                    headers: { 'Accept': 'application/json' }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    if (['closed', 'completed'].includes(data.status) || (data.status === 'waiting' && data.assigned_staff)) {
-                        cleanupLiveChatSession();
-                        window.location.reload();
-                    } else if (data.status === 'progress' && data.assigned_staff) {
-                        connectToStaff(data.staff_name);
-                    } else {
-                        chatMode = 'waiting_staff';
-                        localStorage.setItem('guest_livechat_mode', 'waiting_staff');
-                        syncChatUiState('waiting_staff');
-                        messagesContainer.innerHTML = '';
-                        addWaitingMessage();
-                        initRealtimeAndListen(activeLiveChatTicketId);
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to restore live chat session status:', error);
+            if (data.status === 'progress' && data.assigned_staff) {
+                connectToStaff(data.staff_name);
+            } else {
+                // Masih menunggu staff
+                chatMode = 'waiting_staff';
+                localStorage.setItem('guest_livechat_mode', 'waiting_staff');
+                syncChatUiState('waiting_staff');
+                messagesContainer.innerHTML = '';
+                addWaitingMessage();
+                initRealtimeAndListen(activeLiveChatTicketId);
             }
+        } catch (error) {
+            // Fetch gagal (network error, server down) - cleanup dan JANGAN buka widget
+            console.error('[CHATBOT] Failed to restore live chat session, cleaning up:', error);
+            cleanupLiveChatSession();
         }
     }
 

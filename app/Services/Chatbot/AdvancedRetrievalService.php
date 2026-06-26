@@ -901,6 +901,14 @@ class AdvancedRetrievalService
         }
         
         $domain = $domainInfo['domain'];
+        
+        // Coba ambil secara dinamis dari DomainDetectionService terlebih dahulu
+        $dynamicCategories = $this->domainDetector->getDomainCategories($domain);
+        if (!empty($dynamicCategories)) {
+            return $dynamicCategories;
+        }
+        
+        // Fallback ke mapping hardcoded jika dinamis kosong/gagal
         return $this->domainCategoryMap[$domain] ?? [];
     }
     

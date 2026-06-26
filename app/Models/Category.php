@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * =========================================================================
@@ -50,8 +51,21 @@ class Category extends Model
      * Output:
      * - Relasi hasMany StaffProfile.
      */
-    public function staffProfiles()
+    public function staffProfiles(): HasMany
     {
         return $this->hasMany(StaffProfile::class);
+    }
+
+    /**
+     * Fungsi:
+     * Mengambil semua kata kunci domain yang diasosiasikan dengan kategori ini.
+     * Digunakan oleh DomainDetectionService untuk deteksi domain dinamis.
+     *
+     * Output:
+     * - Relasi hasMany CategoryDomainKeyword.
+     */
+    public function domainKeywords(): HasMany
+    {
+        return $this->hasMany(CategoryDomainKeyword::class);
     }
 }

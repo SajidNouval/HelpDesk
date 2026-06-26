@@ -160,6 +160,16 @@ class ChatbotRetrievalService
         $domainInfo = $this->domainDetector->detectDomain($query);
         $this->debugInfo['detected_domain'] = $domainInfo['domain'] ?? null;
 
+        // 1.25 Cek apakah query di luar domain IT/support
+        $outOfDomainCheck = $this->domainDetector->detectOutOfDomain($query);
+        if ($outOfDomainCheck['is_out_of_domain']) {
+            $reason = $outOfDomainCheck['reason'] ?? '';
+            // Jangan reject langsung jika alasannya 'no_it_keywords' agar pencarian fallback diizinkan
+            if ($reason !== 'no_it_keywords') {
+                return $this->emptyResult($query);
+            }
+        }
+
         // ============================================================
         // FASE A: RETRIEVAL UTAMA VIA TYPESENSE (bobot 85%)
         // Typesense adalah sumber ranking primer dengan fuzzy kecocokan

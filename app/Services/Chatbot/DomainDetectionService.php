@@ -3,8 +3,10 @@
 namespace App\Services\Chatbot;
 
 use App\Models\Category;
+use App\Models\CategoryDomainKeyword;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * =========================================================================
@@ -46,6 +48,10 @@ class DomainDetectionService
     // Konfigurasi cache untuk menyimpan saran domain
     private const DOMAIN_CACHE_KEY = 'chatbot:domain:mapping';
     private const DOMAIN_CACHE_TTL = 3600; // 1 jam dalam detik
+
+    // Cache untuk dynamic domain keywords yang dimuat dari database
+    private const DYNAMIC_KEYWORDS_CACHE_KEY = 'chatbot:domain:dynamic_keywords';
+    private const DYNAMIC_KEYWORDS_CACHE_TTL = 3600; // 1 jam dalam detik
 
     /**
      * Daftar domain IT yang valid dan terverifikasi.
@@ -330,6 +336,9 @@ class DomainDetectionService
         'rendang', 'nasi', 'gado', 'sate', 'bakso', 'mie',
         'masak', 'memasak', 'dapur', 'resep', 'makanan', 'minuman',
 
+        // Peralatan rumah tangga & elektronik non-IT
+        'kulkas', 'mesin cuci', 'dispenser', 'microwave',
+
         // Kendaraan
         'mobil', 'motor', 'sepeda', 'truk', 'bus', 'kereta',
         'balap', 'rally', 'otomotif', 'bengkel', 'sparepart',
@@ -468,14 +477,15 @@ class DomainDetectionService
      *
      * Fungsi:
      * Inisialisasi dependensi service dan konfigurasi internal.
+     * Memuat keyword domain dinamis dari database (di-merge dengan hardcoded).
      *
      * Alur Proses:
      * 1. Menerima dependency service melalui konstruktor.
-     * 1. Menyimpan dependensi ke properti internal.
-     * 1. Menyiapkan mode debug jika diperlukan.
+     * 2. Menyimpan dependensi ke properti internal.
+     * 3. Memuat keyword domain dinamis dari database.
      *
      * Query yang Digunakan:
-     * - Tidak ada query SQL langsung
+     * - Tidak ada query SQL langsung (dilakukan di loadDomainKeywords)
      *
      * Output:
      * - void
@@ -483,6 +493,129 @@ class DomainDetectionService
     public function __construct(PreprocessingService $preprocessor)
     {
         $this->preprocessor = $preprocessor;
+        $this->loadDomainKeywords();
+    }
+
+    /**
+     * =========================================================================
+     * 1. METODE LOAD DOMAIN KEYWORDS
+     * =========================================================================
+     *
+     * Fungsi:
+     * Memuat keyword domain dari database dan meng-merge-nya dengan keyword
+     * hardcoded yang sudah ada. Keyword dari database ditambahkan ke domain
+     * yang sudah ada, dan kategori DB yang belum ada domainnya dibuat baru.
+     *
+     * Strategi merge:
+     * - Domain hardcoded tetap sebagai fondasi (backward compatible)
+     * - Keyword dari DB ditambahkan ke domain yang cocok (berdasarkan nama kategori)
+     * - Kategori DB yang tidak cocok dengan domain manapun dibuat sebagai domain baru
+     * - Jika DB error, sistem fallback ke hardcoded saja (tidak crash)
+     *
+     * Query yang Digunakan:
+     * - Category::with('domainKeywords'): Ambil semua kategori beserta keywordnya
+     *
+     * Output:
+     * - void (mengupdate $this->domainKeywords in-place)
+     */
+    private function loadDomainKeywords(): void
+    {
+        try {
+            // Coba ambil dari cache terlebih dahulu
+            $cached = Cache::get(self::DYNAMIC_KEYWORDS_CACHE_KEY);
+            if ($cached !== null) {
+                $this->domainKeywords = $cached;
+                return;
+            }
+
+            // Baca semua kategori beserta keyword domain dari DB
+            $categories = Category::with('domainKeywords')->get();
+
+            if ($categories->isEmpty()) {
+                // Tidak ada kategori di DB — pakai hardcoded saja
+                return;
+            }
+
+            // Buat salinan hardcoded sebagai fondasi
+            $merged = $this->domainKeywords;
+
+            foreach ($categories as $category) {
+                $categoryNameLower = mb_strtolower(trim($category->name));
+
+                // Cari domain yang cocok berdasarkan nama kategori (case-insensitive)
+                $matchedDomain = null;
+                foreach (array_keys($merged) as $domainKey) {
+                    if (stripos($categoryNameLower, $domainKey) !== false ||
+                        stripos($domainKey, $categoryNameLower) !== false) {
+                        $matchedDomain = $domainKey;
+                        break;
+                    }
+                    // Cek juga apakah nama kategori ada di categories array domain
+                    $domainCategories = $merged[$domainKey]['categories'] ?? [];
+                    foreach ($domainCategories as $dc) {
+                        if (stripos($categoryNameLower, $dc) !== false ||
+                            stripos($dc, $categoryNameLower) !== false) {
+                            $matchedDomain = $domainKey;
+                            break 2;
+                        }
+                    }
+                }
+
+                // Asosiasikan nama kategori DB aktual dengan domain yang cocok
+                if ($matchedDomain !== null) {
+                    if (!in_array($category->name, $merged[$matchedDomain]['categories'])) {
+                        $merged[$matchedDomain]['categories'][] = $category->name;
+                    }
+                }
+
+                // Tambahkan keyword dari DB ke domain yang cocok
+                if ($category->domainKeywords->isNotEmpty()) {
+                    $dbKeywords = $category->domainKeywords->pluck('keyword')->toArray();
+
+                    if ($matchedDomain !== null) {
+                        // Merge keyword baru ke domain yang sudah ada
+                        $existing = $merged[$matchedDomain]['keywords'] ?? [];
+                        $merged[$matchedDomain]['keywords'] = array_values(
+                            array_unique(array_merge($existing, $dbKeywords))
+                        );
+                    } else {
+                        // Buat domain baru untuk kategori yang tidak cocok dengan domain manapun
+                        $domainKey = $categoryNameLower;
+                        if (!isset($merged[$domainKey])) {
+                            $merged[$domainKey] = [
+                                'keywords'   => $dbKeywords,
+                                'categories' => [$category->name],
+                            ];
+                        } else {
+                            $merged[$domainKey]['keywords'] = array_values(
+                                array_unique(array_merge($merged[$domainKey]['keywords'], $dbKeywords))
+                            );
+                            if (!in_array($category->name, $merged[$domainKey]['categories'])) {
+                                $merged[$domainKey]['categories'][] = $category->name;
+                            }
+                        }
+                    }
+                } elseif ($matchedDomain === null) {
+                    // Kategori tanpa keyword — tetap tambahkan ke itDomainVocabulary
+                    // agar nama kategori dikenali sebagai vocabulary IT
+                    if (!in_array($categoryNameLower, $this->itDomainVocabulary)) {
+                        $this->itDomainVocabulary[] = $categoryNameLower;
+                    }
+                }
+            }
+
+            $this->domainKeywords = $merged;
+
+            // Simpan ke cache agar request berikutnya tidak perlu query DB
+            Cache::put(self::DYNAMIC_KEYWORDS_CACHE_KEY, $merged, self::DYNAMIC_KEYWORDS_CACHE_TTL);
+
+        } catch (\Exception $e) {
+            // Jika DB belum siap (saat migration, testing, dll.) — fallback ke hardcoded
+            Log::warning('DomainDetectionService: gagal memuat keyword dari DB, fallback ke hardcoded.', [
+                'error' => $e->getMessage(),
+            ]);
+            // $this->domainKeywords tetap berisi hardcoded — tidak ada yang berubah
+        }
     }
 
     /**
@@ -938,9 +1071,10 @@ class DomainDetectionService
     {
         $result = $query;
         foreach ($this->synonymMappings as $typo => $correct) {
-            if (str_contains($result, $typo)) {
-                $result = str_replace($typo, $correct, $result);
-            }
+            // Gunakan word boundary (\b) agar tidak merusak kata yang sudah benar
+            // yang mengandung typo sebagai substring (misal: 'email' mengandung 'emai').
+            $pattern = '/\b' . preg_quote($typo, '/') . '\b/ui';
+            $result = preg_replace($pattern, $correct, $result);
         }
         return $result;
     }
@@ -1024,7 +1158,10 @@ class DomainDetectionService
 
             // Normalisasi skor berdasarkan jumlah kata kunci domain
             if (!empty($keywords)) {
-                $score = min(1.0, $score / (count($keywords) * 0.5));
+                // Batasi pembagi (denominator) maksimal 3.0 untuk mencegah dilusi skor
+                // ketika jumlah kata kunci sangat banyak (baik bawaan maupun dinamis).
+                $denominator = min(3.0, count($keywords) * 0.5);
+                $score = min(1.0, $score / $denominator);
             }
 
             $scores[$domain] = $score;
@@ -1141,6 +1278,22 @@ class DomainDetectionService
 
     /**
      * =========================================================================
+     * 1. METODE GET DOMAIN CATEGORIES
+     * =========================================================================
+     *
+     * Fungsi:
+     * Mengambil daftar nama kategori yang diasosiasikan dengan domain tertentu.
+     *
+     * Output:
+     * - array daftar nama kategori, atau array kosong jika domain tidak ditemukan
+     */
+    public function getDomainCategories(string $domain): array
+    {
+        return $this->domainKeywords[$domain]['categories'] ?? [];
+    }
+
+    /**
+     * =========================================================================
      * 1. METODE CLEAR CACHE
      * =========================================================================
      *
@@ -1160,6 +1313,7 @@ class DomainDetectionService
     public function clearCache(): void
     {
         Cache::forget(self::DOMAIN_CACHE_KEY);
+        Cache::forget(self::DYNAMIC_KEYWORDS_CACHE_KEY);
     }
 
     /**

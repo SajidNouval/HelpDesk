@@ -1,0 +1,1639 @@
+# RUNTIME CALCULATION RESULT
+
+Query: `wifi lemot dan printer tidak mau print`
+
+Detected intents: `wifi lemot`, `printer tidak mau print`
+
+## Intent `wifi lemot`
+
+- Normalized intent: `wifi lemot`
+- Detected domain: `wifi`
+- Detected domain confidence: `0.375`
+- Allowed categories: `wifi`, `internet`, `jaringan`
+- Domain filter fallback applied: `no`
+- Expanded query: `wifi lemot internet jaringan hotspot koneksi router wireless lan wan internet jaringan hotspot koneksi router wireless lan wan`
+
+### Query preprocessing
+
+- Query tokens: `wifi`, `lemot`, `internet`, `jaring`, `hotspot`, `koneks`, `router`, `wireless`, `lan`, `wan`, `internet`, `jaring`, `hotspot`, `koneks`, `router`, `wireless`, `lan`, `wan`
+- Query term frequency (TF):
+  - `wifi`: 0.055556
+  - `lemot`: 0.055556
+  - `internet`: 0.111111
+  - `jaring`: 0.111111
+  - `hotspot`: 0.111111
+  - `koneks`: 0.111111
+  - `router`: 0.111111
+  - `wireless`: 0.111111
+  - `lan`: 0.111111
+  - `wan`: 0.111111
+- Query TF-IDF vector:
+  - `wifi`: 0.094063732253
+  - `lemot`: 0
+  - `internet`: 0.023317914319
+  - `jaring`: 0.188127464507
+  - `hotspot`: 0
+  - `koneks`: 0.233179143185
+  - `router`: 0.179893245378
+  - `wireless`: 0.265143817902
+  - `lan`: 0.233179143185
+  - `wan`: 0
+- IDF values used for query:
+  - `wifi`: 1.69314718056
+  - `lemot`: 0
+  - `internet`: 2.098612288668
+  - `jaring`: 1.69314718056
+  - `hotspot`: 0
+  - `koneks`: 2.098612288668
+  - `router`: 1.619039208406
+  - `wireless`: 2.38629436112
+  - `lan`: 2.098612288668
+  - `wan`: 0
+
+### Document candidates (6)
+
+#### Article: `Cara Mengatasi Wifi Tidak Terhubung ke Perangkat`
+
+- Category: `Wifi`
+- Document text length: `611` characters
+- Document frequency terms:
+  - `cara`: 3
+  - `wifi`: 14
+  - `hubung`: 8
+  - `angkat`: 8
+  - `router`: 6
+  - `signal`: 3
+  - `restart`: 3
+  - `mac`: 3
+  - `address`: 3
+  - `filtering`: 3
+  - `jaring`: 3
+  - `wireless`: 2
+  - `pandu`: 1
+  - `lengkap`: 1
+  - `asa`: 1
+  - `bab`: 1
+  - `faktor`: 1
+  - `past`: 2
+  - `ala`: 1
+  - `lampu`: 1
+  - `indikator`: 1
+  - `fungs`: 1
+  - `cek`: 1
+  - `jangkau`: 1
+  - `coba`: 2
+  - `cabut`: 1
+  - `kabel`: 1
+  - `power`: 1
+  - `10`: 1
+  - `detik`: 1
+  - `pasang`: 1
+  - `bal`: 2
+  - `asih`: 1
+  - `hasil`: 1
+  - `lupa`: 1
+  - `atur`: 1
+  - `sambung`: 1
+  - `asuk`: 1
+  - `password`: 1
+  - `blokir`: 1
+- Document TF values:
+  - `cara`: 0.033333333333
+  - `wifi`: 0.155555555556
+  - `hubung`: 0.088888888889
+  - `angkat`: 0.088888888889
+  - `router`: 0.066666666667
+  - `signal`: 0.033333333333
+  - `restart`: 0.033333333333
+  - `mac`: 0.033333333333
+  - `address`: 0.033333333333
+  - `filtering`: 0.033333333333
+  - `jaring`: 0.033333333333
+  - `wireless`: 0.022222222222
+  - `pandu`: 0.011111111111
+  - `lengkap`: 0.011111111111
+  - `asa`: 0.011111111111
+  - `bab`: 0.011111111111
+  - `faktor`: 0.011111111111
+  - `past`: 0.022222222222
+  - `ala`: 0.011111111111
+  - `lampu`: 0.011111111111
+  - `indikator`: 0.011111111111
+  - `fungs`: 0.011111111111
+  - `cek`: 0.011111111111
+  - `jangkau`: 0.011111111111
+  - `coba`: 0.022222222222
+  - `cabut`: 0.011111111111
+  - `kabel`: 0.011111111111
+  - `power`: 0.011111111111
+  - `10`: 0.011111111111
+  - `detik`: 0.011111111111
+  - `pasang`: 0.011111111111
+  - `bal`: 0.022222222222
+  - `asih`: 0.011111111111
+  - `hasil`: 0.011111111111
+  - `lupa`: 0.011111111111
+  - `atur`: 0.011111111111
+  - `sambung`: 0.011111111111
+  - `asuk`: 0.011111111111
+  - `password`: 0.011111111111
+  - `blokir`: 0.011111111111
+- Document TF-IDF vector (selected terms):
+  - `wifi`: 0.263378450309
+  - `router`: 0.107935947227
+  - `jaring`: 0.056438239352
+  - `wireless`: 0.05302876358
+- Cosine similarity: `0.317477497158`
+- Title overlap: `0.15`
+- Query coverage: `0.5`
+- Exact phrase bonus: `0`
+- Domain match: `1`
+- Domain penalty: `0`
+- Phrase boost total: `0`
+- Calculated final score before diversification: `0.360243249148`
+
+#### Article: `Solusi Internet Lambat pada Jaringan Wifi Kantor`
+
+- Category: `Wifi`
+- Document text length: `642` characters
+- Document frequency terms:
+  - `solus`: 4
+  - `internet`: 7
+  - `jaring`: 4
+  - `wifi`: 7
+  - `kantor`: 8
+  - `bandwidth`: 4
+  - `qos`: 3
+  - `router`: 2
+  - `access`: 4
+  - `point`: 4
+  - `frekuens`: 3
+  - `5ghz`: 3
+  - `isp`: 3
+  - `tips`: 1
+  - `khusus`: 1
+  - `ganggu`: 1
+  - `produktivitas`: 1
+  - `ebab`: 1
+  - `umum`: 1
+  - `angkat`: 3
+  - `hubung`: 1
+  - `bag`: 1
+  - `download`: 1
+  - `upload`: 1
+  - `interferens`: 2
+  - `channel`: 1
+  - `batas`: 1
+  - `jum`: 1
+  - `per`: 1
+  - `aksimal`: 1
+  - `15`: 1
+  - `20`: 1
+  - `device`: 1
+  - `guna`: 2
+  - `quality`: 1
+  - `of`: 1
+  - `rvice`: 1
+  - `prioritas`: 1
+  - `traffic`: 1
+  - `ting`: 1
+  - `upgrade`: 1
+  - `paket`: 1
+  - `kabel`: 1
+  - `lan`: 1
+  - `kritis`: 1
+  - `pc`: 1
+  - `rver`: 1
+  - `pindah`: 1
+  - `urang`: 1
+- Document TF values:
+  - `solus`: 0.041666666667
+  - `internet`: 0.072916666667
+  - `jaring`: 0.041666666667
+  - `wifi`: 0.072916666667
+  - `kantor`: 0.083333333333
+  - `bandwidth`: 0.041666666667
+  - `qos`: 0.03125
+  - `router`: 0.020833333333
+  - `access`: 0.041666666667
+  - `point`: 0.041666666667
+  - `frekuens`: 0.03125
+  - `5ghz`: 0.03125
+  - `isp`: 0.03125
+  - `tips`: 0.010416666667
+  - `khusus`: 0.010416666667
+  - `ganggu`: 0.010416666667
+  - `produktivitas`: 0.010416666667
+  - `ebab`: 0.010416666667
+  - `umum`: 0.010416666667
+  - `angkat`: 0.03125
+  - `hubung`: 0.010416666667
+  - `bag`: 0.010416666667
+  - `download`: 0.010416666667
+  - `upload`: 0.010416666667
+  - `interferens`: 0.020833333333
+  - `channel`: 0.010416666667
+  - `batas`: 0.010416666667
+  - `jum`: 0.010416666667
+  - `per`: 0.010416666667
+  - `aksimal`: 0.010416666667
+  - `15`: 0.010416666667
+  - `20`: 0.010416666667
+  - `device`: 0.010416666667
+  - `guna`: 0.020833333333
+  - `quality`: 0.010416666667
+  - `of`: 0.010416666667
+  - `rvice`: 0.010416666667
+  - `prioritas`: 0.010416666667
+  - `traffic`: 0.010416666667
+  - `ting`: 0.010416666667
+  - `upgrade`: 0.010416666667
+  - `paket`: 0.010416666667
+  - `kabel`: 0.010416666667
+  - `lan`: 0.010416666667
+  - `kritis`: 0.010416666667
+  - `pc`: 0.010416666667
+  - `rver`: 0.010416666667
+  - `pindah`: 0.010416666667
+  - `urang`: 0.010416666667
+- Document TF-IDF vector (selected terms):
+  - `internet`: 0.015302381272
+  - `jaring`: 0.07054779919
+  - `wifi`: 0.123458648582
+  - `router`: 0.033729983508
+  - `lan`: 0.021860544674
+- Cosine similarity: `0.203797536511`
+- Title overlap: `0.35`
+- Query coverage: `0.65`
+- Exact phrase bonus: `0`
+- Domain match: `1`
+- Domain penalty: `0`
+- Phrase boost total: `0`
+- Calculated final score before diversification: `0.398639260953`
+
+#### Article: `Cara Reset Router dan Konfigurasi Ulang Jaringan`
+
+- Category: `Wifi`
+- Document text length: `732` characters
+- Document frequency terms:
+  - `cara`: 3
+  - `reset`: 12
+  - `router`: 16
+  - `konfiguras`: 9
+  - `ulang`: 6
+  - `jaring`: 3
+  - `admin`: 6
+  - `192`: 4
+  - `168`: 4
+  - `ssid`: 3
+  - `password`: 4
+  - `default`: 3
+  - `pandu`: 1
+  - `atur`: 4
+  - `pabrik`: 2
+  - `lu`: 1
+  - `saat`: 1
+  - `asa`: 1
+  - `lupa`: 1
+  - `lang`: 1
+  - `car`: 1
+  - `tombol`: 2
+  - `belakang`: 1
+  - `biasa`: 1
+  - `lubang`: 1
+  - `kan`: 1
+  - `10`: 1
+  - `15`: 1
+  - `detik`: 1
+  - `guna`: 1
+  - `paperclip`: 1
+  - `tunggu`: 1
+  - `restart`: 1
+  - `lampu`: 1
+  - `dip`: 1
+  - `akses`: 1
+  - `halam`: 1
+  - `login`: 1
+  - `kredensial`: 1
+  - `lihat`: 1
+  - `stiker`: 1
+  - `wifi`: 1
+  - `am`: 1
+  - `catat`: 1
+  - `hapus`: 1
+  - `custom`: 1
+- Document TF values:
+  - `cara`: 0.026785714286
+  - `reset`: 0.107142857143
+  - `router`: 0.142857142857
+  - `konfiguras`: 0.080357142857
+  - `ulang`: 0.053571428571
+  - `jaring`: 0.026785714286
+  - `admin`: 0.053571428571
+  - `192`: 0.035714285714
+  - `168`: 0.035714285714
+  - `ssid`: 0.026785714286
+  - `password`: 0.035714285714
+  - `default`: 0.026785714286
+  - `pandu`: 0.008928571429
+  - `atur`: 0.035714285714
+  - `pabrik`: 0.017857142857
+  - `lu`: 0.008928571429
+  - `saat`: 0.008928571429
+  - `asa`: 0.008928571429
+  - `lupa`: 0.008928571429
+  - `lang`: 0.008928571429
+  - `car`: 0.008928571429
+  - `tombol`: 0.017857142857
+  - `belakang`: 0.008928571429
+  - `biasa`: 0.008928571429
+  - `lubang`: 0.008928571429
+  - `kan`: 0.008928571429
+  - `10`: 0.008928571429
+  - `15`: 0.008928571429
+  - `detik`: 0.008928571429
+  - `guna`: 0.008928571429
+  - `paperclip`: 0.008928571429
+  - `tunggu`: 0.008928571429
+  - `restart`: 0.008928571429
+  - `lampu`: 0.008928571429
+  - `dip`: 0.008928571429
+  - `akses`: 0.008928571429
+  - `halam`: 0.008928571429
+  - `login`: 0.008928571429
+  - `kredensial`: 0.008928571429
+  - `lihat`: 0.008928571429
+  - `stiker`: 0.008928571429
+  - `wifi`: 0.008928571429
+  - `am`: 0.008928571429
+  - `catat`: 0.008928571429
+  - `hapus`: 0.008928571429
+  - `custom`: 0.008928571429
+- Document TF-IDF vector (selected terms):
+  - `router`: 0.231291315487
+  - `jaring`: 0.045352156622
+  - `wifi`: 0.015117385541
+- Cosine similarity: `0.210767377729`
+- Title overlap: `0.25`
+- Query coverage: `0.4`
+- Exact phrase bonus: `0`
+- Domain match: `1`
+- Domain penalty: `0`
+- Phrase boost total: `0`
+- Calculated final score before diversification: `0.338230213319`
+
+#### Article: `Mengatasi Wifi Sering Putus Nyambung pada Jaringan Kantor`
+
+- Category: `Wifi`
+- Document text length: `801` characters
+- Document frequency terms:
+  - `wifi`: 13
+  - `ring`: 5
+  - `putus`: 9
+  - `nyambung`: 5
+  - `jaring`: 3
+  - `kantor`: 5
+  - `interferens`: 3
+  - `channel`: 5
+  - `extender`: 3
+  - `sh`: 3
+  - `network`: 4
+  - `firmware`: 3
+  - `router`: 5
+  - `access`: 4
+  - `point`: 4
+  - `enterprise`: 3
+  - `solus`: 3
+  - `stabil`: 2
+  - `lingkung`: 1
+  - `ganggu`: 1
+  - `ebab`: 1
+  - `ubah`: 1
+  - `11`: 1
+  - `overlap`: 1
+  - `jarak`: 1
+  - `jauh`: 1
+  - `guna`: 1
+  - `overheating`: 1
+  - `past`: 1
+  - `ventilas`: 1
+  - `tutup`: 1
+  - `debu`: 1
+  - `driver`: 2
+  - `adapter`: 2
+  - `usang`: 2
+  - `update`: 2
+  - `device`: 1
+  - `anager`: 1
+  - `angkat`: 1
+  - `batas`: 1
+  - `koneks`: 1
+  - `upgrade`: 1
+  - `vers`: 1
+  - `website`: 1
+  - `anufacturer`: 1
+- Document TF values:
+  - `wifi`: 0.115044247788
+  - `ring`: 0.044247787611
+  - `putus`: 0.079646017699
+  - `nyambung`: 0.044247787611
+  - `jaring`: 0.026548672566
+  - `kantor`: 0.044247787611
+  - `interferens`: 0.026548672566
+  - `channel`: 0.044247787611
+  - `extender`: 0.026548672566
+  - `sh`: 0.026548672566
+  - `network`: 0.035398230088
+  - `firmware`: 0.026548672566
+  - `router`: 0.044247787611
+  - `access`: 0.035398230088
+  - `point`: 0.035398230088
+  - `enterprise`: 0.026548672566
+  - `solus`: 0.026548672566
+  - `stabil`: 0.017699115044
+  - `lingkung`: 0.008849557522
+  - `ganggu`: 0.008849557522
+  - `ebab`: 0.008849557522
+  - `ubah`: 0.008849557522
+  - `11`: 0.008849557522
+  - `overlap`: 0.008849557522
+  - `jarak`: 0.008849557522
+  - `jauh`: 0.008849557522
+  - `guna`: 0.008849557522
+  - `overheating`: 0.008849557522
+  - `past`: 0.008849557522
+  - `ventilas`: 0.008849557522
+  - `tutup`: 0.008849557522
+  - `debu`: 0.008849557522
+  - `driver`: 0.017699115044
+  - `adapter`: 0.017699115044
+  - `usang`: 0.017699115044
+  - `update`: 0.017699115044
+  - `device`: 0.008849557522
+  - `anager`: 0.008849557522
+  - `angkat`: 0.008849557522
+  - `batas`: 0.008849557522
+  - `koneks`: 0.008849557522
+  - `upgrade`: 0.008849557522
+  - `vers`: 0.008849557522
+  - `website`: 0.008849557522
+  - `anufacturer`: 0.008849557522
+- Document TF-IDF vector (selected terms):
+  - `wifi`: 0.194786843781
+  - `jaring`: 0.044950810103
+  - `router`: 0.071638903027
+  - `koneks`: 0.018571790165
+- Cosine similarity: `0.216740595795`
+- Title overlap: `0.25`
+- Query coverage: `0.5`
+- Exact phrase bonus: `0`
+- Domain match: `1`
+- Domain penalty: `0`
+- Phrase boost total: `0`
+- Calculated final score before diversification: `0.355022178738`
+
+#### Article: `Cara Mengamankan Jaringan Wifi dari Akses Tidak Sah`
+
+- Category: `Wifi`
+- Document text length: `751` characters
+- Document frequency terms:
+  - `cara`: 5
+  - `am`: 10
+  - `jaring`: 5
+  - `wifi`: 10
+  - `akses`: 4
+  - `sah`: 5
+  - `enkrips`: 3
+  - `wpa3`: 3
+  - `wpa2`: 3
+  - `aes`: 3
+  - `mac`: 3
+  - `address`: 3
+  - `filtering`: 3
+  - `hide`: 2
+  - `ssid`: 3
+  - `vlan`: 3
+  - `network`: 5
+  - `guest`: 3
+  - `strateg`: 2
+  - `usaha`: 4
+  - `kantor`: 1
+  - `ting`: 1
+  - `lindung`: 1
+  - `data`: 1
+  - `lang`: 1
+  - `guna`: 3
+  - `hindar`: 1
+  - `wep`: 1
+  - `usang`: 1
+  - `retas`: 1
+  - `gant`: 1
+  - `password`: 2
+  - `kala`: 1
+  - `inimal`: 2
+  - `bul`: 1
+  - `kuat`: 1
+  - `12`: 1
+  - `karakter`: 1
+  - `kombinas`: 1
+  - `huruf`: 2
+  - `angka`: 1
+  - `simbol`: 1
+  - `buny`: 1
+  - `lihat`: 1
+  - `daftar`: 1
+  - `publik`: 1
+  - `aktif`: 1
+  - `whitelist`: 1
+  - `angkat`: 1
+  - `connect`: 1
+  - `update`: 1
+  - `firmware`: 1
+  - `router`: 1
+  - `rutin`: 1
+  - `patch`: 1
+  - `pisah`: 1
+  - `internal`: 1
+- Document TF values:
+  - `cara`: 0.040322580645
+  - `am`: 0.08064516129
+  - `jaring`: 0.040322580645
+  - `wifi`: 0.08064516129
+  - `akses`: 0.032258064516
+  - `sah`: 0.040322580645
+  - `enkrips`: 0.024193548387
+  - `wpa3`: 0.024193548387
+  - `wpa2`: 0.024193548387
+  - `aes`: 0.024193548387
+  - `mac`: 0.024193548387
+  - `address`: 0.024193548387
+  - `filtering`: 0.024193548387
+  - `hide`: 0.016129032258
+  - `ssid`: 0.024193548387
+  - `vlan`: 0.024193548387
+  - `network`: 0.040322580645
+  - `guest`: 0.024193548387
+  - `strateg`: 0.016129032258
+  - `usaha`: 0.032258064516
+  - `kantor`: 0.008064516129
+  - `ting`: 0.008064516129
+  - `lindung`: 0.008064516129
+  - `data`: 0.008064516129
+  - `lang`: 0.008064516129
+  - `guna`: 0.024193548387
+  - `hindar`: 0.008064516129
+  - `wep`: 0.008064516129
+  - `usang`: 0.008064516129
+  - `retas`: 0.008064516129
+  - `gant`: 0.008064516129
+  - `password`: 0.016129032258
+  - `kala`: 0.008064516129
+  - `inimal`: 0.016129032258
+  - `bul`: 0.008064516129
+  - `kuat`: 0.008064516129
+  - `12`: 0.008064516129
+  - `karakter`: 0.008064516129
+  - `kombinas`: 0.008064516129
+  - `huruf`: 0.016129032258
+  - `angka`: 0.008064516129
+  - `simbol`: 0.008064516129
+  - `buny`: 0.008064516129
+  - `lihat`: 0.008064516129
+  - `daftar`: 0.008064516129
+  - `publik`: 0.008064516129
+  - `aktif`: 0.008064516129
+  - `whitelist`: 0.008064516129
+  - `angkat`: 0.008064516129
+  - `connect`: 0.008064516129
+  - `update`: 0.008064516129
+  - `firmware`: 0.008064516129
+  - `router`: 0.008064516129
+  - `rutin`: 0.008064516129
+  - `patch`: 0.008064516129
+  - `pisah`: 0.008064516129
+  - `internal`: 0.008064516129
+- Document TF-IDF vector (selected terms):
+  - `jaring`: 0.068272063732
+  - `wifi`: 0.136544127465
+  - `connect`: 0.019244309364
+  - `router`: 0.01305676781
+- Cosine similarity: `0.175519797597`
+- Title overlap: `0.25`
+- Query coverage: `0.4`
+- Exact phrase bonus: `0`
+- Domain match: `1`
+- Domain penalty: `0`
+- Phrase boost total: `0`
+- Calculated final score before diversification: `0.327655939279`
+
+#### Article: `Troubleshooting Koneksi Internet Putus Nyambung dari ISP`
+
+- Category: `Wifi`
+- Document text length: `811` characters
+- Document frequency terms:
+  - `troubleshooting`: 4
+  - `koneks`: 6
+  - `internet`: 7
+  - `putus`: 6
+  - `nyambung`: 3
+  - `isp`: 12
+  - `ganggu`: 4
+  - `modem`: 9
+  - `indicator`: 2
+  - `fiber`: 4
+  - `optic`: 3
+  - `call`: 3
+  - `center`: 3
+  - `restart`: 3
+  - `cara`: 1
+  - `agnosis`: 3
+  - `asa`: 4
+  - `provider`: 2
+  - `ring`: 1
+  - `erlu`: 1
+  - `sistematis`: 1
+  - `lang`: 1
+  - `cek`: 2
+  - `lampu`: 2
+  - `indikator`: 1
+  - `los`: 1
+  - `pon`: 1
+  - `dip`: 1
+  - `rah`: 1
+  - `st`: 1
+  - `langsung`: 1
+  - `guna`: 2
+  - `kabel`: 3
+  - `lan`: 1
+  - `bypass`: 1
+  - `router`: 2
+  - `past`: 2
+  - `ping`: 1
+  - `gateway`: 1
+  - `biasa`: 1
+  - `192`: 1
+  - `168`: 1
+  - `100`: 1
+  - `timeout`: 1
+  - `assal`: 1
+  - `area`: 1
+  - `hubung`: 1
+  - `cabut`: 1
+  - `power`: 1
+  - `30`: 1
+  - `detik`: 1
+  - `kuk`: 1
+  - `tajam`: 1
+  - `rusak`: 1
+- Document TF values:
+  - `troubleshooting`: 0.032786885246
+  - `koneks`: 0.049180327869
+  - `internet`: 0.05737704918
+  - `putus`: 0.049180327869
+  - `nyambung`: 0.024590163934
+  - `isp`: 0.098360655738
+  - `ganggu`: 0.032786885246
+  - `modem`: 0.073770491803
+  - `indicator`: 0.016393442623
+  - `fiber`: 0.032786885246
+  - `optic`: 0.024590163934
+  - `call`: 0.024590163934
+  - `center`: 0.024590163934
+  - `restart`: 0.024590163934
+  - `cara`: 0.008196721311
+  - `agnosis`: 0.024590163934
+  - `asa`: 0.032786885246
+  - `provider`: 0.016393442623
+  - `ring`: 0.008196721311
+  - `erlu`: 0.008196721311
+  - `sistematis`: 0.008196721311
+  - `lang`: 0.008196721311
+  - `cek`: 0.016393442623
+  - `lampu`: 0.016393442623
+  - `indikator`: 0.008196721311
+  - `los`: 0.008196721311
+  - `pon`: 0.008196721311
+  - `dip`: 0.008196721311
+  - `rah`: 0.008196721311
+  - `st`: 0.008196721311
+  - `langsung`: 0.008196721311
+  - `guna`: 0.016393442623
+  - `kabel`: 0.024590163934
+  - `lan`: 0.008196721311
+  - `bypass`: 0.008196721311
+  - `router`: 0.016393442623
+  - `past`: 0.016393442623
+  - `ping`: 0.008196721311
+  - `gateway`: 0.008196721311
+  - `biasa`: 0.008196721311
+  - `192`: 0.008196721311
+  - `168`: 0.008196721311
+  - `100`: 0.008196721311
+  - `timeout`: 0.008196721311
+  - `assal`: 0.008196721311
+  - `area`: 0.008196721311
+  - `hubung`: 0.008196721311
+  - `cabut`: 0.008196721311
+  - `power`: 0.008196721311
+  - `30`: 0.008196721311
+  - `detik`: 0.008196721311
+  - `kuk`: 0.008196721311
+  - `tajam`: 0.008196721311
+  - `rusak`: 0.008196721311
+- Document TF-IDF vector (selected terms):
+  - `koneks`: 0.103210440426
+  - `internet`: 0.01204121805
+  - `lan`: 0.017201740071
+  - `router`: 0.026541626367
+- Cosine similarity: `0.16725999431`
+- Title overlap: `0.2`
+- Query coverage: `0.5`
+- Exact phrase bonus: `0`
+- Domain match: `1`
+- Domain penalty: `0`
+- Phrase boost total: `0`
+- Calculated final score before diversification: `0.327677998293`
+
+### Final ranked results for intent `wifi lemot`
+- `Solusi Internet Lambat pada Jaringan Wifi Kantor` (final_score: 0.3986, category: `unknown`)
+- `Cara Mengatasi Wifi Tidak Terhubung ke Perangkat` (final_score: 0.2061, category: `unknown`)
+
+## Intent `printer tidak mau print`
+
+- Normalized intent: `printer tidak mau print`
+- Detected domain: `printer`
+- Detected domain confidence: `0.5455`
+- Allowed categories: `hardware`, `printer`
+- Domain filter fallback applied: `no`
+- Expanded query: `printer tidak mau print print cetak scanner mencetak printing epson canon print cetak scanner mencetak printing epson canon`
+
+### Query preprocessing
+
+- Query tokens: `printer`, `print`, `print`, `cetak`, `scanner`, `cetak`, `printing`, `epson`, `canon`, `print`, `cetak`, `scanner`, `cetak`, `printing`, `epson`, `canon`
+- Query term frequency (TF):
+  - `printer`: 0.0625
+  - `print`: 0.1875
+  - `cetak`: 0.25
+  - `scanner`: 0.125
+  - `printing`: 0.125
+  - `epson`: 0.125
+  - `canon`: 0.125
+- Query TF-IDF vector:
+  - `printer`: 0.101189950525
+  - `print`: 0.303569851576
+  - `cetak`: 0
+  - `scanner`: 0
+  - `printing`: 0.29828679514
+  - `epson`: 0.29828679514
+  - `canon`: 0.29828679514
+- IDF values used for query:
+  - `printer`: 1.619039208406
+  - `print`: 1.619039208406
+  - `cetak`: 0
+  - `scanner`: 0
+  - `printing`: 2.38629436112
+  - `epson`: 2.38629436112
+  - `canon`: 2.38629436112
+
+### Document candidates (6)
+
+#### Article: `Cara Mengatasi Printer Offline dan Tidak Terdeteksi`
+
+- Category: `Printer`
+- Document text length: `862` characters
+- Document frequency terms:
+  - `cara`: 3
+  - `printer`: 22
+  - `offline`: 7
+  - `deteks`: 8
+  - `kabel`: 3
+  - `usb`: 4
+  - `ip`: 4
+  - `address`: 3
+  - `print`: 4
+  - `spooler`: 4
+  - `driver`: 3
+  - `solus`: 1
+  - `lengkap`: 1
+  - `status`: 3
+  - `komputer`: 4
+  - `lang`: 1
+  - `ikut`: 1
+  - `iksa`: 1
+  - `koneks`: 1
+  - `past`: 2
+  - `tancap`: 1
+  - `kuat`: 1
+  - `port`: 2
+  - `coba`: 1
+  - `network`: 1
+  - `subnet`: 1
+  - `ping`: 1
+  - `command`: 1
+  - `prompt`: 1
+  - `set`: 2
+  - `baga`: 1
+  - `default`: 2
+  - `device`: 1
+  - `control`: 1
+  - `panel`: 1
+  - `devices`: 2
+  - `and`: 2
+  - `printers`: 2
+  - `klik`: 1
+  - `kan`: 2
+  - `as`: 1
+  - `restart`: 2
+  - `rvice`: 1
+  - `win`: 1
+  - `rvices`: 1
+  - `sc`: 1
+  - `car`: 1
+  - `update`: 1
+  - `reinstall`: 1
+  - `website`: 1
+  - `anufacturer`: 1
+  - `hapus`: 1
+  - `add`: 2
+  - `bal`: 1
+  - `guna`: 1
+  - `wizard`: 1
+- Document TF values:
+  - `cara`: 0.024
+  - `printer`: 0.176
+  - `offline`: 0.056
+  - `deteks`: 0.064
+  - `kabel`: 0.024
+  - `usb`: 0.032
+  - `ip`: 0.032
+  - `address`: 0.024
+  - `print`: 0.032
+  - `spooler`: 0.032
+  - `driver`: 0.024
+  - `solus`: 0.008
+  - `lengkap`: 0.008
+  - `status`: 0.024
+  - `komputer`: 0.032
+  - `lang`: 0.008
+  - `ikut`: 0.008
+  - `iksa`: 0.008
+  - `koneks`: 0.008
+  - `past`: 0.016
+  - `tancap`: 0.008
+  - `kuat`: 0.008
+  - `port`: 0.016
+  - `coba`: 0.008
+  - `network`: 0.008
+  - `subnet`: 0.008
+  - `ping`: 0.008
+  - `command`: 0.008
+  - `prompt`: 0.008
+  - `set`: 0.016
+  - `baga`: 0.008
+  - `default`: 0.016
+  - `device`: 0.008
+  - `control`: 0.008
+  - `panel`: 0.008
+  - `devices`: 0.016
+  - `and`: 0.016
+  - `printers`: 0.016
+  - `klik`: 0.008
+  - `kan`: 0.016
+  - `as`: 0.008
+  - `restart`: 0.016
+  - `rvice`: 0.008
+  - `win`: 0.008
+  - `rvices`: 0.008
+  - `sc`: 0.008
+  - `car`: 0.008
+  - `update`: 0.008
+  - `reinstall`: 0.008
+  - `website`: 0.008
+  - `anufacturer`: 0.008
+  - `hapus`: 0.008
+  - `add`: 0.016
+  - `bal`: 0.008
+  - `guna`: 0.008
+  - `wizard`: 0.008
+- Document TF-IDF vector (selected terms):
+  - `printer`: 0.284950900679
+  - `print`: 0.051809254669
+- Cosine similarity: `0.179214647081`
+- Title overlap: `0.214285714286`
+- Query coverage: `0.357142857143`
+- Exact phrase bonus: `0.5`
+- Domain match: `1`
+- Domain penalty: `0`
+- Phrase boost total: `0`
+  - phrase_boost: `0`
+  - ngram_boost: `0`
+  - detected_phrases: `{"phrase":"tidak mau","position":8,"length":9,"category":"functionality"}`
+  - bigram_matches: ``
+  - trigram_matches: ``
+- Calculated final score before diversification: `0.363407251267`
+
+#### Article: `Troubleshooting Printer Tidak Mau Ngeprint (No Response)`
+
+- Category: `Printer`
+- Document text length: `816` characters
+- Document frequency terms:
+  - `troubleshooting`: 4
+  - `printer`: 17
+  - `ngeprint`: 5
+  - `no`: 5
+  - `response`: 5
+  - `paper`: 3
+  - `jam`: 3
+  - `tinta`: 3
+  - `habis`: 3
+  - `print`: 10
+  - `queue`: 3
+  - `st`: 4
+  - `cara`: 1
+  - `respon`: 3
+  - `in`: 2
+  - `erlu`: 1
+  - `sistematis`: 1
+  - `iksa`: 1
+  - `ala`: 1
+  - `error`: 1
+  - `code`: 1
+  - `splay`: 1
+  - `cek`: 2
+  - `rtas`: 2
+  - `tray`: 1
+  - `acet`: 2
+  - `past`: 1
+  - `toner`: 1
+  - `level`: 1
+  - `properties`: 3
+  - `clear`: 1
+  - `buka`: 1
+  - `devices`: 1
+  - `and`: 1
+  - `printers`: 1
+  - `klik`: 1
+  - `see`: 1
+  - `what`: 1
+  - `printing`: 1
+  - `cancel`: 1
+  - `all`: 1
+  - `documents`: 1
+  - `restart`: 1
+  - `cabut`: 1
+  - `power`: 1
+  - `30`: 1
+  - `detik`: 1
+  - `general`: 1
+  - `page`: 1
+  - `asih`: 1
+  - `uninstall`: 1
+  - `driver`: 1
+  - `uh`: 1
+  - `install`: 1
+  - `ulang`: 1
+  - `website`: 1
+  - `anufacturer`: 1
+- Document TF values:
+  - `troubleshooting`: 0.033898305085
+  - `printer`: 0.14406779661
+  - `ngeprint`: 0.042372881356
+  - `no`: 0.042372881356
+  - `response`: 0.042372881356
+  - `paper`: 0.025423728814
+  - `jam`: 0.025423728814
+  - `tinta`: 0.025423728814
+  - `habis`: 0.025423728814
+  - `print`: 0.084745762712
+  - `queue`: 0.025423728814
+  - `st`: 0.033898305085
+  - `cara`: 0.008474576271
+  - `respon`: 0.025423728814
+  - `in`: 0.016949152542
+  - `erlu`: 0.008474576271
+  - `sistematis`: 0.008474576271
+  - `iksa`: 0.008474576271
+  - `ala`: 0.008474576271
+  - `error`: 0.008474576271
+  - `code`: 0.008474576271
+  - `splay`: 0.008474576271
+  - `cek`: 0.016949152542
+  - `rtas`: 0.016949152542
+  - `tray`: 0.008474576271
+  - `acet`: 0.016949152542
+  - `past`: 0.008474576271
+  - `toner`: 0.008474576271
+  - `level`: 0.008474576271
+  - `properties`: 0.025423728814
+  - `clear`: 0.008474576271
+  - `buka`: 0.008474576271
+  - `devices`: 0.008474576271
+  - `and`: 0.008474576271
+  - `printers`: 0.008474576271
+  - `klik`: 0.008474576271
+  - `see`: 0.008474576271
+  - `what`: 0.008474576271
+  - `printing`: 0.008474576271
+  - `cancel`: 0.008474576271
+  - `all`: 0.008474576271
+  - `documents`: 0.008474576271
+  - `restart`: 0.008474576271
+  - `cabut`: 0.008474576271
+  - `power`: 0.008474576271
+  - `30`: 0.008474576271
+  - `detik`: 0.008474576271
+  - `general`: 0.008474576271
+  - `page`: 0.008474576271
+  - `asih`: 0.008474576271
+  - `uninstall`: 0.008474576271
+  - `driver`: 0.008474576271
+  - `uh`: 0.008474576271
+  - `install`: 0.008474576271
+  - `ulang`: 0.008474576271
+  - `website`: 0.008474576271
+  - `anufacturer`: 0.008474576271
+- Document TF-IDF vector (selected terms):
+  - `printer`: 0.233251411381
+  - `print`: 0.137206712577
+  - `printing`: 0.020222833569
+- Cosine similarity: `0.29901817729`
+- Title overlap: `0.214285714286`
+- Query coverage: `0.5`
+- Exact phrase bonus: `0.75`
+- Domain match: `1`
+- Domain penalty: `0`
+- Phrase boost total: `1`
+  - phrase_boost: `0.6`
+  - ngram_boost: `0.9`
+  - detected_phrases: `{"phrase":"tidak mau","position":8,"length":9,"category":"functionality"}`
+  - bigram_matches: `printer tidak`, `tidak mau`
+  - trigram_matches: `printer tidak mau`
+- Calculated final score before diversification: `1`
+
+#### Article: `Cara Mengatasi Hasil Print Bergaris atau Tidak Jelas`
+
+- Category: `Printer`
+- Document text length: `851` characters
+- Document frequency terms:
+  - `cara`: 4
+  - `hasil`: 8
+  - `print`: 14
+  - `garis`: 9
+  - `jelas`: 5
+  - `head`: 6
+  - `cleaning`: 5
+  - `nozzle`: 4
+  - `check`: 3
+  - `toner`: 4
+  - `cartridge`: 4
+  - `drum`: 3
+  - `unit`: 4
+  - `fuser`: 3
+  - `solus`: 1
+  - `printer`: 6
+  - `inkjet`: 3
+  - `laser`: 2
+  - `asa`: 1
+  - `tinta`: 3
+  - `jal`: 1
+  - `properties`: 1
+  - `aintenance`: 1
+  - `tab`: 1
+  - `la`: 2
+  - `cek`: 2
+  - `kondis`: 1
+  - `asih`: 1
+  - `deep`: 1
+  - `aksimal`: 1
+  - `3x`: 1
+  - `turut`: 2
+  - `past`: 1
+  - `guna`: 2
+  - `inimal`: 1
+  - `1x`: 1
+  - `inggu`: 1
+  - `cegah`: 1
+  - `ring`: 1
+  - `gant`: 2
+  - `expired`: 1
+  - `goyang`: 1
+  - `horizontal`: 1
+  - `rata`: 1
+  - `corona`: 1
+  - `wire`: 1
+  - `cotton`: 1
+  - `bud`: 1
+  - `aus`: 1
+  - `biasa`: 1
+  - `10`: 1
+  - `000`: 2
+  - `15`: 1
+  - `halam`: 1
+  - `luntur`: 1
+- Document TF values:
+  - `cara`: 0.03007518797
+  - `hasil`: 0.06015037594
+  - `print`: 0.105263157895
+  - `garis`: 0.067669172932
+  - `jelas`: 0.037593984962
+  - `head`: 0.045112781955
+  - `cleaning`: 0.037593984962
+  - `nozzle`: 0.03007518797
+  - `check`: 0.022556390977
+  - `toner`: 0.03007518797
+  - `cartridge`: 0.03007518797
+  - `drum`: 0.022556390977
+  - `unit`: 0.03007518797
+  - `fuser`: 0.022556390977
+  - `solus`: 0.007518796992
+  - `printer`: 0.045112781955
+  - `inkjet`: 0.022556390977
+  - `laser`: 0.015037593985
+  - `asa`: 0.007518796992
+  - `tinta`: 0.022556390977
+  - `jal`: 0.007518796992
+  - `properties`: 0.007518796992
+  - `aintenance`: 0.007518796992
+  - `tab`: 0.007518796992
+  - `la`: 0.015037593985
+  - `cek`: 0.015037593985
+  - `kondis`: 0.007518796992
+  - `asih`: 0.007518796992
+  - `deep`: 0.007518796992
+  - `aksimal`: 0.007518796992
+  - `3x`: 0.007518796992
+  - `turut`: 0.015037593985
+  - `past`: 0.007518796992
+  - `guna`: 0.015037593985
+  - `inimal`: 0.007518796992
+  - `1x`: 0.007518796992
+  - `inggu`: 0.007518796992
+  - `cegah`: 0.007518796992
+  - `ring`: 0.007518796992
+  - `gant`: 0.015037593985
+  - `expired`: 0.007518796992
+  - `goyang`: 0.007518796992
+  - `horizontal`: 0.007518796992
+  - `rata`: 0.007518796992
+  - `corona`: 0.007518796992
+  - `wire`: 0.007518796992
+  - `cotton`: 0.007518796992
+  - `bud`: 0.007518796992
+  - `aus`: 0.007518796992
+  - `biasa`: 0.007518796992
+  - `10`: 0.007518796992
+  - `000`: 0.015037593985
+  - `15`: 0.007518796992
+  - `halam`: 0.007518796992
+  - `luntur`: 0.007518796992
+- Document TF-IDF vector (selected terms):
+  - `print`: 0.170425179832
+  - `printer`: 0.073039362785
+- Cosine similarity: `0.24576664721`
+- Title overlap: `0.142857142857`
+- Query coverage: `0.357142857143`
+- Exact phrase bonus: `0`
+- Domain match: `1`
+- Domain penalty: `0`
+- Phrase boost total: `0`
+  - phrase_boost: `0`
+  - ngram_boost: `0`
+  - detected_phrases: `{"phrase":"tidak mau","position":8,"length":9,"category":"functionality"}`
+  - bigram_matches: ``
+  - trigram_matches: ``
+- Calculated final score before diversification: `0.315515708449`
+
+#### Article: `Cara Mengatasi Kertas Macet (Paper Jam) di Printer`
+
+- Category: `Printer`
+- Document text length: `746` characters
+- Document frequency terms:
+  - `cara`: 5
+  - `rtas`: 18
+  - `acet`: 9
+  - `paper`: 6
+  - `jam`: 6
+  - `printer`: 13
+  - `roller`: 5
+  - `pickup`: 4
+  - `tray`: 4
+  - `jalur`: 3
+  - `sobe`: 3
+  - `pandu`: 1
+  - `lengkap`: 1
+  - `am`: 2
+  - `asa`: 1
+  - `umum`: 1
+  - `at`: 1
+  - `cabut`: 1
+  - `kabel`: 1
+  - `power`: 1
+  - `buka`: 1
+  - `cover`: 1
+  - `dep`: 1
+  - `belakang`: 1
+  - `sua`: 2
+  - `anual`: 1
+  - `tarik`: 2
+  - `arah`: 2
+  - `paksa`: 1
+  - `law`: 1
+  - `rusak`: 1
+  - `cek`: 1
+  - `tinggal`: 1
+  - `iksa`: 1
+  - `lap`: 1
+  - `lembab`: 1
+  - `licin`: 1
+  - `debu`: 1
+  - `past`: 1
+  - `uh`: 1
+  - `aksimal`: 1
+  - `80`: 2
+  - `kapasitas`: 1
+  - `guna`: 1
+  - `gramatur`: 1
+  - `70`: 1
+  - `gsm`: 1
+  - `biasa`: 1
+  - `luar`: 1
+  - `nyala`: 1
+  - `st`: 1
+  - `print`: 1
+  - `ulang`: 1
+  - `gant`: 1
+  - `aus`: 1
+- Document TF values:
+  - `cara`: 0.04
+  - `rtas`: 0.144
+  - `acet`: 0.072
+  - `paper`: 0.048
+  - `jam`: 0.048
+  - `printer`: 0.104
+  - `roller`: 0.04
+  - `pickup`: 0.032
+  - `tray`: 0.032
+  - `jalur`: 0.024
+  - `sobe`: 0.024
+  - `pandu`: 0.008
+  - `lengkap`: 0.008
+  - `am`: 0.016
+  - `asa`: 0.008
+  - `umum`: 0.008
+  - `at`: 0.008
+  - `cabut`: 0.008
+  - `kabel`: 0.008
+  - `power`: 0.008
+  - `buka`: 0.008
+  - `cover`: 0.008
+  - `dep`: 0.008
+  - `belakang`: 0.008
+  - `sua`: 0.016
+  - `anual`: 0.008
+  - `tarik`: 0.016
+  - `arah`: 0.016
+  - `paksa`: 0.008
+  - `law`: 0.008
+  - `rusak`: 0.008
+  - `cek`: 0.008
+  - `tinggal`: 0.008
+  - `iksa`: 0.008
+  - `lap`: 0.008
+  - `lembab`: 0.008
+  - `licin`: 0.008
+  - `debu`: 0.008
+  - `past`: 0.008
+  - `uh`: 0.008
+  - `aksimal`: 0.008
+  - `80`: 0.016
+  - `kapasitas`: 0.008
+  - `guna`: 0.008
+  - `gramatur`: 0.008
+  - `70`: 0.008
+  - `gsm`: 0.008
+  - `biasa`: 0.008
+  - `luar`: 0.008
+  - `nyala`: 0.008
+  - `st`: 0.008
+  - `print`: 0.008
+  - `ulang`: 0.008
+  - `gant`: 0.008
+  - `aus`: 0.008
+- Document TF-IDF vector (selected terms):
+  - `printer`: 0.168380077674
+  - `print`: 0.012952313667
+- Cosine similarity: `0.075862077317`
+- Title overlap: `0.214285714286`
+- Query coverage: `0.357142857143`
+- Exact phrase bonus: `0`
+- Domain match: `1`
+- Domain penalty: `0`
+- Phrase boost total: `0`
+  - phrase_boost: `0`
+  - ngram_boost: `0`
+  - detected_phrases: `{"phrase":"tidak mau","position":8,"length":9,"category":"functionality"}`
+  - bigram_matches: ``
+  - trigram_matches: ``
+- Calculated final score before diversification: `0.282401480338`
+
+#### Article: `Cara Install Driver Printer di Windows 10/11`
+
+- Category: `Printer`
+- Document text length: `939` characters
+- Document frequency terms:
+  - `cara`: 3
+  - `install`: 9
+  - `driver`: 16
+  - `printer`: 18
+  - `windows`: 10
+  - `10`: 7
+  - `11`: 6
+  - `hp`: 3
+  - `canon`: 3
+  - `epson`: 3
+  - `usb`: 5
+  - `network`: 4
+  - `pandu`: 1
+  - `ting`: 1
+  - `fungs`: 1
+  - `optimal`: 1
+  - `lang`: 1
+  - `download`: 2
+  - `website`: 1
+  - `anufacturer`: 2
+  - `brother`: 1
+  - `sua`: 2
+  - `odel`: 1
+  - `vers`: 1
+  - `32`: 1
+  - `bit`: 2
+  - `64`: 1
+  - `jal`: 1
+  - `file`: 1
+  - `installer`: 2
+  - `baga`: 2
+  - `administrator`: 2
+  - `klik`: 1
+  - `kan`: 1
+  - `run`: 1
+  - `as`: 1
+  - `ikut`: 1
+  - `wizard`: 1
+  - `instalas`: 1
+  - `pilih`: 1
+  - `koneks`: 1
+  - `jenis`: 1
+  - `sambung`: 1
+  - `kabel`: 1
+  - `saat`: 2
+  - `inta`: 2
+  - `asuk`: 1
+  - `ip`: 1
+  - `address`: 1
+  - `lesa`: 1
+  - `la`: 1
+  - `st`: 1
+  - `print`: 1
+  - `set`: 1
+  - `default`: 1
+  - `lu`: 1
+  - `alternatif`: 1
+  - `update`: 1
+  - `otomatis`: 1
+  - `biasa`: 1
+  - `lengkap`: 1
+  - `fitur`: 1
+- Document TF values:
+  - `cara`: 0.020547945205
+  - `install`: 0.061643835616
+  - `driver`: 0.109589041096
+  - `printer`: 0.123287671233
+  - `windows`: 0.068493150685
+  - `10`: 0.047945205479
+  - `11`: 0.041095890411
+  - `hp`: 0.020547945205
+  - `canon`: 0.020547945205
+  - `epson`: 0.020547945205
+  - `usb`: 0.034246575342
+  - `network`: 0.027397260274
+  - `pandu`: 0.006849315068
+  - `ting`: 0.006849315068
+  - `fungs`: 0.006849315068
+  - `optimal`: 0.006849315068
+  - `lang`: 0.006849315068
+  - `download`: 0.013698630137
+  - `website`: 0.006849315068
+  - `anufacturer`: 0.013698630137
+  - `brother`: 0.006849315068
+  - `sua`: 0.013698630137
+  - `odel`: 0.006849315068
+  - `vers`: 0.006849315068
+  - `32`: 0.006849315068
+  - `bit`: 0.013698630137
+  - `64`: 0.006849315068
+  - `jal`: 0.006849315068
+  - `file`: 0.006849315068
+  - `installer`: 0.013698630137
+  - `baga`: 0.013698630137
+  - `administrator`: 0.013698630137
+  - `klik`: 0.006849315068
+  - `kan`: 0.006849315068
+  - `run`: 0.006849315068
+  - `as`: 0.006849315068
+  - `ikut`: 0.006849315068
+  - `wizard`: 0.006849315068
+  - `instalas`: 0.006849315068
+  - `pilih`: 0.006849315068
+  - `koneks`: 0.006849315068
+  - `jenis`: 0.006849315068
+  - `sambung`: 0.006849315068
+  - `kabel`: 0.006849315068
+  - `saat`: 0.013698630137
+  - `inta`: 0.013698630137
+  - `asuk`: 0.006849315068
+  - `ip`: 0.006849315068
+  - `address`: 0.006849315068
+  - `lesa`: 0.006849315068
+  - `la`: 0.006849315068
+  - `st`: 0.006849315068
+  - `print`: 0.006849315068
+  - `set`: 0.006849315068
+  - `default`: 0.006849315068
+  - `lu`: 0.006849315068
+  - `alternatif`: 0.006849315068
+  - `update`: 0.006849315068
+  - `otomatis`: 0.006849315068
+  - `biasa`: 0.006849315068
+  - `lengkap`: 0.006849315068
+  - `fitur`: 0.006849315068
+- Document TF-IDF vector (selected terms):
+  - `printer`: 0.199607573639
+  - `canon`: 0.049033445776
+  - `epson`: 0.049033445776
+  - `print`: 0.011089309647
+- Cosine similarity: `0.215430266765`
+- Title overlap: `0.214285714286`
+- Query coverage: `0.642857142857`
+- Exact phrase bonus: `0`
+- Domain match: `1`
+- Domain penalty: `0`
+- Phrase boost total: `0`
+  - phrase_boost: `0`
+  - ngram_boost: `0`
+  - detected_phrases: `{"phrase":"tidak mau","position":8,"length":9,"category":"functionality"}`
+  - bigram_matches: ``
+  - trigram_matches: ``
+- Calculated final score before diversification: `0.367129080029`
+
+#### Article: `Cara Setting Printer Network (LAN/WiFi) di Kantor`
+
+- Category: `Printer`
+- Document text length: `936` characters
+- Document frequency terms:
+  - `cara`: 5
+  - `tting`: 6
+  - `printer`: 26
+  - `network`: 11
+  - `lan`: 7
+  - `wifi`: 3
+  - `kantor`: 6
+  - `ip`: 9
+  - `address`: 5
+  - `static`: 3
+  - `tcp`: 4
+  - `sharing`: 5
+  - `switch`: 3
+  - `guna`: 3
+  - `ungkin`: 1
+  - `lang`: 1
+  - `past`: 1
+  - `komputer`: 3
+  - `hubung`: 1
+  - `set`: 1
+  - `nu`: 1
+  - `ubah`: 1
+  - `192`: 1
+  - `168`: 1
+  - `200`: 1
+  - `buka`: 1
+  - `control`: 1
+  - `panel`: 1
+  - `devices`: 1
+  - `and`: 1
+  - `printers`: 1
+  - `add`: 2
+  - `the`: 1
+  - `that`: 1
+  - `want`: 1
+  - `isn`: 1
+  - `listed`: 1
+  - `pilih`: 2
+  - `using`: 1
+  - `or`: 1
+  - `hostname`: 1
+  - `asuk`: 1
+  - `windows`: 1
+  - `detect`: 1
+  - `install`: 1
+  - `driver`: 2
+  - `anual`: 1
+  - `ber`: 1
+  - `nama`: 1
+  - `deskriptif`: 1
+  - `hr`: 1
+  - `lanta`: 1
+  - `st`: 1
+  - `print`: 1
+  - `via`: 1
+  - `usb`: 1
+  - `enable`: 1
+  - `properties`: 1
+  - `tab`: 1
+- Document TF values:
+  - `cara`: 0.034246575342
+  - `tting`: 0.041095890411
+  - `printer`: 0.178082191781
+  - `network`: 0.075342465753
+  - `lan`: 0.047945205479
+  - `wifi`: 0.020547945205
+  - `kantor`: 0.041095890411
+  - `ip`: 0.061643835616
+  - `address`: 0.034246575342
+  - `static`: 0.020547945205
+  - `tcp`: 0.027397260274
+  - `sharing`: 0.034246575342
+  - `switch`: 0.020547945205
+  - `guna`: 0.020547945205
+  - `ungkin`: 0.006849315068
+  - `lang`: 0.006849315068
+  - `past`: 0.006849315068
+  - `komputer`: 0.020547945205
+  - `hubung`: 0.006849315068
+  - `set`: 0.006849315068
+  - `nu`: 0.006849315068
+  - `ubah`: 0.006849315068
+  - `192`: 0.006849315068
+  - `168`: 0.006849315068
+  - `200`: 0.006849315068
+  - `buka`: 0.006849315068
+  - `control`: 0.006849315068
+  - `panel`: 0.006849315068
+  - `devices`: 0.006849315068
+  - `and`: 0.006849315068
+  - `printers`: 0.006849315068
+  - `add`: 0.013698630137
+  - `the`: 0.006849315068
+  - `that`: 0.006849315068
+  - `want`: 0.006849315068
+  - `isn`: 0.006849315068
+  - `listed`: 0.006849315068
+  - `pilih`: 0.013698630137
+  - `using`: 0.006849315068
+  - `or`: 0.006849315068
+  - `hostname`: 0.006849315068
+  - `asuk`: 0.006849315068
+  - `windows`: 0.006849315068
+  - `detect`: 0.006849315068
+  - `install`: 0.006849315068
+  - `driver`: 0.013698630137
+  - `anual`: 0.006849315068
+  - `ber`: 0.006849315068
+  - `nama`: 0.006849315068
+  - `deskriptif`: 0.006849315068
+  - `hr`: 0.006849315068
+  - `lanta`: 0.006849315068
+  - `st`: 0.006849315068
+  - `print`: 0.006849315068
+  - `via`: 0.006849315068
+  - `usb`: 0.006849315068
+  - `enable`: 0.006849315068
+  - `properties`: 0.006849315068
+  - `tab`: 0.006849315068
+- Document TF-IDF vector (selected terms):
+  - `printer`: 0.288322050812
+  - `wifi`: 0.049033445776
+  - `print`: 0.011089309647
+- Cosine similarity: `0.124298708266`
+- Title overlap: `0.214285714286`
+- Query coverage: `0.357142857143`
+- Exact phrase bonus: `0`
+- Domain match: `1`
+- Domain penalty: `-0.8`
+- Phrase boost total: `0`
+  - phrase_boost: `0`
+  - ngram_boost: `0`
+  - detected_phrases: `{"phrase":"tidak mau","position":8,"length":9,"category":"functionality"}`
+  - bigram_matches: ``
+  - trigram_matches: ``
+- Calculated final score before diversification: `0`
+
+### Final ranked results for intent `printer tidak mau print`
+- `Troubleshooting Printer Tidak Mau Ngeprint (No Response)` (final_score: 1, category: `unknown`)
+- `Cara Install Driver Printer di Windows 10/11` (final_score: 0.2168, category: `unknown`)
+
+## Merged multi-intent final top results
+
+- `Solusi Internet Lambat pada Jaringan Wifi Kantor` (final_score: 0.3986, category: `unknown`, intent: `n/a`)
+- `Cara Mengatasi Wifi Tidak Terhubung ke Perangkat` (final_score: 0.2061, category: `unknown`, intent: `n/a`)
+- `Troubleshooting Printer Tidak Mau Ngeprint (No Response)` (final_score: 1, category: `unknown`, intent: `n/a`)
+- `Cara Install Driver Printer di Windows 10/11` (final_score: 0.2168, category: `unknown`, intent: `n/a`)

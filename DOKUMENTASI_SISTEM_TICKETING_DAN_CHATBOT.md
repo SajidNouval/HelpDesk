@@ -619,6 +619,52 @@ private const WEIGHT_DIVERSIFICATION = 0.05; // Diversifikasi hasil
 - Ambil top-5 hasil
 - Tambahkan confidence level (high/medium/low)
 
+  * Mengimplementasikan proses retrieval multi-fase yang mengkombinasikan pencarian
+     * full-teks dengan Typesense (85% bobot) dan perhitungan TF-IDF (15% bobot)
+     * dalam bentuk reranking berbasis relevansi semantik ringan.
+     *
+     * @param string $userMessage Query dari user
+     * @return array Array of article IDs and their scores
+     */
+    public function retrieve(string $userMessage): array
+    {
+        // Fase 1: Preprocessing Query
+        // Menghilangkan typo, tokenisasi, dan normalisasi teks
+        $normalizedQuery = $this->preprocessingService->normalizeQuery($userMessage);
+        
+        // Fase 2: Deteksi domain/kategori
+        // Mendeteksi domain/kategori terkait pada query
+        $domain = $this->domainDetectionService->detectDomain($userMessage);
+        
+        // Fase 3: Ekspansi Query
+        // Meng-ekspansi query dengan mempertimbangkan kata-kata yang mungkin terkait
+        $expandedQuery = $this->preprocessingService->expandQuery($normalizedQuery);
+        
+        // Fase 4: Pencarian dengan Typesense (85% bobot)
+        // Mencari artikel terkait dengan query menggunakan Typesense dengan fuzzy matching
+        $typesenseResult = $this->typesenseService->search($expandedQuery);
+        $typesenseArticles = $typesenseResult['hits'];
+        $fuzzyMatchedArticles = $this->typesenseService->fuzzyMatch($typesenseArticles);
+        
+        // Fase 5: Perhitungan TF-IDF (15% bobot)
+        // Menghitung skor TF-IDF untuk setiap artikel yang telah difilter dengan Typesense
+        $tfidfResult = $this->tfidfService->calculate($normalizedQuery, $fuzzyMatchedArticles);
+        
+        // Fase 6: Perhitungan Cosine Similarity
+        // Menghitung skor cosine similarity antara query dan setiap artikel TF-IDF
+        $cosineSimilarityResult = $this->cosineSimilarityService->calculate($normalizedQuery, $tfidfResult['documents']);
+        
+        // Fase 7: Hybrid Scoring
+        // Menggabungkan skor TF-IDF dan cosine similarity dengan perhitungan linear
+        $finalResult = [];
+        foreach ($cosineSimilarityResult['scoredDocuments'] as $article) {
+            $score = (0.85 * $article['typesense_score']) + (0.15 * $article['tfidf_score']);
+            $finalResult[$article['id']] = $score;
+        }
+        
+        return $finalResult;
+    }
+
 ### Langkah 4: ConversationFlowService Mengelola Alur Percakapan
 
 **File:** `app/Services/Chatbot/ConversationFlowService.php`

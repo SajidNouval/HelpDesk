@@ -3,9 +3,14 @@
 namespace App\Providers;
 
 use App\Models\Article;
+use App\Models\Category;
+use App\Models\CategoryDomainKeyword;
 use App\Observers\ArticleObserver;
+use App\Observers\CategoryDomainKeywordObserver;
+use App\Observers\CategoryObserver;
 use App\Services\Chatbot\ChatbotRetrievalService;
 use App\Services\Chatbot\CosineSimilarityService;
+use App\Services\Chatbot\DomainDetectionService;
 use App\Services\Chatbot\PreprocessingService;
 use App\Services\Chatbot\TfidfService;
 use App\Services\Chatbot\TypesenseService;
@@ -27,6 +32,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(CosineSimilarityService::class);
         $this->app->singleton(ChatbotRetrievalService::class);
         
+        // DomainDetectionService sebagai singleton agar loadDomainKeywords
+        // hanya dijalankan sekali per request lifecycle
+        $this->app->singleton(DomainDetectionService::class);
+        
         // Typesense service for fuzzy retrieval and typo tolerance
         $this->app->singleton(TypesenseService::class);
         
@@ -39,8 +48,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Register Article Observer for auto-indexing
-        // Observer will trigger cache rebuild when articles are created/updated/deleted
+        // Register Article Observer untuk auto-indexing
+        // Observer akan trigger cache rebuild saat artikel dibuat/diupdate/dihapus
         Article::observe(ArticleObserver::class);
+
+        // Register Category Observer untuk invalidasi cache domain detection
+        // Observer akan menghapus cache keyword domain saat kategori berubah
+        Category::observe(CategoryObserver::class);
+
+        // Register CategoryDomainKeyword Observer
+        // Invalidasi cache saat keyword domain ditambah/diubah/dihapus langsung
+        CategoryDomainKeyword::observe(CategoryDomainKeywordObserver::class);
     }
 }
