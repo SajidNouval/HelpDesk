@@ -127,44 +127,51 @@ Route::get('/tickets/track/{token}', [TicketController::class, 'track'])->name('
 Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
 Route::post('/reports', [TicketController::class, 'storeReport'])->name('reports.store');
 
-// Test route for WebSocket
-Route::get('/test-websocket', function () {
-    broadcast(new \App\Events\TestWebSocketEvent('Hello from Laravel!'));
-    return 'Event broadcasted!';
-});
+// Test routes — only available in local/development environment
+if (app()->environment('local', 'testing')) {
+    Route::get('/test-websocket', function () {
+        broadcast(new \App\Events\TestWebSocketEvent('Hello from Laravel!'));
+        return 'Event broadcasted!';
+    });
 
-// Test message broadcast
-Route::get('/test-message-broadcast', function () {
-    $message = \App\Models\Message::first();
-    if ($message) {
-        broadcast(new \App\Events\MessageSent($message));
-        return 'Message broadcasted!';
-    }
-    return 'No messages found!';
-});
+    Route::get('/test-message-broadcast', function () {
+        $message = \App\Models\Message::first();
+        if ($message) {
+            broadcast(new \App\Events\MessageSent($message));
+            return 'Message broadcasted!';
+        }
+        return 'No messages found!';
+    });
+}
 
 Route::get('/articles', [ArticleController::class, 'publicIndex'])->name('articles.index');
 Route::get('/articles/{slug}', [ArticleController::class, 'publicShow'])->name('articles.show');
 Route::post('/articles/{article}/feedback', [ArticleController::class, 'storeFeedback'])->name('articles.feedback');
 
-// Chatbot routes (public)
-Route::post('/chatbot/get-response', [ChatbotController::class, 'getResponse'])->name('chatbot.get-response');
-Route::post('/chatbot/search', [ChatbotController::class, 'chatbotSearch'])->name('chatbot.search');
-Route::post('/chatbot/show-contact-form', [ChatbotController::class, 'showContactForm'])->name('chatbot.show-contact-form');
-Route::post('/chatbot/create-ticket', [ChatbotController::class, 'createTicketAndMessage'])->name('chatbot.create-ticket');
-Route::post('/chatbot/send-message', [ChatbotController::class, 'sendMessage'])->name('chatbot.send-message');
-Route::get('/chatbot/ticket/{ticket}/messages', [ChatbotController::class, 'getTicketMessages'])->name('chatbot.messages');
+// Chatbot routes (public) - dengan rate limiting untuk mencegah abuse
+Route::middleware(['throttle:30,1'])->group(function () {
+    Route::post('/chatbot/get-response', [ChatbotController::class, 'getResponse'])->name('chatbot.get-response');
+    Route::post('/chatbot/search', [ChatbotController::class, 'chatbotSearch'])->name('chatbot.search');
+    Route::post('/chatbot/show-contact-form', [ChatbotController::class, 'showContactForm'])->name('chatbot.show-contact-form');
+    Route::post('/chatbot/create-ticket', [ChatbotController::class, 'createTicketAndMessage'])->name('chatbot.create-ticket');
+    Route::post('/chatbot/send-message', [ChatbotController::class, 'sendMessage'])->name('chatbot.send-message');
+    Route::get('/chatbot/ticket/{ticket}/messages', [ChatbotController::class, 'getTicketMessages'])->name('chatbot.messages');
+});
 
-// Interactive chatbot features (public)
-Route::get('/chatbot/greeting', [ChatbotController::class, 'getGreeting'])->name('chatbot.greeting');
-Route::post('/chatbot/category-subtopics', [ChatbotController::class, 'getCategorySubtopics'])->name('chatbot.category-subtopics');
-Route::post('/chatbot/check-ambiguity', [ChatbotController::class, 'checkAmbiguity'])->name('chatbot.check-ambiguity');
-Route::get('/chatbot/search-suggestions', [ChatbotController::class, 'getSearchSuggestions'])->name('chatbot.search-suggestions');
+// Interactive chatbot features (public) - rate limit ringan
+Route::middleware(['throttle:60,1'])->group(function () {
+    Route::get('/chatbot/greeting', [ChatbotController::class, 'getGreeting'])->name('chatbot.greeting');
+    Route::post('/chatbot/category-subtopics', [ChatbotController::class, 'getCategorySubtopics'])->name('chatbot.category-subtopics');
+    Route::post('/chatbot/check-ambiguity', [ChatbotController::class, 'checkAmbiguity'])->name('chatbot.check-ambiguity');
+    Route::get('/chatbot/search-suggestions', [ChatbotController::class, 'getSearchSuggestions'])->name('chatbot.search-suggestions');
+});
 
 // Legacy routes (keep for backward compatibility)
-Route::get('/chatbot/topics', [ChatbotController::class, 'getTopics'])->name('chatbot.topics');
-Route::post('/chatbot/subtopics', [ChatbotController::class, 'getSubtopics'])->name('chatbot.subtopics');
-Route::post('/chatbot/article-suggestion', [ChatbotController::class, 'getArticleSuggestion'])->name('chatbot.article-suggestion');
+Route::middleware(['throttle:60,1'])->group(function () {
+    Route::get('/chatbot/topics', [ChatbotController::class, 'getTopics'])->name('chatbot.topics');
+    Route::post('/chatbot/subtopics', [ChatbotController::class, 'getSubtopics'])->name('chatbot.subtopics');
+    Route::post('/chatbot/article-suggestion', [ChatbotController::class, 'getArticleSuggestion'])->name('chatbot.article-suggestion');
+});
 
 // Chatbot admin routes (cache management)
 Route::middleware(['auth', 'admin'])->prefix('admin/chatbot')->name('admin.chatbot.')->group(function () {

@@ -18,7 +18,7 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
 
-            $table->string('title');
+            $table->string('title', 200);
             $table->text('message');
 
             $table->boolean('is_read')->default(false);

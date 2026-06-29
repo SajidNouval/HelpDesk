@@ -40,10 +40,10 @@ return new class extends Migration
             $table->ulid('id')->primary();
 
             // Data user (guest)
-            $table->string('name');
-            $table->string('email');
+            $table->string('name', 50);
+            $table->string('email', 50);
 
-            $table->string('subject');
+            $table->string('subject', 200);
             $table->text('message');
 
             $table->foreignUlid('category_id')
@@ -83,6 +83,13 @@ return new class extends Migration
             $table->string('tracking_token', 80)->nullable()->unique();
 
             $table->timestamps();
+
+            // Indexes
+            $table->index('status', 'tickets_status_idx');
+            $table->index(['staff_id', 'status'], 'tickets_staff_status_idx');
+            $table->index('email', 'tickets_email_idx');
+            $table->index('category_id', 'tickets_category_idx');
+            $table->index('created_at', 'tickets_created_at_idx');
         });
     }
 

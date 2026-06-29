@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\StaffProfile;
 use App\Models\TicketLog;
+use App\Services\TicketAssignmentService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -38,6 +39,10 @@ use Illuminate\Http\JsonResponse;
  */
 class TicketController extends Controller
 {
+    public function __construct(
+        private TicketAssignmentService $assignmentService
+    ) {}
+
     /**
      * =========================================================================
      * 1. METODE INDEX - DAFTAR TIKET STAFF
@@ -390,50 +395,10 @@ class TicketController extends Controller
             'description' => 'Tiket diselesaikan oleh staff: ' . $user->name,
         ]);
 
-        // ✨ Cari tiket waiting dengan kategori yang sama untuk di-assign
+        // ✨ Auto-assign tiket waiting berikutnya di kategori yang sama
         $staffProfile = StaffProfile::where('user_id', $user->id)->first();
-        
         if ($staffProfile) {
-            $nextTicket = Ticket::where('category_id', $staffProfile->category_id)
-                ->where('status', 'waiting')
-                ->whereNull('staff_id') // Hanya tiket yang belum di-assign
-                ->oldest()
-                ->first();
-
-            if ($nextTicket) {
-                // Cari staff paling available (tidak ada active tickets) di kategori yang sama
-                $availableStaff = StaffProfile::where('category_id', $staffProfile->category_id)
-                    ->where('is_busy', false)
-                    ->get()
-                    ->sortBy(function ($profile) {
-                        // Prioritas: staff tanpa tiket active sama sekali
-                        $activeCount = $profile->user->tickets()
-                            ->whereIn('status', ['assigned', 'progress', 'waiting'])
-                            ->count();
-                        return $activeCount;
-                    })
-                    ->first();
-
-                if ($availableStaff) {
-                    // Assign ke staff yang paling available
-                    $nextTicket->update([
-                        'staff_id' => $availableStaff->user_id,
-                        'status' => 'assigned',
-                        'assigned_at' => now(),
-                    ]);
-
-                    // Update status staff jadi sibuk
-                    $availableStaff->update([
-                        'is_busy' => true,
-                    ]);
-
-                    TicketLog::create([
-                        'ticket_id' => $nextTicket->id,
-                        'action' => 'assigned',
-                        'description' => 'Tiket di-assign ke staff: ' . $availableStaff->user->name,
-                    ]);
-                }
-            }
+            $this->assignmentService->assignNextWaiting($staffProfile);
         }
 
         broadcast(new \App\Events\TicketClosed($ticket));
@@ -494,50 +459,10 @@ class TicketController extends Controller
             'description' => 'Tiket ditangguhkan oleh staff dan chat dihentikan sementara.',
         ]);
 
-        // ✨ Cari tiket waiting dengan kategori yang sama untuk di-assign
+        // ✨ Auto-assign tiket waiting berikutnya di kategori yang sama
         $staffProfile = StaffProfile::where('user_id', $user->id)->first();
-        
         if ($staffProfile) {
-            $nextTicket = Ticket::where('category_id', $staffProfile->category_id)
-                ->where('status', 'waiting')
-                ->whereNull('staff_id') // Hanya tiket yang belum di-assign
-                ->oldest()
-                ->first();
-
-            if ($nextTicket) {
-                // Cari staff paling available (tidak ada active tickets) di kategori yang sama
-                $availableStaff = StaffProfile::where('category_id', $staffProfile->category_id)
-                    ->where('is_busy', false)
-                    ->get()
-                    ->sortBy(function ($profile) {
-                        // Prioritas: staff tanpa tiket active sama sekali
-                        $activeCount = $profile->user->tickets()
-                            ->whereIn('status', ['assigned', 'progress', 'waiting'])
-                            ->count();
-                        return $activeCount;
-                    })
-                    ->first();
-
-                if ($availableStaff) {
-                    // Assign ke staff yang paling available
-                    $nextTicket->update([
-                        'staff_id' => $availableStaff->user_id,
-                        'status' => 'assigned',
-                        'assigned_at' => now(),
-                    ]);
-
-                    // Update status staff jadi sibuk
-                    $availableStaff->update([
-                        'is_busy' => true,
-                    ]);
-
-                    TicketLog::create([
-                        'ticket_id' => $nextTicket->id,
-                        'action' => 'assigned',
-                        'description' => 'Tiket di-assign ke staff: ' . $availableStaff->user->name,
-                    ]);
-                }
-            }
+            $this->assignmentService->assignNextWaiting($staffProfile);
         }
 
         broadcast(new \App\Events\TicketClosed($ticket));

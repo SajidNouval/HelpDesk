@@ -23,11 +23,11 @@ return new class extends Migration
                 ->constrained('users')
                 ->cascadeOnDelete();
 
-            $table->string('title');
-            $table->string('slug')->unique();
+            $table->string('title', 200);
+            $table->string('slug', 255)->unique();
             $table->longText('content');
             $table->text('excerpt')->nullable();
-            $table->string('keywords')->nullable();
+            $table->string('keywords', 500)->nullable();
 
             $table->integer('views')->default(0);
 
@@ -37,6 +37,12 @@ return new class extends Migration
             $table->text('rejection_note')->nullable();
 
             $table->timestamps();
+
+            // Indexes
+            $table->index(['publish_status', 'is_published'], 'articles_publish_status_published_idx');
+            $table->index('views', 'articles_views_idx');
+            $table->index('staff_id', 'articles_staff_idx');
+            $table->index('category_id', 'articles_category_idx');
         });
 
         // Add FULLTEXT index untuk MySQL 5.7+ atau MariaDB 10.0+

@@ -35,9 +35,9 @@ return new class extends Migration
     {
         Schema::create('ticket_otps', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->string('name');
-            $table->string('email');
-            $table->string('subject');
+            $table->string('name', 50);
+            $table->string('email', 50);
+            $table->string('subject', 200);
             $table->text('message');
             $table->foreignUlid('category_id')
                 ->constrained()
@@ -48,6 +48,10 @@ return new class extends Migration
             $table->timestamp('expires_at');
             $table->string('token', 80)->unique();
             $table->timestamps();
+
+            // Indexes
+            $table->index('email', 'ticket_otps_email_idx');
+            $table->index('expires_at', 'ticket_otps_expires_at_idx');
         });
     }
 

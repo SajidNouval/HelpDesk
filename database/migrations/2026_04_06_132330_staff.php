@@ -25,6 +25,9 @@ return new class extends Migration
             $table->boolean('is_busy')->default(false);
 
             $table->timestamps();
+
+            // Indexes
+            $table->index(['category_id', 'is_busy'], 'staff_profiles_category_busy_idx');
         });
     }
 

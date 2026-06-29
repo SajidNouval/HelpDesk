@@ -18,7 +18,7 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
 
-            $table->string('action'); 
+            $table->string('action', 50); 
             // contoh: created, assigned, progress, closed
 
             $table->text('description')->nullable();

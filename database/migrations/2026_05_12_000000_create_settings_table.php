@@ -27,8 +27,8 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->string('key')->unique();
-            $table->text('value')->nullable();
+            $table->string('key', 100)->unique();
+            $table->longText('value')->nullable();
             $table->timestamps();
         });
     }

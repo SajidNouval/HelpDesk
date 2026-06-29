@@ -77,7 +77,7 @@ class MessageController extends Controller
 
         $ticket = Ticket::findOrFail($request->ticket_id);
 
-        // Cek apakah staff yang update adalah pemilik tiket
+        // Cek otorisasi pengguna
         $myTickets = session()->get('my_tickets', []);
         $guestTicketId = session('guest_ticket_id');
         $isStaff = Auth::check() && Auth::user()->role === 'staff';
@@ -85,14 +85,8 @@ class MessageController extends Controller
                    $guestTicketId == $ticket->id ||
                    ($request->query('email') && $request->query('email') === $ticket->email);
 
-        // Untuk debugging - izinkan akses jika tiket ada dan tidak closed
         if (!$isStaff && !$isOwner) {
-            if ($ticket->status !== 'closed') {
-                // Izinkan akses untuk debugging
-                $isOwner = true;
-            } else {
-                return response()->json(['error' => 'Unauthorized'], 403);
-            }
+            return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         if (!$isStaff && in_array($ticket->status, ['assigned', 'waiting', 'closed'])) {
@@ -188,12 +182,7 @@ class MessageController extends Controller
                    ($request->query('email') && $request->query('email') === $ticket->email);
 
         if (!$isStaff && !$isOwner) {
-            if ($ticket->status !== 'closed') {
-                // Izinkan akses untuk debugging
-                $isOwner = true;
-            } else {
-                return response()->json(['error' => 'Unauthorized'], 403);
-            }
+            return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         // Untuk guest, izinkan akses ke pesan tiket untuk semua status aktif

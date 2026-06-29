@@ -68,11 +68,25 @@ class Ticket extends Model
     /**
      * Fungsi:
      * Mengambil staff yang ditugaskan menangani tiket.
+     * Alias: staff() untuk kompatibilitas dengan eager loading ->with(['staff'])
      *
      * Output:
      * - Relasi belongsTo User.
      */
     public function assignedStaff()
+    {
+        return $this->belongsTo(User::class, 'staff_id');
+    }
+
+    /**
+     * Fungsi:
+     * Alias dari assignedStaff() untuk kompatibilitas dengan seluruh controller.
+     * Digunakan pada: ->with(['staff']), $ticket->staff
+     *
+     * Output:
+     * - Relasi belongsTo User.
+     */
+    public function staff()
     {
         return $this->belongsTo(User::class, 'staff_id');
     }

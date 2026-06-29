@@ -13,6 +13,7 @@ use App\Models\Setting;
 use App\Models\StaffProfile;
 use App\Models\TicketLog;
 use App\Models\TicketOtp;
+use App\Services\TicketAssignmentService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -39,6 +40,10 @@ use Illuminate\Support\Str;
  */
 class TicketController extends Controller
 {
+    public function __construct(
+        private TicketAssignmentService $assignmentService
+    ) {}
+
     /**
      * =========================================================================
      * 1. METODE CREATE - TAMPILKAN FORM TIKET
@@ -147,27 +152,27 @@ class TicketController extends Controller
         // ✅ Buat tiket + auto assign staff dalam transaksi
         $ticket = DB::transaction(function () use ($request) {
             $ticket = Ticket::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'subject' => $request->subject,
-                'message' => $request->message,
+                'name'        => $request->name,
+                'email'       => $request->email,
+                'subject'     => $request->subject,
+                'message'     => $request->message,
                 'category_id' => $request->category_id,
-                'status' => 'open',
+                'status'      => 'open',
             ]);
 
             TicketLog::create([
-                'ticket_id' => $ticket->id,
-                'action' => 'created',
+                'ticket_id'   => $ticket->id,
+                'action'      => 'created',
                 'description' => 'Tiket dibuat oleh user',
             ]);
 
-            $staffProfile = $this->assignTicketToAvailableStaff($ticket);
+            $staffProfile = $this->assignmentService->assignLiveChat($ticket);
 
             if (!$staffProfile) {
                 $ticket->update(['status' => 'waiting']);
                 TicketLog::create([
-                    'ticket_id' => $ticket->id,
-                    'action' => 'waiting',
+                    'ticket_id'   => $ticket->id,
+                    'action'      => 'waiting',
                     'description' => 'Belum ada staff tersedia',
                 ]);
             }
@@ -266,26 +271,26 @@ class TicketController extends Controller
         // ✅ Buat laporan sebagai tiket waiting yang ditangguhkan ke staf
         $ticket = DB::transaction(function () use ($request) {
             $ticket = Ticket::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'subject' => $request->subject,
-                'message' => $request->message,
+                'name'        => $request->name,
+                'email'       => $request->email,
+                'subject'     => $request->subject,
+                'message'     => $request->message,
                 'category_id' => $request->category_id,
-                'status' => 'waiting',
+                'status'      => 'waiting',
             ]);
 
             TicketLog::create([
-                'ticket_id' => $ticket->id,
-                'action' => 'created',
+                'ticket_id'   => $ticket->id,
+                'action'      => 'created',
                 'description' => 'Laporan dibuat dari halaman artikel',
             ]);
 
-            $assignedReportStaff = $this->assignReportToStaff($ticket);
+            $assignedReportStaff = $this->assignmentService->assignReport($ticket);
 
             if (!$assignedReportStaff) {
                 TicketLog::create([
-                    'ticket_id' => $ticket->id,
-                    'action' => 'waiting',
+                    'ticket_id'   => $ticket->id,
+                    'action'      => 'waiting',
                     'description' => 'Belum ada staff tersedia untuk menangani laporan ini',
                 ]);
             }
@@ -480,23 +485,23 @@ class TicketController extends Controller
             ]);
 
             if ($otp->type === 'livechat') {
-                $staffProfile = $this->assignTicketToAvailableStaff($ticket);
+                $staffProfile = $this->assignmentService->assignLiveChat($ticket);
 
                 if (!$staffProfile) {
                     $ticket->update(['status' => 'waiting']);
                     TicketLog::create([
-                        'ticket_id' => $ticket->id,
-                        'action' => 'waiting',
+                        'ticket_id'   => $ticket->id,
+                        'action'      => 'waiting',
                         'description' => 'Belum ada staff tersedia setelah verifikasi OTP.',
                     ]);
                 }
             } else {
-                $assignedReportStaff = $this->assignReportToStaff($ticket);
+                $assignedReportStaff = $this->assignmentService->assignReport($ticket);
 
                 if (!$assignedReportStaff) {
                     TicketLog::create([
-                        'ticket_id' => $ticket->id,
-                        'action' => 'waiting',
+                        'ticket_id'   => $ticket->id,
+                        'action'      => 'waiting',
                         'description' => 'Belum ada staff tersedia untuk laporan setelah verifikasi OTP.',
                     ]);
                 }
@@ -570,138 +575,6 @@ class TicketController extends Controller
      * Output:
      * - StaffProfile atau null jika tidak ada staff tersedia.
      */
-    private function assignTicketToAvailableStaff(Ticket $ticket): ?StaffProfile
-    {
-        return DB::transaction(function () use ($ticket) {
-            $staffProfiles = StaffProfile::where('category_id', $ticket->category_id)
-                ->where('is_busy', false)
-                ->with('user')
-                ->lockForUpdate()
-                ->get();
-
-            if ($staffProfiles->isEmpty()) {
-                return null;
-            }
-
-            $staffWithCounts = $staffProfiles->map(function ($profile) {
-                return [
-                    'profile' => $profile,
-                    'active_tickets' => $profile->user->tickets()
-                        ->whereIn('status', ['assigned', 'progress'])
-                        ->count(),
-                    'waiting_reports' => $profile->user->tickets()
-                        ->where('status', 'waiting')
-                        ->count(),
-                ];
-            });
-
-            $best = $staffWithCounts->sort(function ($a, $b) {
-                if ($a['active_tickets'] !== $b['active_tickets']) {
-                    return $a['active_tickets'] <=> $b['active_tickets'];
-                }
-                if ($a['waiting_reports'] !== $b['waiting_reports']) {
-                    return $a['waiting_reports'] <=> $b['waiting_reports'];
-                }
-                return $a['profile']->id <=> $b['profile']->id;
-            })->first();
-
-            if (!$best) {
-                return null;
-            }
-
-            $bestStaff = $best['profile'];
-
-            $ticket->update([
-                'staff_id' => $bestStaff->user_id,
-                'status' => 'assigned',
-                'assigned_at' => now(),
-            ]);
-
-            $bestStaff->update(['is_busy' => true]);
-
-            TicketLog::create([
-                'ticket_id' => $ticket->id,
-                'action' => 'assigned',
-                'description' => 'Tiket di-assign ke staff: ' . $bestStaff->user->name .
-                    ' (active: ' . $bestStaff->user->tickets()->whereIn('status', ['assigned', 'progress'])->count() .
-                    ', waiting: ' . $bestStaff->user->tickets()->where('status', 'waiting')->count() . ')',
-            ]);
-
-            return $bestStaff;
-        });
-    }
-
-    /**
-     * =========================================================================
-     * 8. METODE ASSIGN REPORT TO STAFF - ASSIGN LAPORAN KE STAFF
-     * =========================================================================
-     *
-     * Fungsi:
-     * Menugaskan laporan ke staff sebagai tiket waiting tanpa live chat.
-     *
-     * Alur Proses:
-     * 1. Query staff profiles di kategori tiket.
-     * 2. Hitung waiting tickets per staff.
-     * 3. Sort staff berdasarkan beban waiting terendah.
-     * 4. Assign tiket ke staff terbaik.
-     * 5. Catat log penugasan.
-     *
-     * Query yang Digunakan:
-     * - StaffProfile::where()->with()->get(): Cari staff
-     * - $profile->user->tickets()->count(): Hitung waiting tickets
-     * - $ticket->update(): Update tiket
-     *
-     * Output:
-     * - StaffProfile atau null jika tidak ada staff tersedia.
-     */
-    private function assignReportToStaff(Ticket $ticket): ?StaffProfile
-    {
-        $staffProfiles = StaffProfile::where('category_id', $ticket->category_id)
-            ->with('user')
-            ->get();
-
-        if ($staffProfiles->isEmpty()) {
-            return null;
-        }
-
-        $staffWithWaitingCounts = $staffProfiles->map(function ($profile) {
-            return [
-                'profile' => $profile,
-                'waiting_count' => $profile->user->tickets()
-                    ->where('status', 'waiting')
-                    ->count(),
-            ];
-        });
-
-        $best = $staffWithWaitingCounts->sort(function ($a, $b) {
-            if ($a['waiting_count'] !== $b['waiting_count']) {
-                return $a['waiting_count'] <=> $b['waiting_count'];
-            }
-            return $a['profile']->id <=> $b['profile']->id;
-        })->first();
-
-        if (!$best) {
-            return null;
-        }
-
-        $bestStaff = $best['profile'];
-
-        $ticket->update([
-            'staff_id' => $bestStaff->user_id,
-            'assigned_at' => now(),
-            'status' => 'waiting',
-        ]);
-
-        TicketLog::create([
-            'ticket_id' => $ticket->id,
-            'action' => 'assigned',
-            'description' => 'Laporan ditugaskan ke staf: ' . $bestStaff->user->name .
-                ' (waiting load: ' . $best['waiting_count'] . ')',
-        ]);
-
-        return $bestStaff;
-    }
-
     /**
      * =========================================================================
      * 9. METODE INDEX - DAFTAR TIKET ADMIN

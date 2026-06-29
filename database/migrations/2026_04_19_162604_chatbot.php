@@ -15,11 +15,11 @@ return new class extends Migration
             $table->ulid('id')->primary();
 
             // keyword bisa lebih dari 1 (pisah koma)
-            $table->string('keywords');
+            $table->string('keywords', 500);
             // contoh: "wifi,internet,lemot"
 
             // jawaban chatbot
-            $table->text('response');
+            $table->longText('response');
 
             // optional: terkait kategori tiket
             $table->foreignUlid('category_id')
