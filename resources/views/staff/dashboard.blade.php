@@ -139,9 +139,36 @@
                         </div>
 
                         <!-- Live Service Status Row -->
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full {{ $liveServiceEnabled ? 'bg-green-400' : 'bg-gray-400' }}"></span>
-                            <span class="text-sm text-gray-600">Status Live Service: <strong class="text-gray-900">{{ $liveServiceEnabled ? 'Aktif' : 'Nonaktif' }}</strong></span>
+                        <div class="flex flex-col gap-3">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full {{ $liveServiceEnabled ? 'bg-green-400' : 'bg-gray-400' }}"></span>
+                                <span class="text-sm text-gray-600">Status Live Service: <strong class="text-gray-900">{{ $liveServiceEnabled ? 'Aktif' : 'Nonaktif' }}</strong></span>
+                            </div>
+                            
+                            <div class="flex flex-col gap-2 pt-3 border-t border-gray-100">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full {{ auth()->user()->status === 'active' ? 'bg-emerald-500' : 'bg-red-500' }}"></span>
+                                    <span class="text-sm text-gray-600">Status Keaktifan Staf: <strong class="text-gray-900">{{ auth()->user()->status === 'active' ? 'Aktif' : 'Nonaktif' }}</strong></span>
+                                </div>
+                                <div class="mt-1">
+                                    <form action="{{ route('staff.toggle-status') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-lg shadow-sm border {{ auth()->user()->status === 'active' ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100' : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100' }} transition">
+                                            @if(auth()->user()->status === 'active')
+                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Ubah Menjadi Nonaktif
+                                            @else
+                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Ubah Menjadi Aktif
+                                            @endif
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -140,11 +140,7 @@
                     {!! str_replace('<img', '<img loading="lazy" decoding="async"', $article->content) !!}
                 </div>
 
-                @if(session('success'))
-                    <x-alert type="success" class="mt-8">
-                        {{ session('success') }}
-                    </x-alert>
-                @endif
+
 
                 <!-- Feedback Section -->
                 @if(!session('article_feedback_' . $article->id))
@@ -207,16 +203,12 @@
         <div class="absolute -top-10 -right-10 w-24 h-24 bg-red-50 rounded-full blur-2xl pointer-events-none"></div>
 
         <!-- Header -->
+        <!-- Header -->
         <div class="flex justify-between items-start px-6 py-5 border-b border-gray-100">
             <div>
                 <h2 class="text-2xl font-bold text-gray-900">Hubungi Layanan Bantuan</h2>
                 <p class="text-sm text-gray-500 mt-1">Pilih metode bantuan yang paling sesuai dengan kebutuhan Anda saat ini.</p>
             </div>
-            <button type="button" data-close-modal class="text-gray-400 hover:text-gray-600 p-1.5 hover:bg-gray-100 rounded-xl transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
         </div>
 
         <!-- Content Options -->
@@ -333,11 +325,6 @@
                 <h2 class="text-xl font-semibold text-gray-900">Live Chat</h2>
                 <p class="text-sm text-gray-600">Chat langsung dengan tim support kami</p>
             </div>
-            <x-secondary-button type="button" data-close-modal class="text-gray-400 hover:text-gray-600 p-0 w-8 h-8 flex items-center justify-center rounded-xl">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </x-secondary-button>
         </div>
 
         <form action="#" method="POST" class="p-6 space-y-4" id="liveChatForm"

@@ -36,6 +36,36 @@ class PreprocessingService
     private array $protectedTokensLookup = [];
 
     /**
+     * Indonesian IT terms that should not be stemmed to keep their precise IT context.
+     * For example, 'jaringan' (network) should not be stemmed to 'jaring' (net/web),
+     * and 'perangkat' (device) should not be stemmed to 'angkat' (lift).
+     */
+    private array $stemmingExceptions = [
+        'jaringan',
+        'perangkat',
+        'keamanan',
+        'pencadangan',
+        'pemulihan',
+        'penyaringan',
+        'pemblokiran',
+        'pengarsipan',
+        'peralatan',
+        'penyimpanan',
+        'sambungan',
+        'pemasangan',
+        'pembaruan',
+        'penghapusan',
+        'pencarian',
+        'pengiriman',
+        'pelayanan',
+        'konektivitas',
+        'pengguna',
+        'penggunaan',
+    ];
+
+    private array $stemmingExceptionsLookup = [];
+
+    /**
      * Prefix yang sudah diurutkan dari terpanjang ke terpendek.
      * Diinisialisasi sekali di constructor; sebelumnya diurutkan ulang di setiap stem().
      */
@@ -471,7 +501,7 @@ class PreprocessingService
         
         // Intensifiers
         'sangat', 'cukup', 'paling', 'lebih', 'kurang', 'sekali', 'terlalu',
-        'agak', 'lumayan', 'benar', 'sungguh',
+        'agak', 'lumayan', 'benar', 'sungguh', 'banget', 'bgt',
         
         // Adjectives (common)
         'benar', 'baik', 'besar', 'kecil', 'baru', 'lama', 'tinggi', 'rendah',
@@ -497,6 +527,11 @@ class PreprocessingService
         // Common filler words
         'si', 'sang', 'para', 'kaum', 'tiap', 'masing', 'saling', 'sama',
         'sendiri', 'sendiris', 'pribadi',
+
+        // Slang & informal daily conversational words (Indonesian)
+        'gue', 'lu', 'lo', 'gw', 'elo', 'gua', 'kalo', 'klo', 'gimana', 'gmana', 
+        'gmn', 'gpp', 'gapapa', 'pengen', 'pingin', 'bikin', 'nyari', 'nanya', 
+        'kaga', 'kagak', 'cuma', 'cuman', 'tuh', 'yah', 'dlu', 'dulu', 'ntar', 'nanti',
     ];
 
     /**
@@ -528,6 +563,9 @@ class PreprocessingService
 
         // OPTIMASI: Bangun hash-set O(1) dari protected tokens
         $this->protectedTokensLookup = array_flip($this->protectedTechnicalTokens);
+
+        // OPTIMASI: Bangun hash-set O(1) dari stemming exceptions
+        $this->stemmingExceptionsLookup = array_flip($this->stemmingExceptions);
 
         // OPTIMASI: Prefix diurutkan satu kali di constructor
         $this->sortedPrefixes = $this->prefixes;
@@ -718,8 +756,15 @@ class PreprocessingService
      */
     private function stem(string $word): string
     {
+        $lowerWord = mb_strtolower($word);
+
         // CRITICAL: Jangan stem protected technical tokens
-        if ($this->isProtectedTechnicalToken($word)) {
+        if ($this->isProtectedTechnicalToken($lowerWord)) {
+            return $word;
+        }
+
+        // CRITICAL: Jangan stem kata-kata pengecualian stemming Bahasa Indonesia
+        if (isset($this->stemmingExceptionsLookup[$lowerWord])) {
             return $word;
         }
 

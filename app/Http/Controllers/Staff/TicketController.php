@@ -597,6 +597,9 @@ class TicketController extends Controller
             ->where('category_id', $ticket->category_id)
             ->where('is_busy', false)
             ->where('user_id', '!=', $ticket->staff_id) // jangan assign ke diri sendiri
+            ->whereHas('user', function ($q) {
+                $q->where('status', 'active');
+            })
             ->with([
                 'user' => function ($q) {
                     $q->select(['id', 'name'])

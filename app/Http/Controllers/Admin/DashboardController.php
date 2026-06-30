@@ -8,6 +8,7 @@ use App\Models\ArticleFeedback;
 use App\Models\Ticket;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\ChatbotSearchLog;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Cache;
@@ -153,12 +154,45 @@ class DashboardController extends Controller
                 ->take(3)
                 ->get(['id', 'name']);
 
+            $totalChatbotQuestions = ChatbotSearchLog::count();
+            $todayChatbotQuestions = ChatbotSearchLog::whereDate('created_at', \Carbon\Carbon::today())->count();
+            $answeredChatbotQuestions = ChatbotSearchLog::where('is_fallback_triggered', false)->count();
+            $unansweredChatbotQuestions = ChatbotSearchLog::where('is_fallback_triggered', true)->count();
+            $chatbotAccuracy = $totalChatbotQuestions > 0
+                ? round(($answeredChatbotQuestions / $totalChatbotQuestions) * 100, 1)
+                : 0;
+            $avgConfidence = ChatbotSearchLog::where('is_fallback_triggered', false)->avg('confidence') ?? 0;
+            $avgConfidencePercent = round($avgConfidence * 100, 1);
+
             $chatbotStats = [
-                'total_questions' => 0,
-                'today' => 0,
-                'answered' => 0,
-                'unanswered' => 0,
+                'total_questions' => $totalChatbotQuestions,
+                'today' => $todayChatbotQuestions,
+                'answered' => $answeredChatbotQuestions,
+                'unanswered' => $unansweredChatbotQuestions,
+                'accuracy_rate' => $chatbotAccuracy,
+                'avg_confidence' => $avgConfidencePercent,
             ];
+
+            // Top 5 chatbot queries
+            $chatbotQueries = ChatbotSearchLog::selectRaw("query_original, count(*) as query_count")
+                ->groupBy('query_original')
+                ->orderByDesc('query_count')
+                ->take(5)
+                ->get();
+
+            // Top 5 recommended articles
+            $chatbotArticles = ChatbotSearchLog::selectRaw("top_result_id, top_result_title, count(*) as recommend_count")
+                ->whereNotNull('top_result_id')
+                ->groupBy('top_result_id', 'top_result_title')
+                ->orderByDesc('recommend_count')
+                ->take(5)
+                ->get();
+
+            // Recent chatbot logs
+            $recentChatbotLogs = ChatbotSearchLog::select(['id', 'query_original', 'detected_domain', 'confidence', 'is_fallback_triggered', 'created_at'])
+                ->latest()
+                ->paginate(5, ['*'], 'chatbot_page')
+                ->withQueryString();
 
             return compact(
                 'staffCount',
@@ -175,7 +209,10 @@ class DashboardController extends Controller
                 'staffStats',
                 'topArticles',
                 'topStaff',
-                'chatbotStats'
+                'chatbotStats',
+                'chatbotQueries',
+                'chatbotArticles',
+                'recentChatbotLogs'
             );
         });
 

@@ -9,11 +9,6 @@
                 <h2 class="text-2xl font-bold text-gray-900">Buat Laporan Tiket</h2>
                 <p class="text-sm text-gray-500 mt-1">Laporan Anda akan ditinjau dan ditangani secara mendalam oleh staf kami.</p>
             </div>
-            <button type="button" data-close-modal class="text-gray-400 hover:text-gray-600 p-1.5 hover:bg-gray-100 rounded-xl transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
         </div>
 
         <form action="#" method="POST" class="p-6 space-y-5 max-h-[75vh] overflow-y-auto" id="reportForm" data-request-otp-url="{{ route('tickets.request-otp') }}" data-verify-otp-url="{{ route('tickets.verify-otp') }}">
@@ -171,18 +166,4 @@
             </button>
         </div>
     </div>
-</div>
-
-<!-- Success Notification Toast -->
-<div id="successToast" class="hidden fixed top-4 right-4 rounded-xl border shadow-lg px-4 py-3 flex items-start gap-3 bg-green-50 border-green-200 text-green-800 z-50 animate-fade-in">
-    <div class="flex-shrink-0">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-    </div>
-    <div class="flex-1 min-w-0">
-        <p class="text-sm text-gray-600" id="toastMessage">Laporan berhasil dibuat!</p>
-    </div>
-    <button type="button" data-close-toast class="flex-shrink-0 ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex items-center justify-center h-8 w-8 text-green-800 hover:bg-green-100 focus:outline-none">
-        <span class="sr-only">Close</span>
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 11-1.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-    </button>
 </div>

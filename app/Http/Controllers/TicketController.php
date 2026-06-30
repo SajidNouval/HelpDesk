@@ -120,34 +120,16 @@ class TicketController extends Controller
 
         $request->validate($validationRules);
 
-        // Anti-spam checks
-        $ip = $request->ip();
-        $email = $request->email;
-
-        // Check IP rate limit
-        if (Cache::has("ticket_ip_{$ip}")) {
-            if ($request->expectsJson()) {
-                return response()->json(['error' => 'Terlalu banyak permintaan dari IP ini. Coba lagi dalam 1 menit.'], 429);
-            }
-            return redirect()->back()->withErrors(['error' => 'Terlalu banyak permintaan dari IP ini. Coba lagi dalam 1 menit.']);
-        }
-
-        // Check email rate limit
-        if (Cache::has("ticket_email_{$email}")) {
-            if ($request->expectsJson()) {
-                return response()->json(['error' => 'Email ini sudah digunakan baru-baru ini. Coba lagi dalam 1 menit.'], 429);
-            }
-            return redirect()->back()->withErrors(['error' => 'Email ini sudah digunakan baru-baru ini. Coba lagi dalam 1 menit.']);
+        // Check Rate limit via private helper
+        $rateLimitResponse = $this->checkRateLimit($request, 'ticket');
+        if ($rateLimitResponse) {
+            return $rateLimitResponse;
         }
 
         // Captcha check only for non-JSON requests
         if (!$request->expectsJson() && $request->captcha != session('captcha')) {
             return redirect()->back()->withErrors(['captcha' => 'Captcha salah.']);
         }
-
-        // Set cache for 1 minute
-        Cache::put("ticket_ip_{$ip}", true, 60);
-        Cache::put("ticket_email_{$email}", true, 60);
 
         // ✅ Buat tiket + auto assign staff dalam transaksi
         $ticket = DB::transaction(function () use ($request) {
@@ -181,19 +163,8 @@ class TicketController extends Controller
             return $ticket;
         });
 
-        // Store ticket ID in session for persistence
-        session()->push('my_tickets', $ticket->id);
-        session(['ticket_id' => $ticket->id]);
-        
-        // For guest users, store in separate session keys for chat widget
-        if (!Auth::check()) {
-            session(['guest_ticket_id' => $ticket->id]);
-            if ($request->email) {
-                session(['guest_email' => $request->email]);
-            }
-        }
-        
-        session()->save(); // Explicitly save session before response
+        // Store ticket ID in session via private helper
+        $this->storeTicketInSession($ticket);
 
         // Return JSON if requested as API
         if (request()->expectsJson()) {
@@ -245,29 +216,11 @@ class TicketController extends Controller
 
         $request->validate($validationRules);
 
-        // Anti-spam checks
-        $ip = $request->ip();
-        $email = $request->email;
-
-        // Check IP rate limit
-        if (Cache::has("report_ip_{$ip}")) {
-            if ($request->expectsJson()) {
-                return response()->json(['error' => 'Terlalu banyak permintaan dari IP ini. Coba lagi dalam 1 menit.'], 429);
-            }
-            return redirect()->back()->withErrors(['error' => 'Terlalu banyak permintaan dari IP ini. Coba lagi dalam 1 menit.']);
+        // Check Rate limit via private helper
+        $rateLimitResponse = $this->checkRateLimit($request, 'report');
+        if ($rateLimitResponse) {
+            return $rateLimitResponse;
         }
-
-        // Check email rate limit
-        if (Cache::has("report_email_{$email}")) {
-            if ($request->expectsJson()) {
-                return response()->json(['error' => 'Email ini sudah digunakan baru-baru ini. Coba lagi dalam 1 menit.'], 429);
-            }
-            return redirect()->back()->withErrors(['error' => 'Email ini sudah digunakan baru-baru ini. Coba lagi dalam 1 menit.']);
-        }
-
-        // Set cache for 1 minute
-        Cache::put("report_ip_{$ip}", true, 60);
-        Cache::put("report_email_{$email}", true, 60);
 
         // ✅ Buat laporan sebagai tiket waiting yang ditangguhkan ke staf
         $ticket = DB::transaction(function () use ($request) {
@@ -300,19 +253,8 @@ class TicketController extends Controller
             return $ticket;
         });
 
-        // Store ticket ID in session for persistence
-        session()->push('my_tickets', $ticket->id);
-        session(['ticket_id' => $ticket->id]);
-        
-        // For guest users, store in separate session keys for chat widget
-        if (!Auth::check()) {
-            session(['guest_ticket_id' => $ticket->id]);
-            if ($request->email) {
-                session(['guest_email' => $request->email]);
-            }
-        }
-        
-        session()->save();
+        // Store ticket ID in session via private helper
+        $this->storeTicketInSession($ticket);
 
         // Return JSON if requested as API
         if ($request->expectsJson()) {
@@ -443,25 +385,21 @@ class TicketController extends Controller
             'otp_code' => 'required|string|size:6',
         ]);
 
-        $result = null;
-        $ticket = DB::transaction(function () use ($request, &$result) {
+        $result = DB::transaction(function () use ($request) {
             $otp = TicketOtp::where('token', $request->verification_token)->lockForUpdate()->first();
 
             if (!$otp) {
-                $result = ['success' => false, 'code' => 404, 'message' => 'Token verifikasi tidak valid.'];
-                return null;
+                return ['success' => false, 'code' => 404, 'message' => 'Token verifikasi tidak valid.'];
             }
 
             if ($otp->expires_at->isPast()) {
                 $otp->delete();
-                $result = ['success' => false, 'code' => 422, 'message' => 'Kode OTP telah kedaluwarsa. Silakan minta ulang.'];
-                return null;
+                return ['success' => false, 'code' => 422, 'message' => 'Kode OTP telah kedaluwarsa. Silakan minta ulang.'];
             }
 
             if ($otp->attempts >= 3) {
                 $otp->delete();
-                $result = ['success' => false, 'code' => 422, 'message' => 'Anda telah melebihi batas percobaan OTP. Silakan minta ulang.'];
-                return null;
+                return ['success' => false, 'code' => 422, 'message' => 'Anda telah melebihi batas percobaan OTP. Silakan minta ulang.'];
             }
 
             if ($otp->otp_code !== $request->otp_code) {
@@ -470,18 +408,15 @@ class TicketController extends Controller
 
                 if ($otp->attempts >= 3) {
                     $otp->delete();
-                    $result = ['success' => false, 'code' => 422, 'message' => 'Anda sudah salah 3 kali. Silakan lakukan permintaan ulang.'];
-                    return null;
+                    return ['success' => false, 'code' => 422, 'message' => 'Anda sudah salah 3 kali. Silakan lakukan permintaan ulang.'];
                 }
 
-                $result = ['success' => false, 'code' => 422, 'message' => "OTP salah. Kesempatan tersisa: {$remaining}."];
-                return null;
+                return ['success' => false, 'code' => 422, 'message' => "OTP salah. Kesempatan tersisa: {$remaining}."];
             }
 
             if ($otp->type === 'livechat' && !Setting::bool('live_service_enabled', true)) {
                 $otp->delete();
-                $result = ['success' => false, 'code' => 423, 'message' => 'Live service sedang offline. Silakan buat laporan/report.'];
-                return null;
+                return ['success' => false, 'code' => 423, 'message' => 'Live service sedang offline. Silakan buat laporan/report.'];
             }
 
             $ticket = Ticket::create([
@@ -531,16 +466,17 @@ class TicketController extends Controller
 
             $ticketType = $otp->type; // capture before delete
             $otp->delete();
-            $result = ['success' => true, 'ticket' => $ticket, 'ticket_type' => $ticketType];
-            return $ticket;
+            return ['success' => true, 'ticket' => $ticket, 'ticket_type' => $ticketType];
         });
 
-        if (!$result || !$result['success']) {
-            return response()->json(['success' => false, 'message' => $result['message'] ?? 'Token verifikasi tidak valid.'], $result['code'] ?? 422);
+        if (!$result['success']) {
+            return response()->json(['success' => false, 'message' => $result['message']], $result['code']);
         }
 
+        $ticket = $result['ticket'];
         $trackingUrl = route('tickets.track', ['token' => $ticket->tracking_token]);
         Mail::to($ticket->email)->send(new TicketTrackingMail($ticket, $trackingUrl));
+        \Log::info('Tracking email sent successfully', ['email' => $ticket->email, 'tracking_url' => $trackingUrl]);
 
         $queuePosition = null;
         $estimatedWaitingMinutes = null;
@@ -750,5 +686,51 @@ class TicketController extends Controller
         ]);
 
         return back()->with('success', 'Status berhasil diupdate');
+    }
+
+    /**
+     * Helper to check rate limit for tickets and reports.
+     */
+    private function checkRateLimit(Request $request, string $prefix): \Symfony\Component\HttpFoundation\Response|null
+    {
+        $ip = $request->ip();
+        $email = $request->email;
+
+        if (Cache::has("{$prefix}_ip_{$ip}")) {
+            $msg = 'Terlalu banyak permintaan dari IP ini. Coba lagi dalam 1 menit.';
+            return $request->expectsJson()
+                ? response()->json(['error' => $msg], 429)
+                : redirect()->back()->withErrors(['error' => $msg]);
+        }
+
+        if (Cache::has("{$prefix}_email_{$email}")) {
+            $msg = 'Email ini sudah digunakan baru-baru ini. Coba lagi dalam 1 menit.';
+            return $request->expectsJson()
+                ? response()->json(['error' => $msg], 429)
+                : redirect()->back()->withErrors(['error' => $msg]);
+        }
+
+        Cache::put("{$prefix}_ip_{$ip}", true, 60);
+        Cache::put("{$prefix}_email_{$email}", true, 60);
+
+        return null;
+    }
+
+    /**
+     * Helper to store ticket details in user session.
+     */
+    private function storeTicketInSession(Ticket $ticket): void
+    {
+        session()->push('my_tickets', $ticket->id);
+        session(['ticket_id' => $ticket->id]);
+        
+        if (!Auth::check()) {
+            session(['guest_ticket_id' => $ticket->id]);
+            if ($ticket->email) {
+                session(['guest_email' => $ticket->email]);
+            }
+        }
+        
+        session()->save();
     }
 }

@@ -6,9 +6,12 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
+        <meta name="description" content="@yield('meta_description', 'Layanan bantuan dan Knowledge Base HelpDesk TA.')">
+        <meta name="keywords" content="@yield('meta_keywords', 'helpdesk, support, bantuan, knowledge base')">
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+        <link rel="dns-prefetch" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->

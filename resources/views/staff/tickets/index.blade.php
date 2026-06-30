@@ -60,12 +60,7 @@
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9" data-page="staff-tickets" data-all-pages="{{ $allPages }}" data-completed-pages="{{ $completedPages }}" data-waiting-pages="{{ $waitingPages }}">
 
-                <!-- Success/Error Alert -->
-                @if (session('success'))
-                    <x-alert type="success" class="mb-6">
-                        {{ session('success') }}
-                    </x-alert>
-                @endif
+
 
                 <!-- Header Section with Statistics -->
                 <div class="mb-6 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">

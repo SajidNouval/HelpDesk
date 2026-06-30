@@ -136,6 +136,29 @@ class VocabularyService
     private array $vocabularyLookup = [];
 
     /**
+     * Common Indonesian pronouns, question words, negations, prepositions,
+     * and daily conversational terms to protect them from typo correction
+     * (so they aren't accidentally mapped to IT vocabulary terms,
+     * e.g., protecting 'saya' from being corrected to 'daya').
+     */
+    private array $protectedCommonWords = [
+        'saya', 'aku', 'kamu', 'kita', 'kami', 'mereka', 'dia', 'ia', 'anda', 'beliau',
+        'gue', 'gua', 'lu', 'lo', 'gw', 'elo', 'ku', 'mu', 'nya',
+        'ini', 'itu', 'sini', 'situ', 'sana', 'tersebut', 'begini', 'begitu',
+        'di', 'ke', 'dari', 'pada', 'dalam', 'kepada', 'daripada', 'oleh', 'untuk', 'dengan',
+        'yg', 'yang', 'dan', 'atau', 'tetapi', 'tapi', 'namun', 'karena', 'krn', 'jika', 'kalau',
+        'kalo', 'klo', 'sebelum', 'sesudah', 'setelah', 'lalu', 'kemudian', 'juga', 'jg',
+        'apa', 'siapa', 'mana', 'kapan', 'bagaimana', 'gimana', 'gmana', 'gmn', 'mengapa', 'kenapa',
+        'sih', 'kok', 'dong', 'deh', 'loh', 'tuh', 'nih', 'yah', 'ya', 'aja', 'saja', 'cuma', 'cuman',
+        'bisa', 'dapat', 'akan', 'telah', 'sudah', 'sdh', 'belum', 'blm', 'sedang', 'pernah', 'harus', 'boleh',
+        'tidak', 'tak', 'gak', 'ga', 'nggak', 'bukan', 'jangan', 'kaga', 'kagak', 'gpp', 'gapapa',
+        'ada', 'tiada', 'mau', 'ingin', 'pengen', 'pingin', 'bikin', 'buat', 'nyari', 'nanya', 'tanya',
+        'tolong', 'bantu', 'minta', 'mohon', 'maaf', 'permisi', 'kasih', 'terima', 'terimakasih', 'makasih',
+        'sangat', 'banget', 'bgt', 'sekali', 'terlalu', 'agak', 'lumayan', 'cukup', 'lebih', 'kurang', 'paling',
+        'dlu', 'dulu', 'ntar', 'nanti',
+    ];
+
+    /**
      * =========================================================================
      * 1. METODE GET ADAPTIVE MAX DISTANCE - AMBIL JARAK MAKSIMUM ADAPTIF (PRIVATE)
      * =========================================================================
@@ -345,6 +368,7 @@ class VocabularyService
         }
         
         // Normalisasi dan deduplikasi
+        $vocabulary = array_merge($vocabulary, $this->protectedCommonWords);
         $vocabulary = array_unique($vocabulary);
         $vocabulary = array_filter($vocabulary, fn($word) => mb_strlen($word) >= self::MIN_WORD_LENGTH);
         

@@ -190,11 +190,6 @@
                 <h2 class="text-2xl font-bold text-gray-900">Hubungi Layanan Bantuan</h2>
                 <p class="text-sm text-gray-500 mt-1">Pilih metode bantuan yang paling sesuai dengan kebutuhan Anda saat ini.</p>
             </div>
-            <button type="button" data-close-modal class="text-gray-400 hover:text-gray-600 p-1.5 hover:bg-gray-100 rounded-xl transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
         </div>
 
         <!-- Content Options -->

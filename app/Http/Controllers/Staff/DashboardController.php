@@ -6,6 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\Setting;
 use App\Models\Ticket;
+use App\Models\StaffProfile;
+use App\Models\TicketLog;
+use App\Services\TicketAssignmentService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\TicketRejectionMail;
+use App\Events\TicketClosed;
 use Illuminate\View\View;
 
 /**
@@ -85,5 +92,99 @@ class DashboardController extends Controller
         $liveServiceEnabled = Setting::bool('live_service_enabled', true);
 
         return view('staff.dashboard', compact('todayTickets', 'waitingTickets', 'articleCount', 'liveServiceEnabled'));
+    }
+
+    /**
+     * =========================================================================
+     * 2. METODE TOGGLE STATUS - UBAH STATUS KEAKTIFAN STAFF
+     * =========================================================================
+     * 
+     * Fungsi: Mengubah status keaktifan staff (active/inactive).
+     */
+    public function toggleStatus(): RedirectResponse
+    {
+        $user = auth()->user();
+        $currentStatus = $user->status;
+        $newStatus = $currentStatus === 'active' ? 'inactive' : 'active';
+
+        if ($newStatus === 'inactive') {
+            // Cek jika sedang aktif live chat (status progress)
+            $activeChatExists = Ticket::where('staff_id', $user->id)
+                ->where('type', 'livechat')
+                ->where('status', 'progress')
+                ->exists();
+
+            if ($activeChatExists) {
+                return redirect()->back()->with('error', 'Tidak dapat menonaktifkan status Anda saat sedang aktif dalam live chat.');
+            }
+
+            // Jika ada tiket live chat masuk yang belum diproses (status assigned), otomatis closed (reject)
+            $assignedTickets = Ticket::where('staff_id', $user->id)
+                ->where('type', 'livechat')
+                ->where('status', 'assigned')
+                ->get();
+
+            foreach ($assignedTickets as $ticket) {
+                $ticket->update([
+                    'status' => 'closed',
+                    'closed_at' => now(),
+                ]);
+
+                // Reset staff profile to not busy
+                StaffProfile::where('user_id', $user->id)->update([
+                    'is_busy' => false,
+                ]);
+
+                // Log penolakan/auto-close
+                TicketLog::create([
+                    'ticket_id' => $ticket->id,
+                    'action' => 'rejected',
+                    'description' => 'Tiket otomatis ditutup (ditolak) karena staf menonaktifkan status keaktifan mereka.',
+                ]);
+
+                // Send rejection email to guest
+                try {
+                    Mail::to($ticket->email)->send(new TicketRejectionMail($ticket));
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send rejection email: ' . $e->getMessage());
+                }
+
+                // Broadcast event TicketClosed
+                broadcast(new TicketClosed($ticket));
+
+                // Cari tiket waiting berikutnya untuk kategori ini untuk ditugaskan ke staf lain
+                $staffProfile = StaffProfile::where('user_id', $user->id)
+                    ->where('category_id', $ticket->category_id)
+                    ->first();
+                if ($staffProfile) {
+                    $assignmentService = resolve(TicketAssignmentService::class);
+                    $assignmentService->assignNextWaiting($staffProfile);
+                }
+            }
+        }
+
+        // Update user status
+        $user->update([
+            'status' => $newStatus,
+        ]);
+
+        if ($newStatus === 'active') {
+            // Otomatis masukkan tiket jika ada tiket waiting
+            $staffProfiles = StaffProfile::where('user_id', $user->id)->get();
+            $assignmentService = resolve(TicketAssignmentService::class);
+            foreach ($staffProfiles as $profile) {
+                $profile->refresh();
+                while (!$profile->is_busy) {
+                    $assignedTicket = $assignmentService->assignNextWaiting($profile);
+                    if (!$assignedTicket) {
+                        break;
+                    }
+                    $profile->refresh();
+                }
+            }
+        }
+
+        $statusLabel = $newStatus === 'active' ? 'aktif' : 'nonaktif';
+        return redirect()->back()->with('success', "Status keaktifan Anda berhasil diubah menjadi {$statusLabel}.");
     }
 }

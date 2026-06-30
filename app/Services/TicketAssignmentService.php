@@ -40,6 +40,9 @@ class TicketAssignmentService
             $staffProfiles = StaffProfile::select(['id', 'user_id', 'category_id', 'is_busy'])
                 ->where('category_id', $ticket->category_id)
                 ->where('is_busy', false)
+                ->whereHas('user', function ($q) {
+                    $q->where('status', 'active');
+                })
                 ->with([
                     'user' => function ($q) {
                         $q->select(['id', 'name'])
@@ -109,6 +112,9 @@ class TicketAssignmentService
     {
         $staffProfiles = StaffProfile::select(['id', 'user_id', 'category_id', 'is_busy'])
             ->where('category_id', $ticket->category_id)
+            ->whereHas('user', function ($q) {
+                $q->where('status', 'active');
+            })
             ->with([
                 'user' => function ($q) {
                     $q->select(['id', 'name'])
@@ -181,6 +187,9 @@ class TicketAssignmentService
         $availableStaff = StaffProfile::select(['id', 'user_id', 'category_id', 'is_busy'])
             ->where('category_id', $completedStaffProfile->category_id)
             ->where('is_busy', false)
+            ->whereHas('user', function ($q) {
+                $q->where('status', 'active');
+            })
             ->with([
                 'user' => function ($q) {
                     $q->select(['id', 'name'])

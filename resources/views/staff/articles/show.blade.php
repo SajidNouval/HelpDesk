@@ -53,12 +53,7 @@
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9">
 
-                <!-- Success/Error Alert -->
-                @if (session('success'))
-                    <x-alert type="success" class="mb-6">
-                        {{ session('success') }}
-                    </x-alert>
-                @endif
+
 
                 <!-- Single Article Card -->
                 <div class="bg-white border border-gray-200 rounded-xl shadow-sm">

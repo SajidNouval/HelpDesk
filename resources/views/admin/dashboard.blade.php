@@ -313,6 +313,179 @@
                         @endif
                     </div>
                 </div>
+
+                <!-- Chatbot Statistics Section -->
+                <div class="mt-8 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">Analitik & Statistik Chatbot</h3>
+                                <p class="text-sm text-gray-500 mt-1">Pantau interaksi pengguna dengan asisten virtual chatbot.</p>
+                            </div>
+                            <span class="px-3 py-1 bg-red-50 text-red-700 text-xs font-semibold rounded-full border border-red-200">
+                                Real-time Insights
+                            </span>
+                        </div>
+
+                        <!-- Chatbot Mini Cards Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                            <!-- Card 1: Total Chat -->
+                            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium">Total Percakapan</p>
+                                    <p class="text-xl font-bold text-gray-900">{{ number_format($chatbotStats['total_questions']) }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Card 2: Chats Today -->
+                            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium">Percakapan Hari Ini</p>
+                                    <p class="text-xl font-bold text-gray-900">{{ number_format($chatbotStats['today']) }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Card 3: Accuracy Rate -->
+                            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium">Tingkat Jawaban Sukses</p>
+                                    <p class="text-xl font-bold text-gray-900">{{ $chatbotStats['accuracy_rate'] }}%</p>
+                                </div>
+                            </div>
+
+                            <!-- Card 4: Avg Confidence -->
+                            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium">Confidence Rata-rata</p>
+                                    <p class="text-xl font-bold text-gray-900">{{ $chatbotStats['avg_confidence'] }}%</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Queries & Articles Columns -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                            <!-- Left: Top User Queries -->
+                            <div class="p-5 border border-gray-100 bg-gray-50/50 rounded-xl">
+                                <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                                    </svg>
+                                    Pertanyaan Paling Sering
+                                </h4>
+                                @if($chatbotQueries->count() > 0)
+                                    <ul class="space-y-3">
+                                        @foreach($chatbotQueries as $query)
+                                            <li class="flex items-center justify-between bg-white px-4 py-2.5 rounded-lg border border-gray-100 text-sm">
+                                                <span class="font-medium text-gray-700 break-all max-w-[70%]" title="{{ $query->query_original }}">{{ $query->query_original }}</span>
+                                                <span class="px-2 py-0.5 bg-red-50 text-red-600 rounded text-xs font-semibold shrink-0">{{ $query->query_count }}x dicari</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @else
+                                    <p class="text-xs text-gray-400 text-center py-6">Belum ada riwayat pertanyaan.</p>
+                                @endif
+                            </div>
+
+                            <!-- Right: Top Recommended Articles -->
+                            <div class="p-5 border border-gray-100 bg-gray-50/50 rounded-xl">
+                                <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    Rekomendasi Artikel Terbanyak
+                                </h4>
+                                @if($chatbotArticles->count() > 0)
+                                    <ul class="space-y-3">
+                                        @foreach($chatbotArticles as $art)
+                                            <li class="flex items-center justify-between bg-white px-4 py-2.5 rounded-lg border border-gray-100 text-sm">
+                                                <span class="font-medium text-gray-700 truncate max-w-[70%]" title="{{ $art->top_result_title }}">{{ $art->top_result_title }}</span>
+                                                <span class="px-2 py-0.5 bg-green-50 text-green-600 rounded text-xs font-semibold shrink-0">{{ $art->recommend_count }}x direkomendasikan</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @else
+                                    <p class="text-xs text-gray-400 text-center py-6">Belum ada artikel yang direkomendasikan.</p>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Recent Logs Table -->
+                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            Log Aktivitas Chatbot Terbaru
+                        </h4>
+                        @if($recentChatbotLogs->count() > 0)
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Pertanyaan User</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Domain Terdeteksi</th>
+                                            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Confidence</th>
+                                            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Waktu</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        @foreach($recentChatbotLogs as $log)
+                                            <tr class="hover:bg-gray-50 transition">
+                                                <td class="px-6 py-4 text-gray-900 font-medium break-all max-w-xs" title="{{ $log->query_original }}">
+                                                    {{ $log->query_original }}
+                                                </td>
+                                                <td class="px-6 py-4 text-gray-600">{{ $log->detected_domain ?? '-' }}</td>
+                                                <td class="px-6 py-4 text-center text-gray-900 font-semibold">{{ $log->confidence ? round($log->confidence * 100, 1) . '%' : '-' }}</td>
+                                                <td class="px-6 py-4 text-center">
+                                                    @if($log->is_fallback_triggered)
+                                                        <span class="px-2.5 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Fallback</span>
+                                                    @else
+                                                        <span class="px-2.5 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Sukses</span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-6 py-4 text-gray-500 text-xs">{{ $log->created_at->format('d M Y, H:i') }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            @if($recentChatbotLogs->hasPages())
+                                <div class="mt-6 flex items-center justify-center gap-1">
+                                    <a href="{{ $recentChatbotLogs->previousPageUrl() }}" class="relative inline-flex items-center px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-transparent hover:border-gray-200 rounded-md hover:text-red-600 transition-colors {{ $recentChatbotLogs->onFirstPage() ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' }}" {{ $recentChatbotLogs->onFirstPage() ? 'aria-disabled=true tabindex=-1' : '' }}>
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                                    </a>
+                                    <span class="text-sm text-gray-600 font-medium px-2">Halaman {{ $recentChatbotLogs->currentPage() }} dari {{ $recentChatbotLogs->lastPage() }}</span>
+                                    <a href="{{ $recentChatbotLogs->nextPageUrl() }}" class="relative inline-flex items-center px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-transparent hover:border-gray-200 rounded-md hover:text-red-600 transition-colors {{ $recentChatbotLogs->currentPage() === $recentChatbotLogs->lastPage() ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' }}" {{ $recentChatbotLogs->currentPage() === $recentChatbotLogs->lastPage() ? 'aria-disabled=true tabindex=-1' : '' }}>
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                                    </a>
+                                </div>
+                            @endif
+                        @else
+                            <p class="text-center text-gray-500 py-8">Belum ada riwayat interaksi chatbot.</p>
+                        @endif
+                    </div>
+                </div>
             </div>
 
         </div>

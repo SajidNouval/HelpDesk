@@ -6,9 +6,12 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
+        <meta name="description" content="@yield('meta_description', 'Layanan bantuan dan Knowledge Base HelpDesk TA.')">
+        <meta name="keywords" content="@yield('meta_keywords', 'helpdesk, support, bantuan, knowledge base')">
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+        <link rel="dns-prefetch" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
@@ -35,7 +38,7 @@
             </main>
 
             <!-- Toast Container -->
-            <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none" aria-live="polite" aria-atomic="true"></div>
+            <div id="toast-container" class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none w-full max-w-sm" aria-live="polite" aria-atomic="true"></div>
         </div>
 
         <!-- Flash Message Toast Handler -->
@@ -55,6 +58,14 @@
 
                 @if(session('warning'))
                     window.toast?.warning('{{ session('warning') }}', 4000);
+                @endif
+
+                @if($errors->has('delete'))
+                    window.toast?.error('{{ $errors->first('delete') }}', 5000);
+                @endif
+
+                @if($errors->has('error'))
+                    window.toast?.error('{{ $errors->first('error') }}', 5000);
                 @endif
             });
         </script>

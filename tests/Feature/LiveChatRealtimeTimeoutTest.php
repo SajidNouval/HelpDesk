@@ -72,7 +72,7 @@ class LiveChatRealtimeTimeoutTest extends TestCase
         \Carbon\Carbon::setTestNow($now);
 
         // Check status/queue position of Ticket 2 (should be #2)
-        $response = $this->getJson("/api/tickets/{$ticket2->id}/status");
+        $response = $this->withSession(['my_tickets' => [$ticket2->id]])->getJson("/api/tickets/{$ticket2->id}/status");
         $response->assertStatus(200);
         $response->assertJson([
             'status' => 'waiting',
@@ -103,7 +103,7 @@ class LiveChatRealtimeTimeoutTest extends TestCase
 
         \Carbon\Carbon::setTestNow($now);
 
-        $response = $this->getJson("/api/tickets/{$ticket->id}/status");
+        $response = $this->withSession(['my_tickets' => [$ticket->id]])->getJson("/api/tickets/{$ticket->id}/status");
         $response->assertStatus(200);
         $response->assertJson([
             'status' => 'closed',
@@ -136,7 +136,7 @@ class LiveChatRealtimeTimeoutTest extends TestCase
 
         \Carbon\Carbon::setTestNow($now);
 
-        $response = $this->getJson("/api/tickets/{$ticket->id}/status");
+        $response = $this->withSession(['my_tickets' => [$ticket->id]])->getJson("/api/tickets/{$ticket->id}/status");
         $response->assertStatus(200);
         $response->assertJson([
             'status' => 'waiting',
@@ -168,7 +168,7 @@ class LiveChatRealtimeTimeoutTest extends TestCase
         \Carbon\Carbon::setTestNow($now);
 
         // No messages yet, so updated_at is used as activity time.
-        $response = $this->getJson("/api/tickets/{$ticket->id}/status");
+        $response = $this->withSession(['my_tickets' => [$ticket->id]])->getJson("/api/tickets/{$ticket->id}/status");
         $response->assertStatus(200);
         $response->assertJson([
             'status' => 'progress',
@@ -226,7 +226,7 @@ class LiveChatRealtimeTimeoutTest extends TestCase
 
         \Carbon\Carbon::setTestNow($now);
 
-        $response = $this->getJson("/api/tickets/{$ticket->id}/status");
+        $response = $this->withSession(['my_tickets' => [$ticket->id]])->getJson("/api/tickets/{$ticket->id}/status");
         $response->assertStatus(200);
         $response->assertJson([
             'status' => 'waiting',
@@ -265,7 +265,7 @@ class LiveChatRealtimeTimeoutTest extends TestCase
 
         \Carbon\Carbon::setTestNow($now);
 
-        $response = $this->getJson("/api/tickets/{$ticket->id}/status");
+        $response = $this->withSession(['my_tickets' => [$ticket->id]])->getJson("/api/tickets/{$ticket->id}/status");
         $response->assertStatus(200);
         $response->assertJsonFragment([
             'status' => 'waiting',

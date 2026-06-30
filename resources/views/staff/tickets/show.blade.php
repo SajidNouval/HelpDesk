@@ -28,12 +28,7 @@
             <!-- Left Column (Ticket Details, Chat, Logs) -->
             <div class="col-span-12 lg:col-span-8 space-y-6">
 
-                <!-- Success Alert -->
-                @if (session('success'))
-                    <x-alert type="success" class="mb-4">
-                        {{ session('success') }}
-                    </x-alert>
-                @endif
+
 
                 <!-- Ticket Info Card -->
                 <div class="bg-white border border-gray-100 rounded-lg shadow-sm">

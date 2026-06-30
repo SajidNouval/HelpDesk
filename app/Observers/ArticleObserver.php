@@ -3,8 +3,6 @@
 namespace App\Observers;
 
 use App\Models\Article;
-use App\Services\Chatbot\ChatbotRetrievalService;
-use App\Services\Chatbot\TypesenseService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use App\Jobs\RebuildChatbotCacheJob;
@@ -13,16 +11,6 @@ use App\Jobs\RemoveArticleFromTypesenseJob;
 
 class ArticleObserver
 {
-    private ChatbotRetrievalService $retrievalService;
-    private TypesenseService $typesenseService;
-
-    public function __construct(
-        ChatbotRetrievalService $retrievalService,
-        TypesenseService $typesenseService
-    ) {
-        $this->retrievalService = $retrievalService;
-        $this->typesenseService = $typesenseService;
-    }
 
     /**
      * Auto-index ketika artikel dibuat

@@ -76,6 +76,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 Route::middleware(['auth', 'staff'])->group(function () {
     Route::get('/staff/dashboard', [StaffDashboardController::class, 'index'])
         ->name('staff.dashboard');
+    Route::post('/staff/toggle-status', [StaffDashboardController::class, 'toggleStatus'])
+        ->name('staff.toggle-status');
 
     // Staff Tickets
     Route::get('/staff/tickets', [StaffTicketController::class, 'index'])

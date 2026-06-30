@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use App\Services\Chatbot\TypesenseService;
 
 /**
  * =========================================================================
@@ -417,6 +418,7 @@ class AdvancedRetrievalService
     private DomainDetectionService $domainDetector;
     private VocabularyService $vocabularyService;
     private ImportantPhraseService $phraseService;
+    private TypesenseService $typesenseService;
     
     private array $debugInfo = [];
     
@@ -453,7 +455,8 @@ class AdvancedRetrievalService
         CosineSimilarityService $similarityService,
         DomainDetectionService $domainDetector,
         VocabularyService $vocabularyService,
-        ImportantPhraseService $phraseService
+        ImportantPhraseService $phraseService,
+        TypesenseService $typesenseService
     ) {
         $this->preprocessor = $preprocessor;
         $this->tfidfService = $tfidfService;
@@ -461,6 +464,7 @@ class AdvancedRetrievalService
         $this->domainDetector = $domainDetector;
         $this->vocabularyService = $vocabularyService;
         $this->phraseService = $phraseService;
+        $this->typesenseService = $typesenseService;
         
         // OPTIMASI: Urutkan synonymMap satu kali di constructor.
         // Sebelumnya uksort() dipanggil setiap kali normalizeSynonyms() dipanggil.
@@ -516,7 +520,9 @@ class AdvancedRetrievalService
                     'output' => 'REJECTED - ' . $reason,
                 ];
 
-                return $this->outOfDomainResult($query);
+                $retrievalResult = $this->outOfDomainResult($query);
+                $this->logSearch($query, $retrievalResult);
+                return $retrievalResult;
             }
 
             // Log bahwa kita menunda penolakan untuk no_it_keywords
@@ -546,10 +552,57 @@ class AdvancedRetrievalService
         $this->logStage('multi_intent_detection', $query, json_encode($intents));
         
         if (count($intents) > 1) {
-            return $this->multiIntentRetrieval($intents, $limit);
+            $retrievalResult = $this->multiIntentRetrieval($intents, $limit);
+        } else {
+            $retrievalResult = $this->singleIntentRetrieval($normalizedQuery, $limit);
         }
-        
-        return $this->singleIntentRetrieval($normalizedQuery, $limit);
+
+        $this->logSearch($query, $retrievalResult);
+
+        return $retrievalResult;
+    }
+
+    /**
+     * =========================================================================
+     * 1. METODE LOG SEARCH - SIMPAN AUDIT TRAIL PENCARIAN (PRIVATE)
+     * =========================================================================
+     *
+     * Fungsi:
+     * Menyimpan log pencarian chatbot ke database untuk analisis audit trail.
+     *
+     * Alur Proses:
+     * 1. Ekstrak data artikel teratas jika ditemukan.
+     * 2. Simpan metadata pencarian ke tabel chatbot_search_logs.
+     * 3. Tangkap exception agar kegagalan log tidak merusak alur utama chatbot.
+     *
+     * @param string $originalQuery
+     * @param array $result
+     * @return void
+     */
+    private function logSearch(string $originalQuery, array $result): void
+    {
+        try {
+            $topResult = !empty($result['results']) ? $result['results'][0] : null;
+            
+            \App\Models\ChatbotSearchLog::create([
+                'query_original' => mb_substr($originalQuery, 0, 1000),
+                'query_normalized' => mb_substr($result['query'] ?? $originalQuery, 0, 1000),
+                'detected_domain' => $result['detected_domain'] ?? ($result['out_of_domain'] ?? false ? 'out_of_domain' : null),
+                'confidence' => $result['max_similarity'] ?? 0,
+                'results_count' => $result['total'] ?? 0,
+                'top_result_id' => $topResult['id'] ?? null,
+                'top_result_title' => $topResult['title'] ?? null,
+                'top_result_score' => $topResult['final_score'] ?? null,
+                'is_fallback_triggered' => empty($result['results']),
+                'ip_address' => request()->ip(),
+                'user_id' => auth()->id(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log chatbot search in AdvancedRetrievalService: ' . $e->getMessage(), [
+                'query' => $originalQuery,
+                'exception' => $e
+            ]);
+        }
     }
     
     /**
@@ -581,15 +634,49 @@ class AdvancedRetrievalService
         $this->debugInfo['allowed_categories'] = $allowedCategories;
         $this->logStage('domain_filtering', 'allowed', json_encode($allowedCategories));
         
-        $articles = $this->getDomainFilteredArticles($allowedCategories);
+        // FASE A: RETRIEVAL CANDIDATES VIA TYPESENSE (Primary Search Engine)
+        $typesenseCandidates = [];
+        $typesenseUsed = false;
+        
+        try {
+            if ($this->typesenseService->isConnected()) {
+                $cleanTokens = $this->preprocessor->preprocess($query);
+                $cleanQuery = implode(' ', $cleanTokens);
+                $typesenseQuery = $cleanQuery . $this->getSynonymExtensions($cleanQuery);
+                
+                $typesenseResults = $this->typesenseService->search($typesenseQuery, 30);
+                if ($typesenseResults['success'] && !empty($typesenseResults['results'])) {
+                    $typesenseCandidates = $typesenseResults['results'];
+                    $typesenseUsed = true;
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('Typesense search failed in AdvancedRetrievalService: ' . $e->getMessage());
+        }
+
+        if ($typesenseUsed && !empty($typesenseCandidates)) {
+            $candidateIds = array_column($typesenseCandidates, 'id');
+            $articles = Article::select(['id', 'category_id', 'title', 'content', 'excerpt', 'keywords', 'slug', 'updated_at'])
+                ->whereIn('id', $candidateIds)
+                ->where('is_published', true)
+                ->where('publish_status', 'approved')
+                ->with('category:id,name')
+                ->get();
+            $this->debugInfo['typesense_used'] = true;
+            $this->debugInfo['typesense_candidates'] = $articles->count();
+        } else {
+            // Fallback to database query filtering
+            $articles = $this->getDomainFilteredArticles($allowedCategories);
+            if ($articles->isEmpty()) {
+                $articles = $this->getPublishedArticles();
+                $this->debugInfo['fallback_applied'] = true;
+            }
+            $this->debugInfo['typesense_used'] = false;
+            $this->debugInfo['typesense_candidates'] = 0;
+        }
+        
         $this->debugInfo['candidate_count'] = $articles->count();
         $this->logStage('article_filtering', 'candidates', $articles->count());
-        
-        if ($articles->isEmpty()) {
-            $articles = $this->getPublishedArticles();
-            $this->debugInfo['fallback_applied'] = true;
-            $this->logStage('fallback', 'all_articles', $articles->count());
-        }
         
         $expandedQuery = $this->expandQuery($query, $domainInfo['domain'] ?? null);
         $this->debugInfo['expanded_query'] = $expandedQuery;
@@ -1026,6 +1113,48 @@ class AdvancedRetrievalService
         }
         
         return $expanded;
+    }
+
+    /**
+     * Get synonym extensions for a query to improve search recall.
+     * It maps terms in the query to all their synonyms/variations in the synonymMap.
+     */
+    private function getSynonymExtensions(string $query): string
+    {
+        $queryLower = strtolower($query);
+        $extensions = [];
+        
+        // Group synonyms by their target/canonical representation
+        $groups = [];
+        foreach ($this->synonymMap as $source => $target) {
+            $groups[$target][] = $source;
+            $groups[$target][] = $target;
+        }
+        
+        // De-duplicate groups
+        foreach ($groups as $target => $words) {
+            $groups[$target] = array_unique($words);
+        }
+        
+        // Check if any word from any group is in the query
+        foreach ($groups as $target => $words) {
+            $matched = false;
+            foreach ($words as $word) {
+                // Check if the synonym word exists in the query
+                if (str_contains($queryLower, $word)) {
+                    $matched = true;
+                    break;
+                }
+            }
+            
+            if ($matched) {
+                foreach ($words as $word) {
+                    $extensions[] = $word;
+                }
+            }
+        }
+        
+        return empty($extensions) ? '' : ' ' . implode(' ', array_unique($extensions));
     }
     
     /**
@@ -1604,6 +1733,25 @@ class AdvancedRetrievalService
         // EXACT MATCH: Full query frasa di judul (highest prioritas)
         if (str_contains($titleLower, $queryLower)) {
             return 1.0;
+        }
+        
+        // REVERSE TITLE COVERAGE: Jika semua kata penting dalam judul ada di query
+        $titleWords = explode(' ', $titleLower);
+        $importantTitleWords = array_filter($titleWords, fn($w) => 
+            mb_strlen($w) > 2 && !$this->isLowPriorityTerm($w)
+        );
+        $importantTitleWords = array_values($importantTitleWords);
+        
+        if (count($importantTitleWords) >= 2) {
+            $matchedTitleWords = 0;
+            foreach ($importantTitleWords as $word) {
+                if (str_contains($queryLower, $word)) {
+                    $matchedTitleWords++;
+                }
+            }
+            if ($matchedTitleWords === count($importantTitleWords)) {
+                return 0.85; // Boost sangat kuat karena seluruh kata kunci judul ada di query
+            }
         }
         
         // EXACT PHRASE MATCH: All penting words muncul consecutively di judul
@@ -2293,10 +2441,10 @@ class AdvancedRetrievalService
                 continue;
             }
             
-            $titleTokens = $this->preprocessor->preprocess($article->title);
-            $excerptTokens = $this->preprocessor->preprocess($article->excerpt ?? '');
-            $keywordsTokens = $this->preprocessor->preprocess($article->keywords ?? '');
-            $contentTokens = $this->preprocessor->preprocess($article->content);
+            $titleTokens = $this->preprocessor->preprocess($this->normalizeSynonyms($article->title));
+            $excerptTokens = $this->preprocessor->preprocess($this->normalizeSynonyms($article->excerpt ?? ''));
+            $keywordsTokens = $this->preprocessor->preprocess($this->normalizeSynonyms($article->keywords ?? ''));
+            $contentTokens = $this->preprocessor->preprocess($this->normalizeSynonyms($article->content));
             
             $allTokens = [];
             
@@ -2374,7 +2522,8 @@ class AdvancedRetrievalService
             $documentTermFrequencies[$docId] = $doc['frequency'];
         }
         
-        $idf = $this->tfidfService->calculateIDF($documentTermFrequencies);
+        // Gunakan cache IDF global agar tidak menghitung dari awal setiap request
+        $idf = $this->tfidfService->getOrComputeIDF($documents);
         
         $vectors = [];
         foreach ($documentTermFrequencies as $docId => $termFreq) {

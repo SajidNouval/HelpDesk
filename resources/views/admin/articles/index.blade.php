@@ -53,17 +53,7 @@
 
             <!-- Main Content Right -->
             <div class="col-span-12 md:col-span-9">
-                @if (session('success'))
-                    <x-alert type="success" class="mb-6">
-                        {{ session('success') }}
-                    </x-alert>
-                @endif
 
-                @if (session('error'))
-                    <x-alert type="error" class="mb-6">
-                        {{ session('error') }}
-                    </x-alert>
-                @endif
 
                 <!-- Header Section with Statistics -->
                 <div class="mb-6 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -205,7 +195,6 @@
                     </div>
                 </div>
 
-                <div id="ajaxNotification" class="fixed top-6 right-6 z-50 space-y-3"></div>
 
                 <div class="bg-white border border-gray-100 rounded-lg shadow-sm">
                     <div class="p-4">
