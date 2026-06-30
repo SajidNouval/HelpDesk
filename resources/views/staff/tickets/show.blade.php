@@ -163,7 +163,7 @@
                                 </div>
                             </div>
 
-                            <form id="message-form" class="flex gap-3 border-t border-gray-100 pt-4">
+                            <form id="message-form" data-no-loader class="flex gap-3 border-t border-gray-100 pt-4">
                                 <input type="text" id="message-input" name="message" placeholder="Ketik pesan..."
                                     class="flex-1 h-11 px-4 border border-gray-300 rounded-lg text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" required>
                                 <button type="submit" class="h-11 px-5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">Kirim</button>

@@ -474,6 +474,7 @@ class TicketController extends Controller
         }
 
         $ticket = $result['ticket'];
+        $this->storeTicketInSession($ticket);
         $trackingUrl = route('tickets.track', ['token' => $ticket->tracking_token]);
         Mail::to($ticket->email)->send(new TicketTrackingMail($ticket, $trackingUrl));
         \Log::info('Tracking email sent successfully', ['email' => $ticket->email, 'tracking_url' => $trackingUrl]);

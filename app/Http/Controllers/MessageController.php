@@ -84,16 +84,38 @@ class MessageController extends Controller
         $isOwner = in_array($ticket->id, $myTickets) ||
                    $guestTicketId == $ticket->id;
 
+        \Log::debug('MessageController@store incoming request', [
+            'ticket_id' => $request->ticket_id,
+            'ticket_status' => $ticket->status,
+            'session_my_tickets' => $myTickets,
+            'session_guest_ticket_id' => $guestTicketId,
+            'auth_check' => Auth::check(),
+            'auth_role' => Auth::check() ? Auth::user()->role : 'guest',
+            'is_staff' => $isStaff,
+            'is_owner' => $isOwner
+        ]);
+
         if (!$isStaff && !$isOwner) {
+            \Log::warning('MessageController@store blocked: not staff and not owner', [
+                'ticket_id' => $ticket->id,
+                'user_id' => Auth::id()
+            ]);
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         if (!$isStaff && in_array($ticket->status, ['assigned', 'waiting', 'closed'])) {
+            \Log::warning('MessageController@store blocked: guest tried to chat on non-active ticket status', [
+                'ticket_id' => $ticket->id,
+                'status' => $ticket->status
+            ]);
             return response()->json(['error' => 'Tiket sedang tidak terhubung atau sudah ditutup.'], 403);
         }
 
         // Untuk tiket waiting, tidak boleh chat sama sekali
         if ($ticket->status === 'waiting') {
+            \Log::warning('MessageController@store blocked: status is waiting', [
+                'ticket_id' => $ticket->id
+            ]);
             return response()->json(['error' => 'Tiket sedang dalam status waiting dan chat tidak diizinkan.'], 403);
         }
 

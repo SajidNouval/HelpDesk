@@ -412,6 +412,11 @@ function initGlobalHandlers() {
             return;
         }
 
+        // Skip global handling for custom forms
+        if (form.hasAttribute('data-no-loader') || form.dataset.ajax === 'custom' || form.dataset.ajax === 'disabled') {
+            return;
+        }
+
         // Clear previous validation errors
         clearFormValidationErrors(form);
 

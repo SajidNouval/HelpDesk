@@ -41,9 +41,11 @@
         </div>
 
         <div class="grid gap-6 lg:grid-cols-2">
-            <div class="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
+            <div class="bg-white border border-gray-200 rounded-3xl shadow-sm p-6 flex flex-col">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Detail Pesan</h3>
-                <p class="text-gray-700 leading-relaxed">{{ $ticket->message }}</p>
+                <div class="flex-1 overflow-y-auto pr-2" style="max-height: 400px;">
+                    <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ $ticket->message }}</p>
+                </div>
             </div>
 
             <div class="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
@@ -51,15 +53,17 @@
                 @if($ticket->logs->isEmpty())
                     <p class="text-sm text-gray-500">Belum ada log.</p>
                 @else
-                    <ul class="space-y-3 text-sm text-gray-700">
-                        @foreach($ticket->logs as $log)
-                            <li class="rounded-2xl border border-gray-200 p-3 bg-gray-50">
-                                <p class="font-semibold">{{ Str::title(str_replace('_', ' ', $log->action)) }}</p>
-                                <p class="text-gray-500">{{ $log->description }}</p>
-                                <p class="text-xs text-gray-400 mt-2">{{ $log->created_at->format('d M Y H:i') }}</p>
-                            </li>
-                        @endforeach
-                    </ul>
+                    <div class="overflow-y-auto pr-2" style="max-height: 400px;">
+                        <ul class="space-y-3 text-sm text-gray-700">
+                            @foreach($ticket->logs as $log)
+                                <li class="rounded-2xl border border-gray-200 p-3 bg-gray-50">
+                                    <p class="font-semibold">{{ Str::title(str_replace('_', ' ', $log->action)) }}</p>
+                                    <p class="text-gray-500">{{ $log->description }}</p>
+                                    <p class="text-xs text-gray-400 mt-2">{{ $log->created_at->format('d M Y H:i') }}</p>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
                 @endif
             </div>
         </div>
@@ -69,16 +73,18 @@
             @if($ticket->messages->isEmpty())
                 <p class="text-sm text-gray-500">Belum ada pesan.</p>
             @else
-                <div class="space-y-4">
-                    @foreach($ticket->messages as $message)
-                        <div class="rounded-3xl border border-gray-200 p-4 {{ $message->sender_type === 'guest' ? 'bg-red-50' : 'bg-gray-50' }}">
-                            <div class="flex items-center justify-between mb-2 text-xs text-gray-500">
-                                <span>{{ ucfirst($message->sender_type) }}</span>
-                                <span>{{ $message->created_at->format('d M Y H:i') }}</span>
+                <div class="overflow-y-auto pr-2" style="max-height: 450px;">
+                    <div class="space-y-4">
+                        @foreach($ticket->messages as $message)
+                            <div class="rounded-3xl border border-gray-200 p-4 {{ $message->sender_type === 'guest' ? 'bg-red-50' : 'bg-gray-50' }}">
+                                <div class="flex items-center justify-between mb-2 text-xs text-gray-500">
+                                    <span>{{ ucfirst($message->sender_type) }}</span>
+                                    <span>{{ $message->created_at->format('d M Y H:i') }}</span>
+                                </div>
+                                <p class="text-gray-700">{{ $message->message }}</p>
                             </div>
-                            <p class="text-gray-700">{{ $message->message }}</p>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </div>
             @endif
         </div>

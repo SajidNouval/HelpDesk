@@ -505,7 +505,7 @@ class TicketChatManager {
 /**
  * Initialize ticket chat when DOM is ready
  */
-document.addEventListener('DOMContentLoaded', () => {
+function initOnLoad() {
     const ticketData = document.getElementById('ticket-data');
     if (!ticketData) {
         return;
@@ -521,6 +521,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Store reference for cleanup if needed
     window.ticketChatManager = chatManager;
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initOnLoad);
+} else {
+    initOnLoad();
+}
 
 export { TicketChatManager };

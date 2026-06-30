@@ -1362,13 +1362,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     const data = await response.json();
                     
                     if (chatMode === 'waiting_staff') {
-                        if (data.status === 'assigned' || data.status === 'progress') {
+                        if (data.status === 'progress') {
                             clearInterval(statusPollingInterval);
                             connectToStaff(data.staff_name);
                         } else if (['closed', 'completed'].includes(data.status)) {
                             clearInterval(statusPollingInterval);
                             showWaitingError(data.reason || 'Sesi live chat ditutup otomatis karena tidak aktif.');
-                        } else if (data.status === 'waiting') {
+                        } else if (data.status === 'waiting' || data.status === 'assigned') {
                             updateQueuePositionUI(data.queue_position, data.estimated_waiting_minutes);
                             
                             // Check for warning at 17 mins in queue
