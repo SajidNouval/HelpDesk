@@ -26,6 +26,7 @@ export default defineConfig({
             ext: '.gz',
             threshold: 1024,
             filter: /\.(js|css|html|svg|json)$/i,
+            verbose: false,
         }),
         // Pre-compress assets to Brotli format
         viteCompression({
@@ -33,6 +34,7 @@ export default defineConfig({
             ext: '.br',
             threshold: 1024,
             filter: /\.(js|css|html|svg|json)$/i,
+            verbose: false,
         }),
     ],
     build: {
