@@ -99,7 +99,7 @@ class DashboardController extends Controller
                 ])
                 ->where('publish_status', 'pending')
                 ->oldest()
-                ->paginate(10)
+                ->paginate(10, ['*'], 'pending_page')
                 ->withQueryString();
 
             $articles = Article::select(['id', 'category_id', 'staff_id', 'title', 'slug', 'views', 'created_at'])
@@ -116,7 +116,7 @@ class DashboardController extends Controller
                     },
                 ])
                 ->orderBy('views', 'desc')
-                ->paginate(10)
+                ->paginate(10, ['*'], 'articles_page')
                 ->withQueryString();
 
             $liveServiceEnabled = Setting::bool('live_service_enabled', true);
@@ -143,7 +143,7 @@ class DashboardController extends Controller
                     'articles as articles_rejected' => function ($q) { $q->where('publish_status', 'rejected'); },
                 ])
                 ->orderByDesc('tickets_done')
-                ->paginate(10)
+                ->paginate(10, ['*'], 'staff_page')
                 ->withQueryString();
 
             $topArticles = Article::orderByDesc('views')->take(5)->get(['id', 'title', 'views']);

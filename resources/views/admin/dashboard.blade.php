@@ -138,7 +138,7 @@
                 
 
                 <!-- Pending Articles Review Section -->
-                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div id="pending-articles-card" data-ajax-table class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-opacity duration-200">
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-4">
                             <div>
@@ -208,7 +208,7 @@
                 </div>
 
                 <!-- Per-Article Statistics -->
-                <div class="mt-8 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div id="articles-statistics-card" data-ajax-table class="mt-8 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-opacity duration-200">
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-900">Statistik Artikel</h3>
@@ -269,7 +269,7 @@
                 </div>
 
                 <!-- Statistik Kinerja Staff -->
-                <div class="mt-8 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div id="staff-performance-card" data-ajax-table class="mt-8 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-opacity duration-200">
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-900">Statistik Kinerja Staff</h3>
@@ -429,8 +429,9 @@
                             </div>
                         </div>
 
-                        <!-- Recent Logs Table -->
-                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <!-- Recent Logs Table Wrapper -->
+                        <div id="chatbot-logs-card" data-ajax-table class="transition-opacity duration-200">
+                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
                             <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                             </svg>
@@ -484,10 +485,72 @@
                         @else
                             <p class="text-center text-gray-500 py-8">Belum ada riwayat interaksi chatbot.</p>
                         @endif
+                        </div>
                     </div>
                 </div>
             </div>
 
         </div>
     </div>
+
+    <!-- AJAX Table Pagination Handler -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('click', function(e) {
+                // Find if the clicked element is an anchor link inside an AJAX table container
+                const link = e.target.closest('a');
+                if (!link) return;
+
+                const container = link.closest('[data-ajax-table]');
+                if (!container) return;
+
+                const url = link.getAttribute('href');
+                if (!url || url === '#' || url.startsWith('javascript:')) return;
+
+                // Only handle pagination URLs (containing page parameter matching our tables)
+                const isPaginationLink = url.includes('pending_page=') || 
+                                         url.includes('articles_page=') || 
+                                         url.includes('staff_page=') || 
+                                         url.includes('chatbot_page=');
+                
+                if (!isPaginationLink) return;
+
+                e.preventDefault();
+
+                // Add loading effect
+                container.classList.add('opacity-40');
+                container.style.pointerEvents = 'none';
+
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newContainer = doc.getElementById(container.id);
+                    if (newContainer) {
+                        container.innerHTML = newContainer.innerHTML;
+                    }
+                    container.classList.remove('opacity-40');
+                    container.style.pointerEvents = 'auto';
+
+                    // Update URL browser
+                    window.history.pushState({}, '', url);
+                })
+                .catch(err => {
+                    console.error('AJAX pagination error:', err);
+                    container.classList.remove('opacity-40');
+                    container.style.pointerEvents = 'auto';
+                    // Fallback to traditional navigation
+                    window.location.href = url;
+                });
+            });
+        });
+    </script>
 </x-app-layout>

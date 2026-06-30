@@ -150,27 +150,72 @@
                                 <!-- Kategori Assignment (hanya untuk role staff) -->
                                 <div id="category-section" class="{{ old('role', $user->role) !== 'staff' ? 'hidden' : '' }}">
                                     <div class="pt-4 border-t border-gray-100">
-                                        <label class="block text-sm font-medium text-gray-700 mb-3">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
                                             Kategori yang Ditangani
                                             <span class="ml-1 text-xs text-gray-400 font-normal">(opsional, bisa lebih dari satu)</span>
                                         </label>
                                         @if($categories->isEmpty())
                                             <p class="text-sm text-gray-500 italic">Belum ada kategori. <a href="{{ route('admin.categories.index') }}" class="text-red-500 hover:underline">Buat kategori terlebih dahulu.</a></p>
                                         @else
-                                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                                @foreach($categories as $category)
-                                                    <label for="category_{{ $category->id }}" class="flex min-w-0 items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-red-50 hover:border-red-300 transition has-[:checked]:bg-red-50 has-[:checked]:border-red-400">
-                                                        <input
-                                                            type="checkbox"
-                                                            id="category_{{ $category->id }}"
-                                                            name="categories[]"
-                                                            value="{{ $category->id }}"
-                                                            {{ in_array($category->id, old('categories', $assignedCategoryIds)) ? 'checked' : '' }}
-                                                            class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
-                                                        >
-                                                        <span class="text-sm text-gray-700 font-medium truncate" title="{{ $category->name }}">{{ $category->name }}</span>
-                                                    </label>
-                                                @endforeach
+                                            <!-- Checkbox Dropdown Container using Alpine.js -->
+                                            <div x-data="{
+                                                open: false,
+                                                selected: [],
+                                                init() {
+                                                    this.updateSelected();
+                                                    // Close dropdown on click outside
+                                                    document.addEventListener('click', (e) => {
+                                                        if (!this.$el.contains(e.target)) {
+                                                            this.open = false;
+                                                        }
+                                                    });
+                                                },
+                                                updateSelected() {
+                                                    let checked = [];
+                                                    this.$el.querySelectorAll('input[type=checkbox]:checked').forEach(el => {
+                                                        checked.push(el.nextElementSibling.textContent.trim());
+                                                    });
+                                                    this.selected = checked;
+                                                },
+                                                get buttonText() {
+                                                    if (this.selected.length === 0) {
+                                                        return 'Pilih Kategori...';
+                                                    }
+                                                    if (this.selected.length <= 2) {
+                                                        return this.selected.join(', ');
+                                                    }
+                                                    return this.selected.length + ' Kategori Terpilih';
+                                                }
+                                            }" class="relative w-full">
+                                                <!-- Dropdown Trigger Button -->
+                                                <button type="button" @click="open = !open" 
+                                                        class="w-full h-11 px-4 border border-gray-300 rounded-xl text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition flex items-center justify-between cursor-pointer">
+                                                    <span x-text="buttonText" class="truncate text-gray-600 block min-w-0 text-left flex-1 mr-2">Pilih Kategori...</span>
+                                                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 flex-shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+
+                                                <!-- Dropdown Menu (Scrollable + Scrollbar Custom Styling) -->
+                                                <div x-show="open" x-transition 
+                                                     class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto p-2 space-y-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
+                                                     style="display: none;">
+                                                    @foreach($categories as $category)
+                                                        <label for="category_{{ $category->id }}" 
+                                                               class="flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition hover:bg-red-50 has-[:checked]:bg-red-50/50">
+                                                            <input
+                                                                type="checkbox"
+                                                                id="category_{{ $category->id }}"
+                                                                name="categories[]"
+                                                                value="{{ $category->id }}"
+                                                                {{ in_array($category->id, old('categories', $assignedCategoryIds)) ? 'checked' : '' }}
+                                                                @change="updateSelected()"
+                                                                class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                                                            >
+                                                            <span class="text-sm text-gray-700 font-medium select-none truncate" title="{{ $category->name }}">{{ $category->name }}</span>
+                                                        </label>
+                                                    @endforeach
+                                                </div>
                                             </div>
                                         @endif
                                     </div>
