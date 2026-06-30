@@ -72,7 +72,7 @@ class MessageController extends Controller
     {
         $request->validate([
             'ticket_id' => 'required|exists:tickets,id',
-            'message' => 'required|string',
+            'message' => 'required|string|max:2000',
         ]);
 
         $ticket = Ticket::select(['id', 'email', 'status'])->findOrFail($request->ticket_id);
@@ -82,8 +82,7 @@ class MessageController extends Controller
         $guestTicketId = session('guest_ticket_id');
         $isStaff = Auth::check() && Auth::user()->role === 'staff';
         $isOwner = in_array($ticket->id, $myTickets) ||
-                   $guestTicketId == $ticket->id ||
-                   ($request->query('email') && $request->query('email') === $ticket->email);
+                   $guestTicketId == $ticket->id;
 
         if (!$isStaff && !$isOwner) {
             return response()->json(['error' => 'Unauthorized'], 403);
@@ -178,8 +177,7 @@ class MessageController extends Controller
         // Cek apakah authorized: staff atau pemilik tiket
         $isStaff = Auth::check() && Auth::user()->role === 'staff';
         $isOwner = in_array($ticket->id, $myTickets) ||
-                   $guestTicketId == $ticket->id ||
-                   ($request->query('email') && $request->query('email') === $ticket->email);
+                   $guestTicketId == $ticket->id;
 
         if (!$isStaff && !$isOwner) {
             return response()->json(['error' => 'Unauthorized'], 403);

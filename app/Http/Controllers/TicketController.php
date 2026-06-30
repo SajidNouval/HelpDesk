@@ -109,7 +109,7 @@ class TicketController extends Controller
             'name' => 'required|string|max:50',
             'email' => 'required|email|max:50',
             'subject' => 'required|string|max:200',
-            'message' => 'required|string',
+            'message' => 'required|string|max:2000',
             'category_id' => 'required|exists:categories,id',
         ];
 
@@ -239,7 +239,7 @@ class TicketController extends Controller
             'name' => 'required|string|max:50',
             'email' => 'required|email|max:50',
             'subject' => 'required|string|max:200',
-            'message' => 'required|string',
+            'message' => 'required|string|max:2000',
             'category_id' => 'required|exists:categories,id',
         ];
 
@@ -390,13 +390,29 @@ class TicketController extends Controller
             'token' => Str::random(60),
         ]);
 
-        \Log::info('OTP Created', ['otp_id' => $otp->id, 'otp_code' => $otpCode, 'email' => $email]);
+        if (app()->environment('local', 'testing')) {
+            \Log::info('OTP Created', ['otp_id' => $otp->id, 'otp_code' => $otpCode, 'email' => $email]);
+        } else {
+            $maskedEmail = substr($email, 0, 3) . '***' . strstr($email, '@');
+            \Log::info('OTP Created', ['otp_id' => $otp->id, 'email' => $maskedEmail]);
+        }
 
         try {
             Mail::to($email)->send(new TicketOtpMail($otpCode, $validated['type']));
-            \Log::info('OTP Email sent successfully', ['email' => $email, 'otp_code' => $otpCode]);
+            
+            if (app()->environment('local', 'testing')) {
+                \Log::info('OTP Email sent successfully', ['email' => $email, 'otp_code' => $otpCode]);
+            } else {
+                $maskedEmail = substr($email, 0, 3) . '***' . strstr($email, '@');
+                \Log::info('OTP Email sent successfully', ['email' => $maskedEmail]);
+            }
         } catch (\Exception $e) {
-            \Log::error('Failed to send OTP email', ['email' => $email, 'error' => $e->getMessage()]);
+            if (app()->environment('local', 'testing')) {
+                \Log::error('Failed to send OTP email', ['email' => $email, 'error' => $e->getMessage()]);
+            } else {
+                $maskedEmail = substr($email, 0, 3) . '***' . strstr($email, '@');
+                \Log::error('Failed to send OTP email', ['email' => $maskedEmail, 'error' => $e->getMessage()]);
+            }
             return response()->json(['success' => false, 'message' => 'Gagal mengirim OTP. Silakan coba lagi.'], 500);
         }
 

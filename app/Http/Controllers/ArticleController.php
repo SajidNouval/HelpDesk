@@ -470,12 +470,14 @@ class ArticleController extends Controller
     public function publicIndex(Request $request)
     {
         $selectedCategoryId = $request->query('category');
+        $search = $request->query('q');
         $page = $request->query('page', 1);
 
         $version = Cache::rememberForever('articles_cache_version', fn() => time());
-        $cacheKey = "articles_public_list:v{$version}:cat_" . ($selectedCategoryId ?? 'all') . ":page_" . $page;
+        $searchHash = $search ? '_' . md5($search) : '';
+        $cacheKey = "articles_public_list:v{$version}:cat_" . ($selectedCategoryId ?? 'all') . ":q{$searchHash}:page_" . $page;
 
-        $articles = Cache::remember($cacheKey, 3600, function () use ($selectedCategoryId) {
+        $articles = Cache::remember($cacheKey, 3600, function () use ($selectedCategoryId, $search) {
             return Article::select(['id', 'category_id', 'staff_id', 'title', 'slug', 'content', 'views', 'created_at'])
                 ->with([
                     'category:id,name',
@@ -486,6 +488,12 @@ class ArticleController extends Controller
                 ->where('publish_status', 'approved')
                 ->when($selectedCategoryId, function ($query, $selectedCategoryId) {
                     return $query->where('category_id', $selectedCategoryId);
+                })
+                ->when($search, function ($query, $search) {
+                    return $query->where(function ($sub) use ($search) {
+                        $sub->where('title', 'like', "%{$search}%")
+                            ->orWhere('content', 'like', "%{$search}%");
+                    });
                 })
                 ->paginate(10)
                 ->withQueryString();

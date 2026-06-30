@@ -117,7 +117,7 @@
                         <!-- Article Content -->
                         <div class="mb-4">
                             <div class="prose prose-gray max-w-none">
-                                {!! $article->content !!}
+                                {!! str_replace('<img', '<img loading="lazy" decoding="async"', $article->content) !!}
                             </div>
                         </div>
 

@@ -7,6 +7,9 @@ use App\Services\Chatbot\ChatbotRetrievalService;
 use App\Services\Chatbot\TypesenseService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use App\Jobs\RebuildChatbotCacheJob;
+use App\Jobs\SyncArticleToTypesenseJob;
+use App\Jobs\RemoveArticleFromTypesenseJob;
 
 class ArticleObserver
 {
@@ -100,10 +103,10 @@ class ArticleObserver
             Cache::forget('articles_cache_version');
             Cache::forget('admin_dashboard_version');
 
-            $this->retrievalService->rebuildCache();
+            RebuildChatbotCacheJob::dispatch();
             
             if (config('app.debug', false)) {
-                Log::debug('Chatbot cache rebuilt', [
+                Log::debug('Chatbot cache rebuild job dispatched', [
                     'event' => $event,
                     'article_id' => $article->id,
                     'article_title' => $article->title,
@@ -111,7 +114,7 @@ class ArticleObserver
             }
         } catch (\Exception $e) {
             // Log error but don't fail the article operation
-            Log::error('Chatbot cache rebuild failed', [
+            Log::error('Dispatched Chatbot cache rebuild job failed', [
                 'event' => $event,
                 'article_id' => $article->id,
                 'article_title' => $article->title,
@@ -128,30 +131,18 @@ class ArticleObserver
     private function safeSyncTypesense(string $event, Article $article): void
     {
         try {
-            if (!$this->typesenseService->isConnected()) {
-                // Typesense not connected - log warning but don't fail
-                if (config('app.debug', false)) {
-                    Log::warning('Typesense not connected, skipping sync', [
-                        'event' => $event,
-                        'article_id' => $article->id,
-                    ]);
-                }
-                return;
-            }
-
-            $result = $this->typesenseService->indexArticle($article);
+            SyncArticleToTypesenseJob::dispatch($article);
             
-            if (config('app.debug', false) || $result['success']) {
-                Log::debug('Article synced to Typesense', [
+            if (config('app.debug', false)) {
+                Log::debug('Sync article to Typesense job dispatched', [
                     'event' => $event,
                     'article_id' => $article->id,
                     'article_title' => $article->title,
-                    'result' => $result['message'] ?? '',
                 ]);
             }
         } catch (\Exception $e) {
             // Log error but don't fail the article operation
-            Log::error('Typesense sync failed', [
+            Log::error('Dispatched Typesense sync job failed', [
                 'event' => $event,
                 'article_id' => $article->id,
                 'article_title' => $article->title,
@@ -167,22 +158,17 @@ class ArticleObserver
     private function safeRemoveFromTypesense(string $event, Article $article): void
     {
         try {
-            if (!$this->typesenseService->isConnected()) {
-                return;
-            }
-
-            $result = $this->typesenseService->removeArticle((string) $article->id);
+            RemoveArticleFromTypesenseJob::dispatch((string) $article->id);
             
             if (config('app.debug', false)) {
-                Log::debug('Article removed from Typesense', [
+                Log::debug('Remove article from Typesense job dispatched', [
                     'event' => $event,
                     'article_id' => $article->id,
                     'article_title' => $article->title,
-                    'result' => $result['message'] ?? '',
                 ]);
             }
         } catch (\Exception $e) {
-            Log::error('Typesense removal failed', [
+            Log::error('Dispatched Typesense removal job failed', [
                 'event' => $event,
                 'article_id' => $article->id,
                 'article_title' => $article->title,

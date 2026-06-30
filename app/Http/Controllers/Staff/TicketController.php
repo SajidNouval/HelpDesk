@@ -85,18 +85,6 @@ class TicketController extends Controller
             $ticketsQuery->where('priority', $request->priority);
         }
 
-        $tickets = $ticketsQuery->latest()->get();
-
-        // Pisahkan berdasarkan status
-        $activeTicket = Ticket::select(['id', 'name', 'email', 'subject', 'category_id', 'staff_id', 'status', 'priority', 'created_at'])
-            ->where('staff_id', $user->id)
-            ->whereIn('status', ['assigned', 'progress'])
-            ->with([
-                'category:id,name',
-                'user:id,name,email'
-            ])
-            ->first();
-
         $completedTicketsQuery = Ticket::select(['id', 'name', 'email', 'subject', 'category_id', 'staff_id', 'status', 'priority', 'created_at'])
             ->where('staff_id', $user->id)
             ->where('status', 'closed')
@@ -109,8 +97,6 @@ class TicketController extends Controller
         if ($request->has('priority') && $request->priority) {
             $completedTicketsQuery->where('priority', $request->priority);
         }
-
-        $completedTickets = $completedTicketsQuery->latest()->get();
 
         $waitingTicketsQuery = Ticket::select(['id', 'name', 'email', 'subject', 'category_id', 'staff_id', 'status', 'priority', 'created_at'])
             ->where('staff_id', $user->id)
@@ -125,6 +111,37 @@ class TicketController extends Controller
             $waitingTicketsQuery->where('priority', $request->priority);
         }
 
+        // Filter by search query if provided
+        if ($request->has('q') && $request->q) {
+            $q = $request->q;
+            $filterSearch = function($query) use ($q) {
+                $query->where(function($sub) use ($q) {
+                    $sub->where('name', 'like', "%{$q}%")
+                        ->orWhere('email', 'like', "%{$q}%")
+                        ->orWhere('subject', 'like', "%{$q}%");
+                    if (is_numeric($q)) {
+                        $sub->orWhere('id', $q);
+                    }
+                });
+            };
+            $ticketsQuery->where($filterSearch);
+            $completedTicketsQuery->where($filterSearch);
+            $waitingTicketsQuery->where($filterSearch);
+        }
+
+        $tickets = $ticketsQuery->latest()->get();
+
+        // Pisahkan berdasarkan status
+        $activeTicket = Ticket::select(['id', 'name', 'email', 'subject', 'category_id', 'staff_id', 'status', 'priority', 'created_at'])
+            ->where('staff_id', $user->id)
+            ->whereIn('status', ['assigned', 'progress'])
+            ->with([
+                'category:id,name',
+                'user:id,name,email'
+            ])
+            ->first();
+
+        $completedTickets = $completedTicketsQuery->latest()->get();
         $waitingTickets = $waitingTicketsQuery->oldest()->get();
 
         return view('staff.tickets.index', compact('user', 'tickets', 'activeTicket', 'completedTickets', 'waitingTickets'));

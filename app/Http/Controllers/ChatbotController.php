@@ -101,6 +101,18 @@ class ChatbotController extends Controller
             ]);
         }
 
+        // 1.5 Handle direct escalation/admin/ticket requests
+        if ($this->retrievalService->isEscalationRequest($userMessage)) {
+            return response()->json([
+                'success' => true,
+                'response' => 'Baik, silakan klik tombol di bawah ini untuk terhubung dengan staf kami via Live Chat atau membuat tiket laporan.',
+                'articles' => [],
+                'show_contact_button' => true,
+                'contact_button_text' => 'Buat Tiket / Hubungi Staff',
+                'confidence' => 'high',
+            ]);
+        }
+
         // 2. Check for clarification needs (ambiguous queries)
         if ($this->retrievalService->needsClarification($userMessage)) {
             $clarification = $this->retrievalService->getClarificationResponse($userMessage);
@@ -426,7 +438,7 @@ class ChatbotController extends Controller
     {
         $request->validate([
             'title'       => 'required|string|max:200',
-            'message'     => 'required|string',
+            'message'     => 'required|string|max:2000',
             'category_id' => 'required|exists:categories,id',
             'email'       => 'nullable|email|max:50',
         ]);
@@ -458,6 +470,15 @@ class ChatbotController extends Controller
                 'updated_at'  => now(),
             ],
         ]);
+
+        // Simpan ke session kepemilikan tiket
+        $myTickets = session()->get('my_tickets', []);
+        $myTickets[] = $ticket->id;
+        session(['my_tickets' => $myTickets, 'guest_ticket_id' => $ticket->id]);
+        if ($request->email) {
+            session(['guest_email' => $request->email]);
+        }
+        session()->save();
 
         return response()->json([
             'success'   => true,
@@ -491,10 +512,23 @@ class ChatbotController extends Controller
     {
         $request->validate([
             'ticket_id' => 'required|exists:tickets,id',
-            'message'   => 'required|string',
+            'message'   => 'required|string|max:2000',
         ]);
 
         $ticket = Ticket::select(['id', 'status'])->findOrFail($request->ticket_id);
+
+        $myTickets = session()->get('my_tickets', []);
+        $guestTicketId = session('guest_ticket_id');
+        $isStaff = auth()->check() && auth()->user()->role === 'staff';
+        $isAdmin = auth()->check() && auth()->user()->role === 'admin';
+        $isOwner = in_array($ticket->id, $myTickets) || $guestTicketId == $ticket->id;
+
+        if (!$isStaff && !$isAdmin && !$isOwner) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+            ], 403);
+        }
 
         if ($ticket->status === 'closed') {
             return response()->json([
@@ -532,6 +566,19 @@ class ChatbotController extends Controller
      */
     public function getTicketMessages(Request $request, Ticket $ticket): JsonResponse
     {
+        $myTickets = session()->get('my_tickets', []);
+        $guestTicketId = session('guest_ticket_id');
+        $isStaff = auth()->check() && auth()->user()->role === 'staff';
+        $isAdmin = auth()->check() && auth()->user()->role === 'admin';
+        $isOwner = in_array($ticket->id, $myTickets) || $guestTicketId == $ticket->id;
+
+        if (!$isStaff && !$isAdmin && !$isOwner) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+            ], 403);
+        }
+
         $messages = $ticket->messages()
             ->orderBy('created_at')
             ->get(['id', 'sender_type', 'message', 'created_at']);
@@ -651,7 +698,7 @@ class ChatbotController extends Controller
     public function getArticleSuggestion(Request $request): JsonResponse
     {
         $request->validate([
-            'article_id' => 'required|integer|exists:articles,id',
+            'article_id' => 'required|string|exists:articles,id',
         ]);
 
         $article = \App\Models\Article::select(['id', 'category_id', 'title', 'excerpt', 'content', 'slug'])
@@ -875,6 +922,10 @@ class ChatbotController extends Controller
      */
     public function getSearchSuggestions(Request $request): JsonResponse
     {
+        $request->validate([
+            'q' => 'nullable|string|max:200',
+        ]);
+
         $query = trim($request->input('q', ''));
         Log::debug('Chatbot search suggestions', ['query' => $query]);
 

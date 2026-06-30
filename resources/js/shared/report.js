@@ -3,7 +3,7 @@
  * Handles OTP request and verification for report functionality
  */
 
-import { getCsrfToken, showInlineAlert, hideInlineAlert, closeModalById, openModalById, showSuccessToast } from './dom';
+import { getCsrfToken, showInlineAlert, hideInlineAlert, closeModalById, openModalById, showSuccessToast, showFormValidationErrors, clearFormValidationErrors } from './dom';
 import { safeFetch } from '../utils/http';
 
 /**
@@ -55,6 +55,7 @@ export function initReportModal() {
     async function requestReportOtp() {
         setLoading(true);
         hideInlineAlert(reportAlert);
+        clearFormValidationErrors(reportForm);
 
         const payload = {
             name: getInputValue('report_name'),
@@ -77,6 +78,9 @@ export function initReportModal() {
             });
 
             if (!response.ok) {
+                if (response.status === 422 && response.data?.errors) {
+                    showFormValidationErrors(reportForm, response.data.errors);
+                }
                 throw new Error(response.data?.message || 'Gagal mengirim OTP.');
             }
 

@@ -2011,6 +2011,41 @@ class AdvancedRetrievalService
     public function clearConversationMemory(): void
     {
         Session::forget(self::SESSION_CONVERSATION_KEY);
+        Session::forget('chatbot_consecutive_failures');
+    }
+
+    /**
+     * Memeriksa apakah query berisi permintaan eskalasi langsung (seperti "panggil admin", "hubungi staff").
+     *
+     * @param string $query
+     * @return bool
+     */
+    public function isEscalationRequest(string $query): bool
+    {
+        $phrases = [
+            'panggil admin', 'panggil staff', 'panggil staf',
+            'hubungi admin', 'hubungi staff', 'hubungi staf',
+            'bicara admin', 'bicara staff', 'bicara staf', 'bicara dengan admin', 'bicara dengan staff', 'bicara dengan staf',
+            'chat admin', 'chat staff', 'chat staf', 'chat dengan admin', 'chat dengan staff', 'chat dengan staf',
+            'buat tiket', 'bikin tiket', 'open tiket',
+            'lapor admin', 'lapor staff', 'lapor staf',
+            'hubungi customer service', 'hubungi cs',
+            'bantuan manusia', 'kontak staff', 'kontak admin',
+        ];
+        
+        $lowerQuery = mb_strtolower(trim($query));
+        // Bersihkan tanda baca
+        $lowerQuery = preg_replace('/[^a-z0-9\s]/', '', $lowerQuery);
+        $lowerQuery = preg_replace('/\s+/', ' ', $lowerQuery);
+        $lowerQuery = trim($lowerQuery);
+        
+        foreach ($phrases as $phrase) {
+            if ($lowerQuery === $phrase || str_contains($lowerQuery, $phrase)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**
@@ -2767,11 +2802,18 @@ class AdvancedRetrievalService
     {
         // Periksa untuk OUT-OF-DOMAIN query first
         if (!empty($retrievalResult['is_out_of_domain'])) {
+            // OPTIMASI: Lacak kegagalan beruntun dalam sesi
+            $consecutiveFailures = Session::get('chatbot_consecutive_failures', 0) + 1;
+            Session::put('chatbot_consecutive_failures', $consecutiveFailures);
+            
+            $showContactButton = ($consecutiveFailures >= 3);
+            
             return [
                 'success' => false,
                 'response' => $retrievalResult['out_of_domain_message'] ?? DomainDetectionService::OUT_OF_DOMAIN_MESSAGE,
                 'articles' => [],
-                'show_contact_button' => false,
+                'show_contact_button' => $showContactButton,
+                'contact_button_text' => 'Buat Tiket untuk Bantuan Lebih Lanjut',
                 'is_out_of_domain' => true,
                 'confidence' => 'none',
             ];
@@ -2780,23 +2822,51 @@ class AdvancedRetrievalService
         // Periksa jika hasil are too weak - gunakan safe fallback instead of unrelated articles
         if ($this->shouldUseSafeFallback($retrievalResult)) {
             $this->trackRetrievalResult($retrievalResult['query'] ?? '', []);
-            return $this->getSafeFallbackResponse($retrievalResult['query'] ?? '');
+            
+            // Lacak kegagalan beruntun dalam sesi
+            $consecutiveFailures = Session::get('chatbot_consecutive_failures', 0) + 1;
+            Session::put('chatbot_consecutive_failures', $consecutiveFailures);
+            
+            $response = $this->getSafeFallbackResponse($retrievalResult['query'] ?? '');
+            
+            // Tampilkan tombol hubungi staff jika kegagalan beruntun >= 3
+            $response['show_contact_button'] = ($consecutiveFailures >= 3);
+            if ($consecutiveFailures >= 3) {
+                $response['contact_button_text'] = 'Buat Tiket untuk Bantuan Lebih Lanjut';
+            } else {
+                // Sembunyikan tombol jika belum 3 kali gagal
+                $response['show_contact_button'] = false;
+            }
+            
+            return $response;
         }
         
         if (empty($retrievalResult['results'])) {
-            if ($this->shouldEscalate($retrievalResult['query'] ?? '')) {
-                return $this->getEscalationResponse();
+            // Lacak kegagalan beruntun dalam sesi
+            $consecutiveFailures = Session::get('chatbot_consecutive_failures', 0) + 1;
+            Session::put('chatbot_consecutive_failures', $consecutiveFailures);
+            
+            $showContactButton = ($consecutiveFailures >= 3);
+            
+            if ($consecutiveFailures >= 3 || $this->shouldEscalate($retrievalResult['query'] ?? '')) {
+                $escalationResponse = $this->getEscalationResponse();
+                $escalationResponse['show_contact_button'] = true;
+                $escalationResponse['contact_button_text'] = 'Buat Tiket untuk Bantuan Lebih Lanjut';
+                return $escalationResponse;
             }
             
             return [
                 'success' => false,
                 'response' => 'Maaf, saya belum menemukan artikel yang sesuai. Coba gunakan kata kunci yang lebih spesifik.',
                 'articles' => [],
-                'show_contact_button' => true,
+                'show_contact_button' => $showContactButton,
                 'contact_button_text' => 'Buat Tiket untuk Bantuan Lebih Lanjut',
                 'confidence' => 'none',
             ];
         }
+        
+        // JIKA BERHASIL: Reset hitung kegagalan beruntun kembali ke 0
+        Session::put('chatbot_consecutive_failures', 0);
         
         $topArticle = $retrievalResult['results'][0];
         $confidence = $topArticle['confidence'] ?? 'medium';

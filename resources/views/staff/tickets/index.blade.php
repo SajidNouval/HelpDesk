@@ -76,23 +76,39 @@
                                 <p class="text-sm text-gray-500">Kelola tiket bantuan pelanggan.</p>
                             </div>
                             <div class="flex flex-wrap items-center gap-3">
+                                <!-- Search Input -->
+                                <form action="{{ route('staff.tickets.index') }}" method="GET" class="flex items-center">
+                                    @if(request('status'))
+                                        <input type="hidden" name="status" value="{{ request('status') }}">
+                                    @endif
+                                    @if(request('priority'))
+                                        <input type="hidden" name="priority" value="{{ request('priority') }}">
+                                    @endif
+                                    <div class="relative">
+                                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari tiket..." class="w-48 h-10 pl-9 pr-4 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                                        <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                    </div>
+                                </form>
+
                                 <!-- Status Filter Dropdown -->
                                 <div class="relative">
                                     <select id="statusSelect"
-                                            onchange="window.location.href=this.value"
-                                            class="h-10 pl-4 pr-8 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none cursor-pointer">
+                                             onchange="window.location.href=this.value"
+                                             class="h-10 pl-4 pr-8 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none cursor-pointer">
 
-                                        <option value="{{ route('staff.tickets.index', ['status' => null, 'priority' => request('priority')]) }}"
+                                        <option value="{{ route('staff.tickets.index', ['status' => null, 'priority' => request('priority'), 'q' => request('q')]) }}"
                                             {{ !request('status') ? 'selected' : '' }}>
                                             Semua Tiket
                                         </option>
 
-                                        <option value="{{ route('staff.tickets.index', ['status' => 'progress', 'priority' => request('priority')]) }}"
+                                        <option value="{{ route('staff.tickets.index', ['status' => 'progress', 'priority' => request('priority'), 'q' => request('q')]) }}"
                                             {{ request('status') == 'progress' ? 'selected' : '' }}>
                                             Diproses
                                         </option>
 
-                                        <option value="{{ route('staff.tickets.index', ['status' => 'completed', 'priority' => request('priority')]) }}"
+                                        <option value="{{ route('staff.tickets.index', ['status' => 'completed', 'priority' => request('priority'), 'q' => request('q')]) }}"
                                             {{ request('status') == 'completed' ? 'selected' : '' }}>
                                             Selesai
                                         </option>
@@ -106,25 +122,25 @@
                                 <!-- Priority Filter Dropdown -->
                                 <div class="relative">
                                     <select id="prioritySelect"
-                                            onchange="window.location.href=this.value"
-                                            class="h-10 pl-4 pr-8 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none cursor-pointer">
+                                             onchange="window.location.href=this.value"
+                                             class="h-10 pl-4 pr-8 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none cursor-pointer">
 
-                                        <option value="{{ route('staff.tickets.index', ['priority' => null, 'status' => request('status')]) }}"
+                                        <option value="{{ route('staff.tickets.index', ['priority' => null, 'status' => request('status'), 'q' => request('q')]) }}"
                                             {{ !request('priority') ? 'selected' : '' }}>
                                             Semua Priority
                                         </option>
 
-                                        <option value="{{ route('staff.tickets.index', ['priority' => 'high', 'status' => request('status')]) }}"
+                                        <option value="{{ route('staff.tickets.index', ['priority' => 'high', 'status' => request('status'), 'q' => request('q')]) }}"
                                             {{ request('priority') == 'high' ? 'selected' : '' }}>
                                             Tinggi
                                         </option>
 
-                                        <option value="{{ route('staff.tickets.index', ['priority' => 'medium', 'status' => request('status')]) }}"
+                                        <option value="{{ route('staff.tickets.index', ['priority' => 'medium', 'status' => request('status'), 'q' => request('q')]) }}"
                                             {{ request('priority') == 'medium' ? 'selected' : '' }}>
                                             Sedang
                                         </option>
 
-                                        <option value="{{ route('staff.tickets.index', ['priority' => 'low', 'status' => request('status')]) }}"
+                                        <option value="{{ route('staff.tickets.index', ['priority' => 'low', 'status' => request('status'), 'q' => request('q')]) }}"
                                             {{ request('priority') == 'low' ? 'selected' : '' }}>
                                             Rendah
                                         </option>
@@ -332,12 +348,24 @@
                                 </div>
                             @endif
                         @else
-                            <x-empty-state
-                                icon="ticket"
-                                title="Tidak ada tiket"
-                                subtitle="Belum ada tiket yang ditampilkan."
-                                size="sm"
-                            />
+                            @if(request('q'))
+                                <x-empty-state
+                                    icon="search"
+                                    title="Tiket Tidak Ditemukan"
+                                    subtitle="Tidak ada tiket yang sesuai dengan kata kunci pencarian Anda."
+                                    actionText="Reset Pencarian"
+                                    actionUrl="{{ route('staff.tickets.index', ['status' => request('status'), 'priority' => request('priority')]) }}"
+                                    actionIcon="arrow-left"
+                                    size="sm"
+                                />
+                            @else
+                                <x-empty-state
+                                    icon="ticket"
+                                    title="Tidak ada tiket"
+                                    subtitle="Belum ada tiket yang ditampilkan."
+                                    size="sm"
+                                />
+                            @endif
                         @endif
                     </div>
                 </div>

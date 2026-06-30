@@ -43,7 +43,7 @@ return new class extends Migration
                 ->constrained('users')
                 ->nullOnDelete();
 
-            $table->text('message');
+            $table->string('message', 2000);
 
             $table->boolean('is_read')->default(false);
 

@@ -149,3 +149,49 @@ export function hideInlineAlert(container) {
         el.classList.add('hidden');
     }
 }
+
+/**
+ * Show validation errors on a form
+ * @param {HTMLFormElement} form - The form
+ * @param {Object} errors - The errors object from Laravel
+ */
+export function showFormValidationErrors(form, errors) {
+    if (!(form instanceof HTMLFormElement) || !errors) return;
+
+    // First clear existing errors
+    clearFormValidationErrors(form);
+
+    Object.entries(errors).forEach(([field, messages]) => {
+        const input = form.querySelector(`[name="${field}"]`) || form.querySelector(`#${field}`) || form.querySelector(`[name="${field}[]"]`);
+        if (!input) return;
+
+        // Highlight input field
+        input.classList.add('border-red-500', 'focus:ring-red-500', 'focus:border-red-500');
+
+        // Create error message element
+        const errorEl = document.createElement('p');
+        errorEl.className = 'mt-1 text-xs text-red-600 validation-error-msg';
+        errorEl.textContent = messages[0]; // Display the first error message
+
+        // Append after input element
+        if (input.parentNode) {
+            input.parentNode.appendChild(errorEl);
+        }
+    });
+}
+
+/**
+ * Clear validation errors on a form
+ * @param {HTMLFormElement} form - The form
+ */
+export function clearFormValidationErrors(form) {
+    if (!(form instanceof HTMLFormElement)) return;
+
+    // Remove input highlights
+    form.querySelectorAll('.border-red-500').forEach(input => {
+        input.classList.remove('border-red-500', 'focus:ring-red-500', 'focus:border-red-500');
+    });
+
+    // Remove error message elements
+    form.querySelectorAll('.validation-error-msg').forEach(el => el.remove());
+}

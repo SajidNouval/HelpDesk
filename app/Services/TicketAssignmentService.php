@@ -201,19 +201,36 @@ class TicketAssignmentService
             return null;
         }
 
-        $nextTicket->update([
-            'staff_id'    => $availableStaff->user_id,
-            'status'      => 'assigned',
-            'assigned_at' => now(),
-        ]);
+        if ($nextTicket->type === 'livechat') {
+            $nextTicket->update([
+                'staff_id'    => $availableStaff->user_id,
+                'status'      => 'assigned',
+                'assigned_at' => now(),
+            ]);
 
-        $availableStaff->update(['is_busy' => true]);
+            $availableStaff->update(['is_busy' => true]);
 
-        TicketLog::create([
-            'ticket_id'   => $nextTicket->id,
-            'action'      => 'assigned',
-            'description' => 'Tiket di-assign ke staff: ' . $availableStaff->user->name . ' (antrian berikutnya)',
-        ]);
+            TicketLog::create([
+                'ticket_id'   => $nextTicket->id,
+                'action'      => 'assigned',
+                'description' => 'Tiket live chat di-assign ke staff: ' . $availableStaff->user->name . ' (antrian berikutnya)',
+            ]);
+        } else {
+            // report
+            $nextTicket->update([
+                'staff_id'    => $availableStaff->user_id,
+                'status'      => 'waiting',
+                'assigned_at' => now(),
+            ]);
+
+            // Untuk report, staff tidak dibuat busy agar tetap bisa menerima live chat
+
+            TicketLog::create([
+                'ticket_id'   => $nextTicket->id,
+                'action'      => 'assigned',
+                'description' => 'Laporan di-assign ke staff: ' . $availableStaff->user->name . ' (antrian berikutnya)',
+            ]);
+        }
 
         // Broadcast queue update for other tickets in this category
         self::broadcastQueueUpdateForCategory($completedStaffProfile->category_id);

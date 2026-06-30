@@ -40,7 +40,7 @@ class StoreTicketRequest extends FormRequest
             'name'        => 'required|string|max:50',
             'email'       => 'required|email|max:50',
             'subject'     => 'required|string|max:200',
-            'message'     => 'required|string|max:5000',
+            'message'     => 'required|string|max:2000',
             'category_id' => 'required|exists:categories,id',
         ];
 
@@ -66,7 +66,7 @@ class StoreTicketRequest extends FormRequest
             'subject.required'     => 'Subjek tiket wajib diisi.',
             'subject.max'          => 'Subjek maksimal 200 karakter.',
             'message.required'     => 'Pesan wajib diisi.',
-            'message.max'          => 'Pesan terlalu panjang (maks 5000 karakter).',
+            'message.max'          => 'Pesan terlalu panjang (maks 2000 karakter).',
             'category_id.required' => 'Kategori wajib dipilih.',
             'category_id.exists'   => 'Kategori yang dipilih tidak valid.',
             'captcha.required'     => 'Kode captcha wajib diisi.',

@@ -186,6 +186,19 @@ class CategoryController extends Controller
 
         if (!empty($data)) {
             StaffProfile::insert($data);
+
+            // Cek antrean tiket waiting untuk kategori yang baru ditugaskan ke staf ini
+            $assignmentService = resolve(\App\Services\TicketAssignmentService::class);
+            $newProfiles = StaffProfile::where('user_id', $staff->id)
+                ->whereIn('category_id', $validated['category_ids'])
+                ->get();
+                
+            foreach ($newProfiles as $profile) {
+                $profile->refresh();
+                if (!$profile->is_busy) {
+                    $assignmentService->assignNextWaiting($profile);
+                }
+            }
         }
 
         return $this->safeRedirect('admin.categories.index')

@@ -11,12 +11,14 @@ import {
     setModalFormAction,
     closeModalById,
     showSuccessToast,
-    closeSuccessToast
+    closeSuccessToast,
+    showFormValidationErrors,
+    clearFormValidationErrors,
+    setButtonLoading,
+    setFormLoading
 } from './dom';
 import { safeFetch } from '../utils/http';
 import { initModalHandlers } from '../utils/modal';
-import { initReportModal } from './report';
-import { initLiveChatForm } from './livechat';
 
 /**
  * Update status badge on article row
@@ -199,6 +201,9 @@ async function sendAjaxForm(form) {
         });
 
         if (!response.ok) {
+            if (response.status === 422 && response.data?.errors) {
+                showFormValidationErrors(form, response.data.errors);
+            }
             throw new Error(response.data?.message || 'Terjadi kesalahan jaringan.');
         }
 
@@ -219,7 +224,17 @@ async function submitAjaxForm(form) {
         return null;
     }
 
+    setFormLoading(form, true);
+
     const result = await sendAjaxForm(form);
+    
+    setFormLoading(form, false);
+    form.dataset.submitting = 'false';
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        setButtonLoading(submitBtn, false);
+    }
+
     if (!result || !result.success) {
         return null;
     }
@@ -261,6 +276,89 @@ function initGlobalHandlers() {
         if (closeToastButton instanceof HTMLElement) {
             event.preventDefault();
             closeSuccessToast();
+            return;
+        }
+
+        // Handle global delete confirmation dialogs
+        const deleteBtn = target.closest('[data-delete-form]');
+        if (deleteBtn instanceof HTMLElement) {
+            event.preventDefault();
+            const formId = deleteBtn.dataset.deleteForm;
+            const message = deleteBtn.dataset.confirmMessage || 'Apakah Anda yakin ingin menghapus data ini?';
+            const title = deleteBtn.dataset.confirmTitle || 'Hapus Data';
+            
+            let dialogId = 'global-confirm-delete';
+            let dialog = document.getElementById(dialogId);
+            if (!dialog) {
+                dialog = document.createElement('div');
+                dialog.id = dialogId;
+                dialog.className = 'hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm p-4 flex items-center justify-center z-50';
+                dialog.innerHTML = `
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-xl w-full max-w-sm">
+                        <div class="p-6">
+                            <div class="flex gap-4">
+                                <div class="flex-shrink-0">
+                                    <div class="flex items-center justify-center h-12 w-12 rounded-2xl bg-red-100">
+                                        <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-900" id="global-delete-title">${title}</h3>
+                                    <p class="mt-2 text-sm text-gray-600" id="global-delete-message">${message}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-6 py-4 bg-gray-50 rounded-b-2xl border-t border-gray-100 flex gap-3 justify-end">
+                            <button type="button" data-confirm-cancel class="inline-flex items-center justify-center rounded-2xl border border-gray-300 bg-white text-gray-700 text-sm font-medium px-4 py-2 transition hover:bg-gray-50 focus:outline-none">
+                                Batal
+                            </button>
+                            <button type="button" data-confirm-submit class="inline-flex items-center justify-center rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 transition focus:outline-none">
+                                Hapus
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(dialog);
+            } else {
+                const titleEl = document.getElementById('global-delete-title');
+                const messageEl = document.getElementById('global-delete-message');
+                if (titleEl) titleEl.textContent = title;
+                if (messageEl) messageEl.textContent = message;
+            }
+            
+            window.confirmDialog.open(dialogId, {
+                onConfirm: () => {
+                    const form = document.getElementById(formId);
+                    if (form) form.submit();
+                }
+            });
+            return;
+        }
+
+        // Handle customized delete confirmation dialogs (e.g. confirm-delete-staff)
+        const customDeleteBtn = target.closest('[data-confirm-delete-dialog]');
+        if (customDeleteBtn instanceof HTMLElement) {
+            event.preventDefault();
+            const dialogId = customDeleteBtn.dataset.confirmDeleteDialog;
+            const formId = customDeleteBtn.dataset.confirmDeleteForm;
+            
+            if (dialogId === 'confirm-delete-staff') {
+                const nameEl = document.getElementById('confirm-delete-staff-name');
+                const emailEl = document.getElementById('confirm-delete-staff-email');
+                const roleEl = document.getElementById('confirm-delete-staff-role');
+                if (nameEl) nameEl.textContent = customDeleteBtn.dataset.userName || '';
+                if (emailEl) emailEl.textContent = customDeleteBtn.dataset.userEmail || '';
+                if (roleEl) roleEl.textContent = customDeleteBtn.dataset.userRole || '';
+            }
+            
+            window.confirmDialog.open(dialogId, {
+                onConfirm: () => {
+                    const form = document.getElementById(formId);
+                    if (form) form.submit();
+                }
+            });
             return;
         }
 
@@ -314,6 +412,15 @@ function initGlobalHandlers() {
             return;
         }
 
+        // Clear previous validation errors
+        clearFormValidationErrors(form);
+
+        // Prevent double submits
+        if (form.dataset.submitting === 'true') {
+            event.preventDefault();
+            return;
+        }
+
         const confirmMessage = form.dataset.confirm;
         if (confirmMessage) {
             console.log('CLICK -> submit intercepted', { formId: form.id, confirmMessage });
@@ -327,21 +434,29 @@ function initGlobalHandlers() {
                 // Create a hidden dialog with the message
                 dialog = document.createElement('div');
                 dialog.id = dialogId;
-                dialog.className = 'hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                dialog.className = 'hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50';
                 dialog.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-lg max-w-sm w-full mx-4">
-                        <div class="flex items-center justify-center h-12 w-12 mx-auto mt-4 rounded-2xl bg-red-100">
-                            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 0a9 9 0 11-18 0 9 9 0 0118 0zm0-4a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"></path>
-                            </svg>
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-xl w-full max-w-sm">
+                        <div class="p-6">
+                            <div class="flex gap-4">
+                                <div class="flex-shrink-0">
+                                    <div class="flex items-center justify-center h-12 w-12 rounded-2xl bg-red-100">
+                                        <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-900">Konfirmasi</h3>
+                                    <p class="mt-2 text-sm text-gray-600">${confirmMessage}</p>
+                                </div>
+                            </div>
                         </div>
-                        <h3 class="text-center mt-2 text-lg font-medium text-gray-900">Konfirmasi</h3>
-                        <p class="text-center mt-2 text-sm text-gray-600 px-4">${confirmMessage}</p>
-                        <div class="mt-6 flex gap-3 justify-center px-4 pb-4">
-                            <button type="button" data-confirm-cancel class="inline-flex items-center justify-center rounded-2xl border border-gray-300 bg-white text-gray-700 text-sm font-medium px-4 py-2 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                        <div class="px-6 py-4 bg-gray-50 rounded-b-2xl border-t border-gray-100 flex gap-3 justify-end">
+                            <button type="button" data-confirm-cancel class="inline-flex items-center justify-center rounded-2xl border border-gray-300 bg-white text-gray-700 text-sm font-medium px-4 py-2 transition hover:bg-gray-50 focus:outline-none">
                                 Batal
                             </button>
-                            <button type="button" data-confirm-submit class="inline-flex items-center justify-center rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 transition focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                            <button type="button" data-confirm-submit class="inline-flex items-center justify-center rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 transition focus:outline-none">
                                 Lanjutkan
                             </button>
                         </div>
@@ -356,12 +471,22 @@ function initGlobalHandlers() {
                     onConfirm: () => {
                         console.log('CONFIRM YES', { dialogId, formId: form.id });
                         console.log('FORM SUBMIT');
+                        form.dataset.submitting = 'true';
+                        const submitBtn = form.querySelector('button[type="submit"]');
+                        if (submitBtn) {
+                            setButtonLoading(submitBtn, true);
+                        }
                         form.submit();
                     }
                 });
             } else {
                 // Fallback to window.confirm if confirmDialog not available
                 if (window.confirm(confirmMessage)) {
+                    form.dataset.submitting = 'true';
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        setButtonLoading(submitBtn, true);
+                    }
                     form.submit();
                 }
             }
@@ -369,6 +494,11 @@ function initGlobalHandlers() {
         }
 
         if (!form.dataset.ajax) {
+            form.dataset.submitting = 'true';
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                setButtonLoading(submitBtn, true);
+            }
             return;
         }
 
@@ -388,11 +518,19 @@ function initSharedUI() {
     // Register the unified document click + form submit handlers.
     initGlobalHandlers();
 
-    // Initialize report modal
-    initReportModal();
+    // Initialize report modal dynamically if present
+    if (document.getElementById('reportForm') || document.getElementById('reportModal')) {
+        import('./report').then(({ initReportModal }) => {
+            initReportModal();
+        });
+    }
 
-    // Initialize live chat form
-    initLiveChatForm();
+    // Initialize live chat form dynamically if present
+    if (document.getElementById('liveChatForm') || document.getElementById('liveChatModal')) {
+        import('./livechat').then(({ initLiveChatForm }) => {
+            initLiveChatForm();
+        });
+    }
 }
 
 // Initialize on DOM ready

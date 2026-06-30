@@ -3,6 +3,15 @@
         <div class="max-w-7xl mx-auto px-4">
             <h1 class="text-3xl font-semibold text-gray-700">Buat Tiket & Verifikasi OTP</h1>
             <p class="mt-2 text-gray-500">Pilih Live Chat atau Laporan, lalu verifikasi email dengan OTP sebelum tiket diproses.</p>
+
+            <!-- Breadcrumb -->
+            <div class="text-sm text-gray-500 mt-3 flex items-center flex-wrap gap-x-1">
+                <a href="{{ url('/') }}" class="text-red-500 hover:text-red-600 font-medium">Beranda</a>
+                <span class="text-gray-400">/</span>
+                <a href="{{ route('articles.index') }}" class="text-red-500 hover:text-red-600 font-medium">Artikel Bantuan</a>
+                <span class="text-gray-400">/</span>
+                <span class="text-gray-700">Buat Tiket</span>
+            </div>
         </div>
     </div>
 

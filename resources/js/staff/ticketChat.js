@@ -47,6 +47,32 @@ class TicketChatManager {
      * Load messages from API
      */
     async loadMessages() {
+        // Show loading skeleton
+        if (this.messagesList) {
+            this.messagesList.innerHTML = `
+                <div class="animate-pulse space-y-4">
+                    <div class="flex justify-start">
+                        <div class="w-2/3 space-y-2">
+                            <div class="h-3 bg-gray-200 rounded w-1/4"></div>
+                            <div class="h-10 bg-gray-200 rounded-2xl"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <div class="w-2/3 space-y-2">
+                            <div class="h-3 bg-gray-200 rounded w-1/4 ml-auto"></div>
+                            <div class="h-10 bg-gray-200 rounded-2xl"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-start">
+                        <div class="w-1/2 space-y-2">
+                            <div class="h-3 bg-gray-200 rounded w-1/3"></div>
+                            <div class="h-8 bg-gray-200 rounded-2xl"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         try {
             const response = await fetch(`/api/tickets/${this.ticketId}/messages`, {
                 credentials: 'same-origin',
@@ -78,6 +104,29 @@ class TicketChatManager {
      * Load logs from API
      */
     async loadLogs() {
+        const logsContainer = document.getElementById('logs-container');
+        if (logsContainer) {
+            // Show loading skeleton
+            logsContainer.innerHTML = `
+                <div class="animate-pulse space-y-3">
+                    <div class="bg-gray-100 p-4 rounded-lg space-y-2">
+                        <div class="flex justify-between">
+                            <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+                            <div class="h-3 bg-gray-200 rounded w-1/4"></div>
+                        </div>
+                        <div class="h-3 bg-gray-200 rounded w-full"></div>
+                    </div>
+                    <div class="bg-gray-100 p-4 rounded-lg space-y-2">
+                        <div class="flex justify-between">
+                            <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+                            <div class="h-3 bg-gray-200 rounded w-1/4"></div>
+                        </div>
+                        <div class="h-3 bg-gray-200 rounded w-5/6"></div>
+                    </div>
+                </div>
+            `;
+        }
+
         try {
             const response = await fetch(`/api/tickets/${this.ticketId}/logs`, {
                 credentials: 'same-origin',
@@ -92,7 +141,6 @@ class TicketChatManager {
             }
 
             const logs = await safeJson(response) || [];
-            const logsContainer = document.getElementById('logs-container');
             if (!logsContainer) return;
 
             logsContainer.innerHTML = '';

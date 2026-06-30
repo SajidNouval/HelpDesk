@@ -87,14 +87,45 @@
                 $selectedCategory = $categories->firstWhere('id', $selectedCategoryId);
             @endphp
 
-            <div class="mb-5 flex items-center justify-between">
-                <p class="text-sm text-gray-500">
-                    Menampilkan <span class="font-medium text-gray-700">{{ $articles->count() }}</span> dari <span class="font-medium text-gray-700">{{ $articles->total() }}</span> artikel
-                    @if($selectedCategory)
-                        untuk kategori <span class="font-medium text-gray-700">{{ $selectedCategory->name }}</span>
+            <!-- Search Box -->
+            <form action="{{ route('articles.index') }}" method="GET" class="mb-5">
+                @if($selectedCategoryId)
+                    <input type="hidden" name="category" value="{{ $selectedCategoryId }}">
+                @endif
+                <div class="relative">
+                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari artikel bantuan..."
+                        class="w-full h-11 pl-11 pr-4 border border-gray-300 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition bg-white shadow-sm">
+                    <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    @if(request('q'))
+                        <a href="{{ route('articles.index', $selectedCategoryId ? ['category' => $selectedCategoryId] : []) }}" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </a>
                     @endif
-                </p>
-            </div>
+                </div>
+                @if(request('q'))
+                    <p class="text-xs text-gray-500 mt-1.5">
+                        Hasil pencarian untuk: <span class="font-medium text-gray-700">"{{ request('q') }}"</span>
+                        &mdash; {{ $articles->total() }} artikel ditemukan
+                    </p>
+                @endif
+            </form>
+
+            @if(!request('q'))
+                <div class="mb-5 flex items-center justify-between">
+                    <p class="text-sm text-gray-500">
+                        Menampilkan <span class="font-medium text-gray-700">{{ $articles->count() }}</span> dari <span class="font-medium text-gray-700">{{ $articles->total() }}</span> artikel
+                        @if($selectedCategory)
+                            untuk kategori <span class="font-medium text-gray-700">{{ $selectedCategory->name }}</span>
+                        @endif
+                    </p>
+                </div>
+            @endif
 
             @if($articles->count() > 0)
                 <div class="space-y-4">
@@ -111,12 +142,30 @@
                     <x-pagination :paginator="$articles" :elements="$articles->links()->elements" />
                 </div>
             @else
-                <x-empty-state
-                    icon="document"
-                    title="Belum ada artikel"
-                    subtitle="Artikel bantuan akan segera ditambahkan"
-                    size="lg"
-                />
+                @if(request('q'))
+                    <div class="text-center py-16">
+                        <div class="mx-auto w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Artikel Tidak Ditemukan</h3>
+                        <p class="text-sm text-gray-500 mb-5">Tidak ada artikel yang cocok dengan kata kunci "<span class="font-medium">{{ request('q') }}</span>".</p>
+                        <a href="{{ route('articles.index', $selectedCategoryId ? ['category' => $selectedCategoryId] : []) }}" class="inline-flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                            </svg>
+                            Kembali ke Semua Artikel
+                        </a>
+                    </div>
+                @else
+                    <x-empty-state
+                        icon="document"
+                        title="Belum ada artikel"
+                        subtitle="Artikel bantuan akan segera ditambahkan"
+                        size="lg"
+                    />
+                @endif
             @endif
 
         </div>

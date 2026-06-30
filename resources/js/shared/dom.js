@@ -46,7 +46,9 @@ export {
     showSuccessToast,
     closeSuccessToast,
     showInlineAlert,
-    hideInlineAlert
+    hideInlineAlert,
+    showFormValidationErrors,
+    clearFormValidationErrors
 } from '../utils/notification';
 
 // Re-export loading utilities

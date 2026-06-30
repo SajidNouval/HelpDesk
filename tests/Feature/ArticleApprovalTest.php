@@ -15,7 +15,6 @@ class ArticleApprovalTest extends TestCase
         parent::setUp();
         $this->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
     }
-
     public function test_staff_can_create_pending_article()
     {
         $staff = User::factory()->staff()->create();

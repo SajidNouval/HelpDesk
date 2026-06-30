@@ -3,8 +3,14 @@
  * Handles OTP request and verification for live chat functionality
  */
 
-import { showInlineAlert, hideInlineAlert } from '../utils/notification';
-import { getCsrfToken, safeFetch } from '../utils/http';
+import {
+    showInlineAlert,
+    hideInlineAlert,
+    showFormValidationErrors,
+    clearFormValidationErrors,
+    getCsrfToken,
+    safeFetch
+} from './dom';
 
 /**
  * Initialize live chat form handler
@@ -49,6 +55,7 @@ export function initLiveChatForm() {
     async function requestLiveChatOtp() {
         setLoading(true);
         hideInlineAlert(liveChatAlert);
+        clearFormValidationErrors(liveChatForm);
 
         const nameInput = document.getElementById('livechat_name');
         const emailInput = document.getElementById('livechat_email');
@@ -83,6 +90,9 @@ export function initLiveChatForm() {
             });
 
             if (!response.ok) {
+                if (response.status === 422 && response.data?.errors) {
+                    showFormValidationErrors(liveChatForm, response.data.errors);
+                }
                 throw new Error(response.data?.message || 'Gagal mengirim OTP.');
             }
 

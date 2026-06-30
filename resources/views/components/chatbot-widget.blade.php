@@ -603,6 +603,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         messagesContainer.appendChild(row);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        return row;
     }
 
     /* ------------------------------------------------------------------ */
@@ -886,20 +887,20 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await window.safeJson(response) || {};
             hideTypingIndicator();
 
-            if (data.success) {
+            if (data.response) {
                 addMessage(data.response, 'bot');
-                if (data.articles && data.articles.length > 0) {
-                    showArticles(data.articles);
+            }
+            
+            if (data.articles && data.articles.length > 0) {
+                showArticles(data.articles);
+            }
+            
+            if (data.show_contact_button) {
+                responseContainer.classList.remove('hidden');
+                contactButtonContainer.classList.remove('hidden');
+                if (data.contact_button_text) {
+                    contactStaffBtn.textContent = data.contact_button_text;
                 }
-                if (data.show_contact_button) {
-                    responseContainer.classList.remove('hidden');
-                    contactButtonContainer.classList.remove('hidden');
-                    if (data.contact_button_text) {
-                        contactStaffBtn.textContent = data.contact_button_text;
-                    }
-                }
-            } else {
-                addMessage(data.response, 'bot');
             }
         } catch (error) {
             console.error('Error:', error);
@@ -936,10 +937,31 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     contactStaffBtn.addEventListener('click', () => {
-        const lastUserMessage = messagesContainer.querySelector('.cb-guest-bubble:last-child');
-        const message = lastUserMessage ? lastUserMessage.textContent : '';
-        document.getElementById('form-message').value = message;
-        showTicketForm(message);
+        const lastUserBubble = messagesContainer.querySelector('.cb-guest-bubble:last-child');
+        const message = lastUserBubble ? lastUserBubble.textContent.trim() : '';
+        
+        const choiceModal = document.getElementById('ticketChoiceModal');
+        if (choiceModal) {
+            // Isi subjek & deskripsi di modal tiket/livechat agar user tidak perlu mengetik ulang
+            const livechatSubject = document.getElementById('livechat_subject');
+            if (livechatSubject) livechatSubject.value = message;
+            
+            const livechatMessage = document.getElementById('livechat_message');
+            if (livechatMessage) livechatMessage.value = message;
+            
+            const reportSubject = document.getElementById('report_subject');
+            if (reportSubject) reportSubject.value = message;
+            
+            const reportMessage = document.getElementById('report_message');
+            if (reportMessage) reportMessage.value = message;
+
+            // Buka modal pilihan tiket
+            choiceModal.classList.remove('hidden');
+        } else {
+            // Fallback ke form inline bawaan widget jika modal tidak ada di halaman saat ini
+            document.getElementById('form-message').value = message;
+            showTicketForm(message);
+        }
         contactButtonContainer.classList.add('hidden');
     });
 
@@ -1093,8 +1115,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function loadSearchSuggestions(query) {
+        // Show loading skeleton
+        searchSuggestionsList.innerHTML = `
+            <div class="animate-pulse p-3 space-y-2.5">
+                <div class="flex items-center gap-2">
+                    <div class="w-3.5 h-3.5 bg-gray-200 rounded-full"></div>
+                    <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3.5 h-3.5 bg-gray-200 rounded-full"></div>
+                    <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3.5 h-3.5 bg-gray-200 rounded-full"></div>
+                    <div class="h-3 bg-gray-200 rounded w-3/4"></div>
+                </div>
+            </div>
+        `;
+        searchSuggestionsContainer.classList.remove('hidden');
+
         try {
-            const response = await fetch('{{ route("chatbot.search-suggestions") }}', {
+            const response = await fetch('{{ route("chatbot.search-suggestions") }}?q=' + encodeURIComponent(query), {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
             });
@@ -1206,7 +1247,7 @@ document.addEventListener('DOMContentLoaded', function() {
     /* SEND STAFF MESSAGE                                                  */
     /* ------------------------------------------------------------------ */
     async function sendStaffMessage(message) {
-        addLiveChatMessage(null, message, 'guest', null);
+        const msgEl = addLiveChatMessage(null, message, 'guest', null);
         input.value = '';
         if (clearInputBtn) clearInputBtn.classList.add('hidden');
         if (searchSuggestionsContainer) searchSuggestionsContainer.classList.add('hidden');
@@ -1228,9 +1269,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify(requestData)
             });
-            if (response.ok) await loadStaffMessages();
+            if (response.ok) {
+                await loadStaffMessages();
+            } else {
+                markMessageFailed(msgEl, message);
+            }
         } catch (error) {
             console.error('Error sending message:', error);
+            markMessageFailed(msgEl, message);
+        }
+    }
+
+    function markMessageFailed(msgEl, message) {
+        if (!msgEl) return;
+        const bubble = msgEl.querySelector('.cb-guest-bubble');
+        if (bubble) {
+            bubble.classList.add('border', 'border-red-300', 'bg-red-50', '!text-red-800');
+        }
+        const wrapper = msgEl.querySelector('.flex-col');
+        if (wrapper && !msgEl.querySelector('.cb-retry-btn')) {
+            const statusContainer = document.createElement('div');
+            statusContainer.className = 'flex items-center gap-1.5 mt-1 cb-retry-container justify-end';
+            statusContainer.innerHTML = `
+                <span class="text-[10px] text-red-500 font-semibold flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Gagal
+                </span>
+                <button type="button" class="text-[10px] text-red-600 hover:text-red-700 underline font-semibold cb-retry-btn">
+                    Coba lagi
+                </button>
+            `;
+            statusContainer.querySelector('.cb-retry-btn').addEventListener('click', () => {
+                msgEl.remove();
+                sendStaffMessage(message);
+            });
+            const ts = wrapper.querySelector('.cb-timestamp');
+            if (ts) ts.remove();
+            wrapper.appendChild(statusContainer);
+        }
+        if (window.toast) {
+            window.toast.error('Gagal mengirim pesan. Silakan coba lagi.');
         }
     }
 

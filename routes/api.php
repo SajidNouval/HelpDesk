@@ -21,13 +21,24 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // Message routes without request throttling for chat polling
 Route::middleware(['web'])->post('/messages', [MessageController::class, 'store'])
-    ->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class, \App\Http\Middleware\VerifyCsrfToken::class]);
+    ->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class]);
 
 Route::middleware(['web'])->get('/tickets/{ticketId}/messages', [MessageController::class, 'index'])
     ->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class]);
 
 Route::middleware(['web'])->get('/tickets/{ticketId}/status', function($ticketId) {
     $ticket = \App\Models\Ticket::with('assignedStaff')->findOrFail($ticketId);
+    
+    // Otorisasi kepemilikan/staf/admin
+    $myTickets = session()->get('my_tickets', []);
+    $guestTicketId = session('guest_ticket_id');
+    $isStaff = auth()->check() && auth()->user()->role === 'staff';
+    $isAdmin = auth()->check() && auth()->user()->role === 'admin';
+    $isOwner = in_array($ticket->id, $myTickets) || $guestTicketId == $ticket->id;
+
+    if (!$isStaff && !$isAdmin && !$isOwner) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
     
     // Only apply auto-close/auto-suspend timeouts for live chat tickets
     if ($ticket->type === 'livechat') {
@@ -200,13 +211,45 @@ Route::middleware(['web'])->get('/tickets/{ticketId}/status', function($ticketId
 // Get ticket logs
 Route::middleware(['web'])->get('/tickets/{ticketId}/logs', function($ticketId) {
     $ticket = \App\Models\Ticket::findOrFail($ticketId);
+    
+    // Otorisasi kepemilikan/staf/admin
+    $myTickets = session()->get('my_tickets', []);
+    $guestTicketId = session('guest_ticket_id');
+    $isStaff = auth()->check() && auth()->user()->role === 'staff';
+    $isAdmin = auth()->check() && auth()->user()->role === 'admin';
+    $isOwner = in_array($ticket->id, $myTickets) || $guestTicketId == $ticket->id;
+
+    if (!$isStaff && !$isAdmin && !$isOwner) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+    
     $logs = $ticket->logs()->orderBy('created_at', 'desc')->get();
     return response()->json($logs);
 })->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class]);
 
 // Get latest ticket (for guest)
 Route::middleware(['web'])->get('/tickets/latest', function() {
-    $ticket = \App\Models\Ticket::latest()->first();
+    $myTickets = session()->get('my_tickets', []);
+    $guestTicketId = session('guest_ticket_id');
+    $ticketIds = array_filter(array_unique(array_merge($myTickets, [$guestTicketId])));
+    
+    if (empty($ticketIds) && !auth()->check()) {
+        return response()->json(null);
+    }
+    
+    $query = \App\Models\Ticket::latest();
+    
+    if (auth()->check()) {
+        if (auth()->user()->role === 'admin') {
+            $ticket = $query->first();
+            return response()->json($ticket);
+        } elseif (auth()->user()->role === 'staff') {
+            $ticket = $query->where('staff_id', auth()->id())->first();
+            return response()->json($ticket);
+        }
+    }
+    
+    $ticket = $query->whereIn('id', $ticketIds)->first();
     return response()->json($ticket);
 })->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class]);
 
@@ -218,23 +261,30 @@ Route::middleware(['web'])->get('/articles/active-ticket', function(Request $req
     if ($ticketId) {
         $ticket = \App\Models\Ticket::find($ticketId);
         if ($ticket && (in_array($ticket->status, ['open', 'assigned', 'progress']) || ($ticket->status === 'waiting' && !$ticket->staff_id))) {
+            // Karena user menyertakan ticket_id unguessable (ULID) yang valid, asumsikan kepemilikan dan perbarui session
+            $myTickets = session()->get('my_tickets', []);
+            if (!in_array($ticket->id, $myTickets)) {
+                session()->push('my_tickets', $ticket->id);
+            }
+            session(['guest_ticket_id' => $ticket->id, 'guest_email' => $ticket->email]);
+            session()->save();
             return response()->json(['ticket_id' => $ticket->id, 'status' => $ticket->status]);
         }
     }
 
     // Try to get from session
-    $ticketId = session('guest_ticket_id');
-    if ($ticketId) {
-        $ticket = \App\Models\Ticket::find($ticketId);
+    $sessionTicketId = session('guest_ticket_id');
+    if ($sessionTicketId) {
+        $ticket = \App\Models\Ticket::find($sessionTicketId);
         if ($ticket && (in_array($ticket->status, ['open', 'assigned', 'progress']) || ($ticket->status === 'waiting' && !$ticket->staff_id))) {
             return response()->json(['ticket_id' => $ticket->id, 'status' => $ticket->status]);
         }
     }
 
-    // Check if there's a ticket created in this session by email
-    $email = $request->query('email') ?? session('guest_email');
-    if ($email) {
-        $ticket = \App\Models\Ticket::where('email', $email)
+    // Check if there's an active ticket matching the guest email ALREADY IN SESSION
+    $sessionEmail = session('guest_email');
+    if ($sessionEmail) {
+        $ticket = \App\Models\Ticket::where('email', $sessionEmail)
             ->where(function ($query) {
                 $query->whereIn('status', ['open', 'assigned', 'progress'])
                       ->orWhere(function ($query) {
@@ -246,8 +296,8 @@ Route::middleware(['web'])->get('/articles/active-ticket', function(Request $req
             ->first();
 
         if ($ticket) {
-            // Store in session
-            session(['guest_ticket_id' => $ticket->id, 'guest_email' => $email]);
+            session(['guest_ticket_id' => $ticket->id]);
+            session()->save();
             return response()->json(['ticket_id' => $ticket->id, 'status' => $ticket->status]);
         }
     }
@@ -255,11 +305,22 @@ Route::middleware(['web'])->get('/articles/active-ticket', function(Request $req
     return response()->json(['ticket_id' => null, 'status' => null]);
 })->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class]);
 
-// Cancel ticket (auto-cancel after 20 minutes)
+// Cancel/close ticket
 Route::middleware(['web'])->post('/tickets/{ticketId}/close', function($ticketId) {
     $ticket = \App\Models\Ticket::findOrFail($ticketId);
 
-    // Only allow auto-close for livechat tickets that are open or waiting
+    // Otorisasi kepemilikan/staf/admin
+    $myTickets = session()->get('my_tickets', []);
+    $guestTicketId = session('guest_ticket_id');
+    $isStaff = auth()->check() && auth()->user()->role === 'staff';
+    $isAdmin = auth()->check() && auth()->user()->role === 'admin';
+    $isOwner = in_array($ticket->id, $myTickets) || $guestTicketId == $ticket->id;
+
+    if (!$isStaff && !$isAdmin && !$isOwner) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
+    // Only allow auto-close/manual-close for livechat tickets that are open or waiting
     if ($ticket->type === 'livechat' && in_array($ticket->status, ['open', 'waiting'])) {
         $ticket->update([
             'status' => 'closed',
@@ -269,9 +330,9 @@ Route::middleware(['web'])->post('/tickets/{ticketId}/close', function($ticketId
         // Create a log entry
         \App\Models\TicketLog::create([
             'ticket_id' => $ticket->id,
-            'user_id' => null, // System action
+            'user_id' => auth()->id() ?: null,
             'action' => 'auto_closed',
-            'description' => 'Tiket ditutup otomatis karena tidak ada staff tersedia dalam 20 menit. Guest diminta mengisi ulang formulir.'
+            'description' => 'Tiket ditutup oleh user/sistem.'
         ]);
 
         broadcast(new \App\Events\TicketClosed($ticket));

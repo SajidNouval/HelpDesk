@@ -9,7 +9,7 @@
  * @param {boolean} isLoading - Whether to show loading state
  * @param {string} [loadingText] - Optional loading text to display
  */
-export function setButtonLoading(button, isLoading, loadingText = 'Loading...') {
+export function setButtonLoading(button, isLoading, loadingText = 'Memproses...') {
     if (!(button instanceof HTMLElement)) {
         return;
     }
@@ -20,23 +20,44 @@ export function setButtonLoading(button, isLoading, loadingText = 'Loading...') 
     const submitText = button.querySelector('.submit-text');
     const submitLoading = button.querySelector('.submit-loading');
 
-    if (submitText instanceof HTMLElement) {
-        submitText.classList.toggle('hidden', isLoading);
-        if (!isLoading) {
-            // Restore original text if loadingText was provided
-            if (button.dataset.originalText && !submitText.dataset.originalText) {
-                submitText.dataset.originalText = button.dataset.originalText;
+    if (submitText instanceof HTMLElement || submitLoading instanceof HTMLElement) {
+        if (submitText instanceof HTMLElement) {
+            submitText.classList.toggle('hidden', isLoading);
+            if (!isLoading) {
+                if (button.dataset.originalText && !submitText.dataset.originalText) {
+                    submitText.dataset.originalText = button.dataset.originalText;
+                }
             }
         }
-    }
 
-    if (submitLoading instanceof HTMLElement) {
-        submitLoading.classList.toggle('hidden', !isLoading);
-    }
+        if (submitLoading instanceof HTMLElement) {
+            submitLoading.classList.toggle('hidden', !isLoading);
+        }
 
-    // Store original text on first loading
-    if (isLoading && submitText && !button.dataset.originalText) {
-        button.dataset.originalText = submitText.textContent;
+        if (isLoading && submitText && !button.dataset.originalText) {
+            button.dataset.originalText = submitText.textContent;
+        }
+    } else {
+        // Dynamic replacement for buttons without predefined sub-elements
+        if (isLoading) {
+            button.classList.add('cursor-not-allowed', 'opacity-70');
+            if (!button.dataset.originalHtml) {
+                button.dataset.originalHtml = button.innerHTML;
+            }
+            button.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-current inline" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>${loadingText}</span>
+            `;
+        } else {
+            button.classList.remove('cursor-not-allowed', 'opacity-70');
+            if (button.dataset.originalHtml) {
+                button.innerHTML = button.dataset.originalHtml;
+                delete button.dataset.originalHtml;
+            }
+        }
     }
 }
 

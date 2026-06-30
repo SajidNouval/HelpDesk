@@ -45,7 +45,7 @@ return new class extends Migration
             $table->string('email', 50);
 
             $table->string('subject', 200);
-            $table->text('message');
+            $table->string('message', 2000);
 
             $table->foreignUlid('category_id')
                 ->constrained()

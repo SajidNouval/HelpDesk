@@ -194,6 +194,19 @@ class UserController extends Controller
             }
             if (!empty($data)) {
                 StaffProfile::insert($data);
+
+                // Cek antrean tiket waiting untuk kategori yang baru ditugaskan ke staf ini
+                $assignmentService = resolve(\App\Services\TicketAssignmentService::class);
+                $newProfiles = StaffProfile::where('user_id', $user->id)
+                    ->whereIn('category_id', $validated['categories'])
+                    ->get();
+                    
+                foreach ($newProfiles as $profile) {
+                    $profile->refresh();
+                    if (!$profile->is_busy) {
+                        $assignmentService->assignNextWaiting($profile);
+                    }
+                }
             }
         }
 
@@ -290,6 +303,19 @@ class UserController extends Controller
                 }
                 if (!empty($data)) {
                     StaffProfile::insert($data);
+
+                    // Cek antrean tiket waiting untuk kategori yang baru ditugaskan ke staf ini
+                    $assignmentService = resolve(\App\Services\TicketAssignmentService::class);
+                    $newProfiles = StaffProfile::where('user_id', $user->id)
+                        ->whereIn('category_id', $validated['categories'])
+                        ->get();
+                        
+                    foreach ($newProfiles as $profile) {
+                        $profile->refresh();
+                        if (!$profile->is_busy) {
+                            $assignmentService->assignNextWaiting($profile);
+                        }
+                    }
                 }
             }
         }
