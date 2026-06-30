@@ -18,7 +18,7 @@
         <div class="text-sm text-gray-500 mt-2 flex items-center flex-wrap gap-x-1">
             <a href="{{ url('/') }}" class="text-red-500 hover:text-red-600 font-medium">Beranda</a>
             <span class="text-gray-400">/</span>
-            <a href="{{ route('articles.index') }}" class="text-red-500 hover:text-red-600 font-medium">Artikel Bantuan</a>
+            <a href="{{ request('return_url', route('articles.index')) }}" class="text-red-500 hover:text-red-600 font-medium">Artikel Bantuan</a>
             <span class="text-gray-400">/</span>
             <span class="text-gray-700 truncate max-w-xs">{{ $article->title }}</span>
         </div>
@@ -153,7 +153,9 @@
                             <input type="hidden" name="is_helpful" value="1">
                             <button type="submit"
                                 class="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-green-200 bg-green-50 text-green-700 text-sm font-medium hover:bg-green-100 hover:border-green-300 transition">
-                                <span>👍</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"></path>
+                                </svg>
                                 Ya, Membantu
                             </button>
                         </form>
@@ -162,7 +164,9 @@
                             <input type="hidden" name="is_helpful" value="0">
                             <button type="submit"
                                 class="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 hover:border-red-300 transition">
-                                <span>👎</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 002 2.3zm7-13h3a2 2 0 012 2v7a2 2 0 01-2 2h-3"></path>
+                                </svg>
                                 Tidak Membantu
                             </button>
                         </form>
@@ -170,13 +174,13 @@
                 </div>
             @else
                 <div class="mt-10 pt-8 border-t border-gray-200">
-                    <p class="text-sm text-gray-500">✅ Terima kasih atas masukan Anda!</p>
+                    <p class="text-sm text-gray-500">Terima kasih atas masukan Anda!</p>
                 </div>
             @endif
 
             <!-- Back Link -->
             <div class="mt-10 pt-6 border-t border-gray-100">
-                <a href="{{ request('category') ? route('articles.index', ['category' => request('category')]) : route('articles.index') }}"
+                <a href="{{ request('return_url', route('articles.index')) }}"
                    class="inline-flex items-center gap-1.5 text-sm text-red-600 hover:text-red-700 font-medium transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>

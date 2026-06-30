@@ -33,7 +33,7 @@ class CheckTicketAccess
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $ticket = \App\Models\Ticket::find($request->id);
+        $ticket = \App\Models\Ticket::select(['id', 'staff_id'])->find($request->id);
 
         if (!$ticket) {
             abort(404);

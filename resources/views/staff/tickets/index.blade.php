@@ -293,7 +293,7 @@
                                                 <div class="truncate text-sm text-gray-600">{{ $ticket->created_at->format('d M Y') }}</div>
                                             </td>
                                             <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                                                <a href="{{ route('staff.tickets.show', $ticket) }}" class="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:border-red-500 hover:text-red-600">Lihat</a>
+                                                <a href="{{ route('staff.tickets.show', [$ticket, 'return_url' => request()->fullUrl()]) }}" class="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:border-red-500 hover:text-red-600">Lihat</a>
                                             </td>
                                         </tr>
                                     @endforeach

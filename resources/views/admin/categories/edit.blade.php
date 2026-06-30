@@ -94,6 +94,7 @@
                         <form id="category-form" action="{{ route('admin.categories.update', $category) }}" method="POST" class="space-y-5">
                             @csrf
                             @method('PUT')
+                            <input type="hidden" name="return_url" value="{{ request('return_url', old('return_url', url()->previous())) }}">
 
                             <div>
                                 <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Nama Kategori <span class="text-red-500">*</span></label>
@@ -110,7 +111,7 @@
                             </div>
 
                             <div class="pt-4 border-t border-gray-200 flex justify-end gap-3">
-                                <a href="{{ route('admin.categories.index') }}">
+                                <a href="{{ request('return_url', route('admin.categories.index')) }}">
                                     <button type="button" class="h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
                                         Batal
                                     </button>

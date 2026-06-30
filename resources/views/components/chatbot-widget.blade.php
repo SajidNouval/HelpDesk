@@ -62,7 +62,7 @@
                 </div>
                 <div class="max-w-[75%]">
                     <div class="bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-bl-sm px-3.5 py-2.5 shadow-sm" data-chatbot-greeting-message>
-                        <p class="text-sm font-semibold">Halo! 👋</p>
+                        <p class="text-sm font-semibold">Halo!</p>
                         <p class="text-sm mt-0.5 text-gray-600">Ada yang bisa saya bantu?</p>
                     </div>
                     <p class="text-[10px] text-gray-400 mt-1 ml-1">Bot</p>
@@ -445,6 +445,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let activeLiveChatTicketId = null;
     let activeLiveChatEmail    = null;
     let chatMode = 'chatbot'; // 'chatbot' | 'waiting_staff' | 'staff_connected'
+    let statusPollingInterval = null;
 
     /* ------------------------------------------------------------------ */
     /* HELPER – current timestamp string                                   */
@@ -498,7 +499,7 @@ document.addEventListener('DOMContentLoaded', function() {
             header.classList.add('mode-live');
             const name = staffName || localStorage.getItem('guest_livechat_staff_name') || 'Staff';
             titleEl.textContent  = name;
-            statusEl.textContent = '🟢 Online';
+            statusEl.textContent = 'Online';
             statusEl.className   = 'text-xs text-green-200 font-semibold';
             dotEl.className      = 'w-1.5 h-1.5 rounded-full bg-green-300';
             // Show initials in avatar
@@ -625,11 +626,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span class="typing-dot"></span>
                     <span class="typing-dot"></span>
                 </div>
-                <p>Sedang mencari staff yang tersedia...</p>
-                <p class="text-[10px] text-amber-700/70 mt-0.5">Mohon jangan menutup halaman ini</p>
+                <p id="cb-queue-text">Sedang mencari staff yang tersedia...</p>
+                <p id="cb-queue-est" class="text-[10px] text-amber-700/70 mt-0.5">Mohon jangan menutup halaman ini</p>
             </div>`;
         messagesContainer.appendChild(row);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function updateQueuePositionUI(position, estimatedMinutes) {
+        const textEl = document.getElementById('cb-queue-text');
+        const estEl = document.getElementById('cb-queue-est');
+        if (textEl) {
+            textEl.innerHTML = `Anda berada di antrean nomor <span class="font-bold text-red-600">#${position}</span>`;
+        }
+        if (estEl) {
+            estEl.textContent = `Estimasi waktu tunggu: ${estimatedMinutes} menit`;
+        }
     }
 
     function removeWaitingMessage() {
@@ -664,7 +676,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Label
         const label = document.createElement('p');
         label.className = 'text-[10px] text-gray-500 font-semibold mb-1 ml-0.5';
-        label.textContent = '📚 Artikel Terkait';
+        label.textContent = 'Artikel Terkait';
         wrapper.appendChild(label);
 
         articles.forEach(article => {
@@ -798,10 +810,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function getGreetingResponse() {
         const h = new Date().getHours();
-        if (h < 11) return 'Selamat pagi! 👋 Ada yang bisa saya bantu?';
-        if (h < 15) return 'Selamat siang! 👋 Silakan tanyakan sesuatu.';
-        if (h < 18) return 'Selamat sore! 👋 Ada yang bisa saya bantu?';
-        return 'Selamat malam! 👋 Silakan tanyakan sesuatu.';
+        if (h < 11) return 'Selamat pagi! Ada yang bisa saya bantu?';
+        if (h < 15) return 'Selamat siang! Silakan tanyakan sesuatu.';
+        if (h < 18) return 'Selamat sore! Ada yang bisa saya bantu?';
+        return 'Selamat malam! Silakan tanyakan sesuatu.';
     }
 
     function resetToGreeting() {
@@ -912,7 +924,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             const result = await window.safeJson(response) || {};
             if (result.success) {
-                addMessage('✅ ' + result.message, 'bot');
+                addMessage(result.message, 'bot');
                 formContainer.classList.add('hidden');
                 ticketForm.reset();
                 setTimeout(() => { widget.classList.remove('show'); toggle.classList.remove('hide'); }, 2000);
@@ -1041,7 +1053,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         clarificationActive = true;
-        clarificationQuestion.textContent = clarification.question || 'Bisa lebih spesifik? 😊';
+        clarificationQuestion.textContent = clarification.question || 'Bisa lebih spesifik?';
         clarificationSuggestions.innerHTML = '';
         const suggestions = clarification.suggestions || [];
         suggestions.forEach(suggestion => {
@@ -1063,7 +1075,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showClarification(suggestions) {
-        clarificationQuestion.textContent = 'Bisa lebih spesifik? 😊';
+        clarificationQuestion.textContent = 'Bisa lebih spesifik?';
         clarificationSuggestions.innerHTML = '';
         suggestions.forEach(suggestion => {
             const chip = document.createElement('button');
@@ -1238,7 +1250,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const staffName = localStorage.getItem('guest_livechat_staff_name') || 'Staf';
                 // System separator: staff connected
-                addSystemMessage(`🟢 ${staffName} telah bergabung`);
+                addSystemMessage(`${staffName} telah bergabung`);
 
                 messages.forEach(msg => {
                     addLiveChatMessage(msg.sender_name, msg.message, msg.sender_type, msg.created_at);
@@ -1252,24 +1264,74 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /* ------------------------------------------------------------------ */
-    /* CHECK TICKET STATUS (staff_connected mode)                         */
+    /* POLLING STATUS & INACTIVITY TIMEOUTS                               */
     /* ------------------------------------------------------------------ */
-    async function checkStaffConnectedTicketStatus() {
-        if (!activeLiveChatTicketId) return;
-        try {
-            const response = await fetch(`/api/tickets/${activeLiveChatTicketId}/status`, {
-                headers: { 'Accept': 'application/json' }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                if (['closed', 'completed'].includes(data.status)) {
-                    cleanupLiveChatSession();
-                    addSystemMessage('🔴 Sesi live chat telah diakhiri');
-                }
+    function startStatusPolling() {
+        if (statusPollingInterval) clearInterval(statusPollingInterval);
+        
+        window.guestChatWarningDisplayed = false;
+
+        statusPollingInterval = setInterval(async () => {
+            if (!activeLiveChatTicketId) {
+                clearInterval(statusPollingInterval);
+                return;
             }
-        } catch (error) {
-            console.error('Error checking staff connected ticket status:', error);
-        }
+            try {
+                const response = await fetch(`/api/tickets/${activeLiveChatTicketId}/status`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (chatMode === 'waiting_staff') {
+                        if (data.status === 'assigned' || data.status === 'progress') {
+                            clearInterval(statusPollingInterval);
+                            connectToStaff(data.staff_name);
+                        } else if (['closed', 'completed'].includes(data.status)) {
+                            clearInterval(statusPollingInterval);
+                            showWaitingError(data.reason || 'Sesi live chat ditutup otomatis karena tidak aktif.');
+                        } else if (data.status === 'waiting') {
+                            updateQueuePositionUI(data.queue_position, data.estimated_waiting_minutes);
+                            
+                            // Check for warning at 17 mins in queue
+                            if (data.warning) {
+                                if (!window.guestChatWarningDisplayed) {
+                                    addSystemMessage(`${data.warning_message}`);
+                                    window.guestChatWarningDisplayed = true;
+                                }
+                            } else {
+                                window.guestChatWarningDisplayed = false;
+                            }
+                        }
+                    } else if (chatMode === 'staff_connected') {
+                        // Handle warning message if guest is inactive in progress chat
+                        if (data.warning) {
+                            if (!window.guestChatWarningDisplayed) {
+                                addSystemMessage(`${data.warning_message}`);
+                                window.guestChatWarningDisplayed = true;
+                            }
+                        } else {
+                            window.guestChatWarningDisplayed = false;
+                        }
+
+                        if (['closed', 'completed'].includes(data.status)) {
+                            clearInterval(statusPollingInterval);
+                            showTicketClosedOverlay();
+                        } else if (data.status === 'waiting') {
+                            clearInterval(statusPollingInterval);
+                            cleanupLiveChatSession();
+                            addSystemMessage('Sesi live chat ditangguhkan karena Anda tidak aktif.');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error polling status in widget:', error);
+            }
+        }, 5000);
+    }
+
+    async function checkStaffConnectedTicketStatus() {
+        // Obsolete: logic is now integrated into startStatusPolling
     }
 
     /* ------------------------------------------------------------------ */
@@ -1290,16 +1352,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear waiting message and show system separator
         removeWaitingMessage();
         messagesContainer.innerHTML = '';
-        addSystemMessage(`🟢 ${staffName} telah bergabung`);
+        addSystemMessage(`${staffName} telah bergabung`);
 
         initRealtimeAndListen(activeLiveChatTicketId);
         loadStaffMessages();
+        
+        startStatusPolling();
     }
 
     function showWaitingError(message) {
         removeWaitingMessage();
         messagesContainer.innerHTML = '';
-        addSystemMessage('🔴 Gagal Terhubung');
+        addSystemMessage('Gagal Terhubung');
         addMessage(message, 'bot');
         cleanupLiveChatSession();
     }
@@ -1328,6 +1392,8 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.removeItem('guest_livechat_mode');
         localStorage.removeItem('guest_livechat_staff_name');
 
+        if (statusPollingInterval) clearInterval(statusPollingInterval);
+
         if (window.Echo && storedTicketId) window.Echo.leave(`ticket.${storedTicketId}`);
 
         syncChatUiState('chatbot');
@@ -1348,6 +1414,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 .listen('.MessageSent', (e) => {
                     console.log('Chatbot widget received WebSocket message:', e);
                     loadStaffMessages();
+                })
+                .listen('.QueuePositionUpdated', (e) => {
+                    console.log('Chatbot widget received QueuePositionUpdated event:', e);
+                    if (chatMode === 'waiting_staff') updateQueuePositionUI(e.position, e.estimated_waiting_minutes);
                 })
                 .listen('.StaffConnected', (e) => {
                     console.log('Chatbot widget received StaffConnected event:', e);
@@ -1370,8 +1440,8 @@ document.addEventListener('DOMContentLoaded', function() {
     /* ------------------------------------------------------------------ */
     /* GLOBAL: startLiveChatMode  (called from other JS contexts)         */
     /* ------------------------------------------------------------------ */
-    window.startLiveChatMode = function(ticketId, ticketStatus, email) {
-        console.log('[CHATBOT] window.startLiveChatMode called', { ticketId, ticketStatus, email });
+    window.startLiveChatMode = function(ticketId, ticketStatus, email, queuePosition, estimatedWaitingMinutes) {
+        console.log('[CHATBOT] window.startLiveChatMode called', { ticketId, ticketStatus, email, queuePosition, estimatedWaitingMinutes });
 
         activeLiveChatTicketId = ticketId;
         activeLiveChatEmail    = email;
@@ -1405,10 +1475,17 @@ document.addEventListener('DOMContentLoaded', function() {
             syncChatUiState('waiting_staff');
             // Show modern waiting indicator in chat flow
             addWaitingMessage();
+            if (queuePosition) {
+                updateQueuePositionUI(queuePosition, estimatedWaitingMinutes);
+            }
         }
 
         initRealtimeAndListen(ticketId);
-        if (ticketStatus === 'progress') connectToStaff();
+        if (ticketStatus === 'progress') {
+            connectToStaff();
+        } else {
+            startStatusPolling();
+        }
     };
 
     /* ------------------------------------------------------------------ */
@@ -1470,7 +1547,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 syncChatUiState('waiting_staff');
                 messagesContainer.innerHTML = '';
                 addWaitingMessage();
+                if (data.queue_position) {
+                    updateQueuePositionUI(data.queue_position, data.estimated_waiting_minutes);
+                }
                 initRealtimeAndListen(activeLiveChatTicketId);
+                startStatusPolling();
             }
         } catch (error) {
             // Fetch gagal (network error, server down) - cleanup dan JANGAN buka widget

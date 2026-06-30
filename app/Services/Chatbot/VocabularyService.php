@@ -129,6 +129,11 @@ class VocabularyService
     // =========================================================================
     // Kosakata dinamis yang diekstrak dari artikel
     private ?array $vocabulary = null;
+    
+    // OPTIMASI: Hash-map flipped dari $vocabulary untuk pencarian O(1).
+    // Menggunakan isset($this->vocabularyLookup[$word]) jauh lebih cepat
+    // daripada in_array($word, $this->vocabulary) yang O(N).
+    private array $vocabularyLookup = [];
 
     /**
      * =========================================================================
@@ -265,6 +270,8 @@ class VocabularyService
         $cached = Cache::get(self::CACHE_KEY);
         if (is_array($cached) && !empty($cached)) {
             $this->vocabulary = $cached;
+            // OPTIMASI: Bangun hash-map lookup saat memuat dari cache
+            $this->vocabularyLookup = array_flip($this->vocabulary);
             Log::debug('Vocabulary loaded from cache', ['word_count' => count($cached)]);
             return $this->vocabulary;
         }
@@ -348,6 +355,8 @@ class VocabularyService
         Cache::put(self::CACHE_KEY, $vocabulary, self::CACHE_TTL);
         
         $this->vocabulary = $vocabulary;
+        // OPTIMASI: Bangun hash-map lookup setelah rebuild
+        $this->vocabularyLookup = array_flip($this->vocabulary);
         
         if (empty($vocabulary)) {
             Log::warning('Vocabulary rebuilt but still empty - no articles or categories available');
@@ -489,7 +498,8 @@ class VocabularyService
             }
             
             // Cek apakah token yang dikompresi sudah ada di kosakata
-            if (in_array($compressedToken, $this->vocabulary)) {
+            // OPTIMASI: isset pada hash-map O(1) vs in_array O(N)
+            if (isset($this->vocabularyLookup[$compressedToken])) {
                 if ($compressedToken !== $lowerToken) {
                     $corrections[] = [
                         'original' => $lowerToken,
@@ -731,6 +741,8 @@ class VocabularyService
     {
         Cache::forget(self::CACHE_KEY);
         $this->vocabulary = null;
+        // OPTIMASI: Reset hash-map lookup bersama dengan vocabulary
+        $this->vocabularyLookup = [];
         
         Log::info('Vocabulary cache cleared');
     }
@@ -793,13 +805,10 @@ class VocabularyService
         // Gunakan loadVocabulary() yang tidak pernah mengembalikan null
         $this->loadVocabulary();
         
-        // KEAMANAN: Pastikan kosakata array
-        $vocabulary = is_array($this->vocabulary) ? $this->vocabulary : [];
-        
         $lowerWord = mb_strtolower($word);
         
-        // Cek apakah sudah ada di kosakata (aman - kosakata dijamin array)
-        if (in_array($lowerWord, $vocabulary)) {
+        // OPTIMASI: isset pada hash-map O(1) vs in_array O(N)
+        if (isset($this->vocabularyLookup[$lowerWord])) {
             return false;
         }
         

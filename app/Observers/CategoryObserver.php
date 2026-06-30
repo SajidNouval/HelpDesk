@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\Category;
 use App\Services\Chatbot\DomainDetectionService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * =========================================================================
@@ -66,6 +67,10 @@ class CategoryObserver
     private function safeClearDomainCache(string $event, Category $category): void
     {
         try {
+            Cache::forget('categories_list_simple');
+            Cache::forget('articles_cache_version');
+            Cache::forget('admin_dashboard_version');
+
             $this->domainDetector->clearCache();
 
             if (config('app.debug', false)) {

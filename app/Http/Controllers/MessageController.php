@@ -75,7 +75,7 @@ class MessageController extends Controller
             'message' => 'required|string',
         ]);
 
-        $ticket = Ticket::findOrFail($request->ticket_id);
+        $ticket = Ticket::select(['id', 'email', 'status'])->findOrFail($request->ticket_id);
 
         // Cek otorisasi pengguna
         $myTickets = session()->get('my_tickets', []);
@@ -121,7 +121,7 @@ class MessageController extends Controller
         ]);
 
         // Load relasi sender dan tambahkan sender name
-        $message->load('sender');
+        $message->load('sender:id,name');
         if ($senderType === 'staff') {
             $message->sender_name = $message->sender?->name ?? 'Staff';
         } else {
@@ -171,7 +171,7 @@ class MessageController extends Controller
      */
     public function index(Request $request, $ticketId)
     {
-        $ticket = Ticket::findOrFail($ticketId);
+        $ticket = Ticket::select(['id', 'email', 'status'])->findOrFail($ticketId);
         $myTickets = session()->get('my_tickets', []);
         $guestTicketId = session('guest_ticket_id');
 
@@ -191,7 +191,9 @@ class MessageController extends Controller
             return response()->json(['error' => 'Tiket sudah ditutup.'], 403);
         }
 
-        $messages = Message::with('sender')->where('ticket_id', $ticketId)
+        $messages = Message::select(['id', 'ticket_id', 'sender_type', 'sender_id', 'message', 'created_at'])
+            ->with('sender:id,name')
+            ->where('ticket_id', $ticketId)
             ->orderBy('created_at', 'asc')
             ->get();
 

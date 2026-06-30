@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * =========================================================================
@@ -66,7 +67,8 @@ class ArticleController extends Controller
         $sort = request('sort', 'created_desc');
         $status = request('status');
 
-        $articlesQuery = Article::with('category', 'staff')
+        $articlesQuery = Article::select(['id', 'category_id', 'staff_id', 'title', 'slug', 'views', 'publish_status', 'created_at'])
+            ->with(['category:id,name'])
             ->where('staff_id', auth()->id())
             ->withCount([
                 'feedback as helpful_count' => function ($query) {
@@ -114,10 +116,19 @@ class ArticleController extends Controller
 
         $articles = $articlesQuery->paginate(10)->withQueryString();
 
-        $totalArticles = Article::where('staff_id', auth()->id())->count();
-        $pendingArticles = Article::where('staff_id', auth()->id())->where('publish_status', 'pending')->count();
-        $approvedArticles = Article::where('staff_id', auth()->id())->where('publish_status', 'approved')->count();
-        $rejectedArticles = Article::where('staff_id', auth()->id())->where('publish_status', 'rejected')->count();
+        $stats = Article::where('staff_id', auth()->id())
+            ->selectRaw("
+                count(*) as total,
+                count(case when publish_status = 'pending' then 1 end) as pending,
+                count(case when publish_status = 'approved' then 1 end) as approved,
+                count(case when publish_status = 'rejected' then 1 end) as rejected
+            ")
+            ->first();
+
+        $totalArticles = $stats->total;
+        $pendingArticles = $stats->pending;
+        $approvedArticles = $stats->approved;
+        $rejectedArticles = $stats->rejected;
 
         return view('staff.articles.index', compact(
             'articles',
@@ -151,7 +162,9 @@ class ArticleController extends Controller
      */
     public function create()
     {
-        $categories = Category::all();
+        $categories = Cache::rememberForever('categories_list_simple', function () {
+            return Category::select(['id', 'name'])->get();
+        });
         return view('staff.articles.create', compact('categories'));
     }
 
@@ -200,7 +213,7 @@ class ArticleController extends Controller
             'publish_status' => 'pending',
         ]);
 
-        return redirect()->route('staff.articles.index')->with('success', 'Artikel berhasil dibuat dan menunggu persetujuan admin.');
+        return $this->safeRedirect('staff.articles.index')->with('success', 'Artikel berhasil dibuat dan menunggu persetujuan admin.');
     }
 
     /**
@@ -258,7 +271,9 @@ class ArticleController extends Controller
     {
         $this->authorizeArticleOwner($article);
 
-        $categories = Category::all();
+        $categories = Cache::rememberForever('categories_list_simple', function () {
+            return Category::select(['id', 'name'])->get();
+        });
         return view('staff.articles.edit', compact('article', 'categories'));
     }
 
@@ -317,7 +332,7 @@ class ArticleController extends Controller
             ? 'Artikel berhasil diperbarui dan langsung dipublikasikan.' 
             : 'Artikel berhasil diperbarui dan menunggu persetujuan admin.';
 
-        return redirect()->route('staff.articles.show', $article)->with('success', $message);
+        return $this->safeRedirect('staff.articles.show', ['article' => $article->id])->with('success', $message);
     }
 
     /**
@@ -344,7 +359,7 @@ class ArticleController extends Controller
         $this->authorizeArticleOwner($article);
 
         $article->delete();
-        return redirect()->route('staff.articles.index')->with('success', 'Artikel berhasil dihapus.');
+        return $this->safeRedirect('staff.articles.index')->with('success', 'Artikel berhasil dihapus.');
     }
 
     /**
@@ -372,7 +387,7 @@ class ArticleController extends Controller
 
         $article->update(['views' => 0]);
 
-        return redirect()->route('staff.articles.show', $article)->with('success', 'View artikel berhasil di-reset.');
+        return $this->safeRedirect('staff.articles.show', ['article' => $article->id])->with('success', 'View artikel berhasil di-reset.');
     }
 
     /**
@@ -400,7 +415,7 @@ class ArticleController extends Controller
 
         $article->feedback()->delete();
 
-        return redirect()->route('staff.articles.show', $article)->with('success', 'Review artikel berhasil di-reset.');
+        return $this->safeRedirect('staff.articles.show', ['article' => $article->id])->with('success', 'Review artikel berhasil di-reset.');
     }
 
     /**
@@ -455,18 +470,31 @@ class ArticleController extends Controller
     public function publicIndex(Request $request)
     {
         $selectedCategoryId = $request->query('category');
+        $page = $request->query('page', 1);
 
-        $articles = Article::with('category', 'staff')
-            ->where('is_published', true)
-            ->where('is_hidden', false)
-            ->where('publish_status', 'approved')
-            ->when($selectedCategoryId, function ($query, $selectedCategoryId) {
-                return $query->where('category_id', $selectedCategoryId);
-            })
-            ->paginate(10)
-            ->withQueryString();
+        $version = Cache::rememberForever('articles_cache_version', fn() => time());
+        $cacheKey = "articles_public_list:v{$version}:cat_" . ($selectedCategoryId ?? 'all') . ":page_" . $page;
 
-        $categories = Category::all();
+        $articles = Cache::remember($cacheKey, 3600, function () use ($selectedCategoryId) {
+            return Article::select(['id', 'category_id', 'staff_id', 'title', 'slug', 'content', 'views', 'created_at'])
+                ->with([
+                    'category:id,name',
+                    'staff:id,name'
+                ])
+                ->where('is_published', true)
+                ->where('is_hidden', false)
+                ->where('publish_status', 'approved')
+                ->when($selectedCategoryId, function ($query, $selectedCategoryId) {
+                    return $query->where('category_id', $selectedCategoryId);
+                })
+                ->paginate(10)
+                ->withQueryString();
+        });
+
+        $categories = Cache::rememberForever('categories_list_simple', function () {
+            return Category::select(['id', 'name'])->get();
+        });
+
         $liveServiceEnabled = Setting::bool('live_service_enabled', true);
 
         return view('articles.index', compact('articles', 'categories', 'selectedCategoryId', 'liveServiceEnabled'));
@@ -500,20 +528,27 @@ class ArticleController extends Controller
      */
     public function publicShow($slug)
     {
-        $article = Article::with('category', 'staff')
-            ->where('slug', $slug)
-            ->where('is_published', true)
-            ->where('is_hidden', false)
-            ->where('publish_status', 'approved')
-            ->firstOrFail();
+        $version = Cache::rememberForever('articles_cache_version', fn() => time());
+        $article = Cache::remember("article_detail:v{$version}:slug_{$slug}", 3600, function () use ($slug) {
+            return Article::with(['category:id,name', 'staff:id,name'])
+                ->where('slug', $slug)
+                ->where('is_published', true)
+                ->where('is_hidden', false)
+                ->where('publish_status', 'approved')
+                ->firstOrFail();
+        });
 
         $viewedArticles = session()->get('viewed_articles', []);
         if (! in_array($article->id, $viewedArticles, true)) {
-            $article->increment('views');
+            // Gunakan direct query builder untuk increment agar tidak men-trigger model events / observers
+            // yang dapat memicu pembangunan ulang seluruh cache TF-IDF chatbot
+            Article::where('id', $article->id)->increment('views');
             session()->push('viewed_articles', $article->id);
         }
 
-        $categories = Category::all();
+        $categories = Cache::rememberForever('categories_list_simple', function () {
+            return Category::select(['id', 'name'])->get();
+        });
         return view('articles.show', compact('article', 'categories'));
     }
 

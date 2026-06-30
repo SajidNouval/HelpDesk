@@ -186,21 +186,23 @@ class ConversationFlowService
             ->limit(5)
             ->get(['id', 'name', 'description']);
 
+        $categoryIds = $categories->pluck('id')->toArray();
+
         // Ambil artikel paling populer untuk setiap kategori yang dipilih
+        $allArticles = Article::select(['id', 'category_id', 'title', 'slug', 'views'])
+            ->whereIn('category_id', $categoryIds)
+            ->where('is_published', true)
+            ->orderBy('views', 'desc')
+            ->get()
+            ->groupBy('category_id');
+
         $categoryArticles = [];
         foreach ($categories as $category) {
-            // Ambil 3 artikel terpopuler berdasarkan views
-            $articles = Article::where('category_id', $category->id)
-                ->where('is_published', true)
-                ->orderBy('views', 'desc')
-                ->limit(3)
-                ->get(['id', 'title', 'slug']);
-
-            $categoryArticles[$category->id] = $articles;
+            $categoryArticles[$category->id] = $allArticles->get($category->id, collect())->take(3);
         }
 
         return [
-            'greeting'   => "Halo! 👋\nSaya SiMinfo.\nAda masalah apa hari ini?",
+            'greeting'   => "Halo!\nSaya SiMinfo.\nAda masalah apa hari ini?",
             'categories' => $categories->map(fn($cat) => [
                 'id'          => $cat->id,
                 'label'       => $cat->name,
@@ -235,7 +237,7 @@ class ConversationFlowService
     public function getCategorySubtopics(string $categoryId): array
     {
         // Cari kategori berdasarkan ID
-        $category = Category::find($categoryId);
+        $category = Category::select(['id', 'name'])->find($categoryId);
         if (!$category) {
             return ['error' => 'Kategori tidak ditemukan'];
         }
@@ -279,7 +281,7 @@ class ConversationFlowService
 
         return [
             'category' => $category->name,
-            'question' => "{$category->name} kamu sedang bermasalah apa? 😊",
+            'question' => "{$category->name} kamu sedang bermasalah apa?",
             'subtopics' => $subtopics,
         ];
     }
@@ -391,7 +393,7 @@ class ConversationFlowService
                 'is_ambiguous'  => true,
                 'query'         => $query,
                 'clarification' => [
-                    'question'    => 'Bisa lebih spesifik? 😊',
+                    'question'    => 'Bisa lebih spesifik?',
                     'suggestions' => $this->getCategorySuggestions(),
                 ],
             ];
@@ -424,23 +426,23 @@ class ConversationFlowService
     {
         // Peta dari kata ambigu ke pertanyaan klarifikasi yang sesuai
         $categoryMap = [
-            'lemot'     => 'Yang sedang lemot apa ya? 😊',
-            'lambat'    => 'Yang sedang lambat apa ya? 😊',
-            'error'     => 'Error di bagian mana? 😊',
-            'eror'      => 'Error di bagian mana? 😊',
-            'tidak bisa' => 'Tidak bisa apa? 😊',
-            'gak bisa'  => 'Gak bisa apa? 😊',
-            'ga bisa'   => 'Gak bisa apa? 😊',
-            'bermasalah' => 'Bermasalah di bagian mana? 😊',
-            'masalah'   => 'Masalah di bagian mana? 😊',
-            'rusak'     => 'Yang rusak apa? 😊',
-            'mati'      => 'Yang mati apa? 😊',
-            'blank'     => 'Yang blank apa? 😊',
-            'kosong'    => 'Yang kosong apa? 😊',
+            'lemot'     => 'Yang sedang lemot apa ya?',
+            'lambat'    => 'Yang sedang lambat apa ya?',
+            'error'     => 'Error di bagian mana?',
+            'eror'      => 'Error di bagian mana?',
+            'tidak bisa' => 'Tidak bisa apa?',
+            'gak bisa'  => 'Gak bisa apa?',
+            'ga bisa'   => 'Gak bisa apa?',
+            'bermasalah' => 'Bermasalah di bagian mana?',
+            'masalah'   => 'Masalah di bagian mana?',
+            'rusak'     => 'Yang rusak apa?',
+            'mati'      => 'Yang mati apa?',
+            'blank'     => 'Yang blank apa?',
+            'kosong'    => 'Yang kosong apa?',
         ];
 
         // Cari pertanyaan yang paling sesuai berdasarkan kata kunci
-        $question = 'Bisa lebih spesifik? 😊';
+        $question = 'Bisa lebih spesifik?';
         foreach ($categoryMap as $keyword => $q) {
             if (strpos($query, $keyword) !== false) {
                 $question = $q;
@@ -663,7 +665,7 @@ class ConversationFlowService
         // Jika konteks sebelumnya adalah pemilihan kategori, tambahkan nama kategori
         if (isset($context['data']['category_id'])) {
             // Cari nama kategori berdasarkan ID dari konteks percakapan
-            $category = Category::find($context['data']['category_id']);
+            $category = Category::select(['id', 'name'])->find($context['data']['category_id']);
             if ($category) {
                 return "{$category->name} {$query}";
             }
@@ -702,7 +704,7 @@ class ConversationFlowService
     public function getRelatedArticles(int $articleId, int $limit = 3): array
     {
         // Cari artikel sumber berdasarkan ID
-        $article = Article::find($articleId);
+        $article = Article::select(['id', 'category_id'])->with('category:id,name')->find($articleId);
         if (!$article) {
             return [];
         }
@@ -721,7 +723,7 @@ class ConversationFlowService
             'title'         => $art->title,
             'slug'          => $art->slug,
             'excerpt'       => $art->excerpt,
-            'category_name' => $article->category->name,
+            'category_name' => $article->category?->name ?? 'Umum',
         ])->toArray();
     }
 }

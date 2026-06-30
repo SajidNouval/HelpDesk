@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Schema;
  * - subject: Subjek tiket
  * - message: Pesan tiket
  * - category_id: Foreign key ke tabel categories
+ * - type: Tipe tiket (livechat, report)
  * - user_id: Foreign key ke tabel users (nullable)
  * - staff_id: Foreign key ke tabel users untuk staff yang menangani (nullable)
  * - status: Status tiket (open, assigned, progress, waiting, closed, suspended)
@@ -49,6 +50,8 @@ return new class extends Migration
             $table->foreignUlid('category_id')
                 ->constrained()
                 ->cascadeOnDelete();
+
+            $table->enum('type', ['livechat', 'report'])->default('livechat');
 
             // optional jika login
             $table->foreignUlid('user_id')

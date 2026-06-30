@@ -68,7 +68,7 @@ class TicketController extends Controller
      */
     public function create()
     {
-        $categories = Category::all();
+        $categories = Category::select(['id', 'name'])->get();
         $liveServiceEnabled = Setting::bool('live_service_enabled', true);
 
         // Generate simple captcha
@@ -157,6 +157,7 @@ class TicketController extends Controller
                 'subject'     => $request->subject,
                 'message'     => $request->message,
                 'category_id' => $request->category_id,
+                'type'        => 'livechat',
                 'status'      => 'open',
             ]);
 
@@ -276,6 +277,7 @@ class TicketController extends Controller
                 'subject'     => $request->subject,
                 'message'     => $request->message,
                 'category_id' => $request->category_id,
+                'type'        => 'report',
                 'status'      => 'waiting',
             ]);
 
@@ -472,6 +474,7 @@ class TicketController extends Controller
                 'subject' => $otp->subject,
                 'message' => $otp->message,
                 'category_id' => $otp->category_id,
+                'type' => $otp->type,
                 'status' => $otp->type === 'report' ? 'waiting' : 'open',
                 'priority' => 'low',
                 'tracking_token' => Str::random(60),
@@ -494,6 +497,9 @@ class TicketController extends Controller
                         'action'      => 'waiting',
                         'description' => 'Belum ada staff tersedia setelah verifikasi OTP.',
                     ]);
+
+                    // Broadcast queue update
+                    $this->assignmentService::broadcastQueueUpdateForCategory($ticket->category_id);
                 }
             } else {
                 $assignedReportStaff = $this->assignmentService->assignReport($ticket);
@@ -520,6 +526,19 @@ class TicketController extends Controller
         $trackingUrl = route('tickets.track', ['token' => $ticket->tracking_token]);
         Mail::to($ticket->email)->send(new TicketTrackingMail($ticket, $trackingUrl));
 
+        $queuePosition = null;
+        $estimatedWaitingMinutes = null;
+
+        if ($result['ticket_type'] === 'livechat' && $ticket->status === 'waiting') {
+            $queuePosition = Ticket::where('type', 'livechat')
+                ->where('category_id', $ticket->category_id)
+                ->where('status', 'waiting')
+                ->whereNull('staff_id')
+                ->where('created_at', '<', $ticket->created_at)
+                ->count() + 1;
+            $estimatedWaitingMinutes = $queuePosition * 2;
+        }
+
         return response()->json([
             'success'       => true,
             'message'       => 'OTP berhasil diverifikasi. Tiket Anda telah dibuat.',
@@ -527,6 +546,8 @@ class TicketController extends Controller
             'tracking_url'  => $trackingUrl,
             'ticket_status' => $ticket->status,          // 'assigned' | 'waiting'
             'ticket_type'   => $result['ticket_type'],   // 'livechat' | 'report'
+            'queue_position'=> $queuePosition,
+            'estimated_waiting_minutes' => $estimatedWaitingMinutes,
         ]);
     }
 
@@ -545,7 +566,15 @@ class TicketController extends Controller
      */
     public function track(string $token)
     {
-        $ticket = Ticket::with(['category', 'messages', 'logs'])->where('tracking_token', $token)->firstOrFail();
+        $ticket = Ticket::with([
+            'category:id,name',
+            'messages' => function ($q) {
+                $q->select(['id', 'ticket_id', 'sender_type', 'sender_id', 'message', 'created_at']);
+            },
+            'logs' => function ($q) {
+                $q->select(['id', 'ticket_id', 'action', 'description', 'created_at']);
+            }
+        ])->where('tracking_token', $token)->firstOrFail();
 
         return view('guest.tickets.track', compact('ticket'));
     }
@@ -596,7 +625,14 @@ class TicketController extends Controller
      */
     public function index()
     {
-        $tickets = Ticket::with(['category', 'staff'])->latest()->paginate(20);
+        $tickets = Ticket::select(['id', 'name', 'email', 'subject', 'category_id', 'staff_id', 'status', 'priority', 'created_at'])
+            ->with([
+                'category:id,name',
+                'staff:id,name'
+            ])
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
 
         return view('tickets.index', compact('tickets'));
     }
@@ -621,7 +657,16 @@ class TicketController extends Controller
      */
     public function show($id)
     {
-        $ticket = Ticket::with(['category', 'staff', 'messages', 'logs'])->findOrFail($id);
+        $ticket = Ticket::with([
+            'category:id,name',
+            'staff:id,name',
+            'messages' => function ($q) {
+                $q->select(['id', 'ticket_id', 'sender_type', 'sender_id', 'message', 'created_at']);
+            },
+            'logs' => function ($q) {
+                $q->select(['id', 'ticket_id', 'action', 'description', 'created_at']);
+            }
+        ])->findOrFail($id);
 
         return view('tickets.show', compact('ticket'));
     }
@@ -672,7 +717,7 @@ class TicketController extends Controller
                 'closed_at' => now()
             ]);
 
-            $staffProfile = StaffProfile::where('user_id', $ticket->staff_id)->first();
+            $staffProfile = StaffProfile::select(['id', 'user_id', 'is_busy'])->where('user_id', $ticket->staff_id)->first();
 
             if ($staffProfile) {
                 $staffProfile->update([

@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Services\Chatbot\ChatbotRetrievalService;
 use App\Services\Chatbot\TypesenseService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class ArticleObserver
 {
@@ -96,6 +97,9 @@ class ArticleObserver
     private function safeRebuildCache(string $event, Article $article): void
     {
         try {
+            Cache::forget('articles_cache_version');
+            Cache::forget('admin_dashboard_version');
+
             $this->retrievalService->rebuildCache();
             
             if (config('app.debug', false)) {

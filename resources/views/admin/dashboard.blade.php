@@ -125,6 +125,7 @@
                             </div>
                             <form action="{{ route('admin.live-service.toggle') }}" method="POST" class="shrink-0">
                                 @csrf
+                                <input type="hidden" name="return_url" value="{{ request()->fullUrl() }}">
                                 <input type="hidden" name="status" value="{{ $liveServiceEnabled ? 'off' : 'on' }}">
                                 <button type="submit" class="inline-flex items-center justify-center h-9 px-4 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-xs font-medium transition whitespace-nowrap">
                                     {{ $liveServiceEnabled ? 'Nonaktifkan' : 'Aktifkan' }}

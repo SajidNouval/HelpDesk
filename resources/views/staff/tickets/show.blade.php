@@ -4,7 +4,7 @@
     <div class="max-w-7xl mx-auto px-4 py-6">
         <!-- Header with Back Button and Breadcrumb -->
         <div class="mb-6">
-            <a href="{{ route('staff.tickets.index') }}" class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition mb-4">
+            <a href="{{ request('return_url', route('staff.tickets.index')) }}" class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition mb-4">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>
@@ -15,7 +15,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
-                <a href="{{ route('staff.tickets.index') }}" class="hover:text-gray-900">Tiket</a>
+                <a href="{{ request('return_url', route('staff.tickets.index')) }}" class="hover:text-gray-900">Tiket</a>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
@@ -193,6 +193,7 @@
                         @unless ($ticket->status === 'closed')
                             <form id="log-form" action="{{ route('staff.tickets.logs.store', $ticket) }}" method="POST" class="space-y-3 mb-6">
                                 @csrf
+                                <input type="hidden" name="return_url" value="{{ request()->fullUrl() }}">
                                 <div>
                                     <textarea name="description" id="description" rows="4" required class="w-full rounded-lg border border-gray-300 p-4 text-sm text-gray-700 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition resize-none" placeholder="Tambahkan log progress..."></textarea>
                                 </div>
@@ -320,11 +321,13 @@
                                     <form action="{{ route('staff.tickets.start-progress', $ticket) }}" method="POST">
                                         @csrf
                                         @method('PATCH')
+                                        <input type="hidden" name="return_url" value="{{ request('return_url') }}">
                                         <button type="submit" class="w-full h-10 px-5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">Mulai Mengerjakan</button>
                                     </form>
                                     <form action="{{ route('staff.tickets.reject', $ticket) }}" method="POST">
                                         @csrf
                                         @method('PATCH')
+                                        <input type="hidden" name="return_url" value="{{ request('return_url') }}">
                                         <button type="submit" class="w-full h-10 px-4 rounded-lg border border-red-600 text-red-600 hover:bg-red-50 text-sm font-medium transition">Tolak</button>
                                     </form>
                                 </div>
@@ -340,11 +343,12 @@
                                     <h3 class="text-base font-semibold text-gray-900">Tindakan Cepat</h3>
                                 </div>
                                 <div class="space-y-3">
-                                    <button type="button" onclick="confirmCompleteTicket('{{ route('staff.tickets.complete', $ticket) }}', '{{ $ticket->priority }}')" class="w-full h-10 px-5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition">Tandai Selesai</button>
-                                    <button type="button" onclick="confirmRejectTicket('{{ route('staff.tickets.reject', $ticket) }}')" class="w-full h-10 px-4 rounded-lg border border-red-600 text-red-600 hover:bg-red-50 text-sm font-medium transition">Tolak</button>
+                                    <button type="button" onclick="confirmCompleteTicket('{{ route('staff.tickets.complete', [$ticket, 'return_url' => request('return_url')]) }}', '{{ $ticket->priority }}')" class="w-full h-10 px-5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition">Tandai Selesai</button>
+                                    <button type="button" onclick="confirmRejectTicket('{{ route('staff.tickets.reject', [$ticket, 'return_url' => request('return_url')]) }}')" class="w-full h-10 px-4 rounded-lg border border-red-600 text-red-600 hover:bg-red-50 text-sm font-medium transition">Tolak</button>
                                     <form action="{{ route('staff.tickets.update-priority', $ticket) }}" method="POST" class="space-y-3">
                                         @csrf
                                         @method('PATCH')
+                                        <input type="hidden" name="return_url" value="{{ request()->fullUrl() }}">
                                         <label class="text-xs font-semibold text-gray-700 block mb-1">Ubah Priority</label>
                                         <select name="priority" class="w-full h-11 px-4 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
                                             <option value="low" {{ $ticket->priority === 'low' ? 'selected' : '' }}>Low</option>

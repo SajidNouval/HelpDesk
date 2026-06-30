@@ -159,13 +159,13 @@
                         <!-- Action Buttons -->
                         <div class="pt-4 border-t border-gray-200 flex flex-wrap items-center justify-end gap-3">
                             @if($article->publish_status !== 'approved')
-                                <button type="button" onclick="confirmApprove('{{ route('admin.articles.approve', $article) }}')" class="inline-flex items-center h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition gap-2">
+                                <button type="button" onclick="confirmApprove('{{ route('admin.articles.approve', [$article, 'return_url' => request('return_url')]) }}')" class="inline-flex items-center h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
                                     Setujui
                                 </button>
-                                <button type="button" onclick="openRejectModal('{{ route('admin.articles.reject', $article) }}')"
+                                <button type="button" onclick="openRejectModal('{{ route('admin.articles.reject', [$article, 'return_url' => request('return_url')]) }}')"
                                         class="inline-flex items-center h-10 px-5 rounded-xl border border-red-600 text-red-600 hover:bg-red-50 text-sm font-medium transition gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -174,7 +174,7 @@
                                 </button>
                             @endif
                             @if($article->publish_status === 'approved')
-                                <button type="button" onclick="confirmToggleHide('{{ route('admin.articles.toggle-hide', $article) }}', {{ $article->is_hidden ? 'true' : 'false' }})" class="inline-flex items-center h-10 px-5 rounded-xl border {{ $article->is_hidden ? 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100' }} text-sm font-medium transition gap-2" title="{{ $article->is_hidden ? 'Tampilkan Arsip' : 'Arsipkan' }}">
+                                <button type="button" onclick="confirmToggleHide('{{ route('admin.articles.toggle-hide', [$article, 'return_url' => request('return_url')]) }}', {{ $article->is_hidden ? 'true' : 'false' }})" class="inline-flex items-center h-10 px-5 rounded-xl border {{ $article->is_hidden ? 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100' }} text-sm font-medium transition gap-2" title="{{ $article->is_hidden ? 'Tampilkan Arsip' : 'Arsipkan' }}">
                                     @if($article->is_hidden)
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -189,7 +189,7 @@
                                     @endif
                                 </button>
                             @endif
-                            <a href="{{ route('admin.articles.index') }}"
+                            <a href="{{ request('return_url', route('admin.articles.index')) }}"
                                class="inline-flex items-center h-10 px-5 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -212,6 +212,7 @@
             </div>
             <form method="POST" id="rejectForm" data-ajax data-close-on-success class="p-6 space-y-4">
                 @csrf
+                <input type="hidden" name="return_url" value="{{ request('return_url') }}">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Penolakan</label>
                     <textarea name="rejection_note" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none" rows="4" placeholder="Jelaskan alasan penolakan..." required></textarea>

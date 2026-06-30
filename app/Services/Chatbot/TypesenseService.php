@@ -5,6 +5,7 @@ namespace App\Services\Chatbot;
 use App\Models\Article;
 use Exception;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Typesense\Client;
 use Typesense\Exceptions\ObjectNotFound;
 
@@ -484,195 +485,200 @@ class TypesenseService
         $normalizedQuery = $this->normalizeRepeatedChars($query);
         $query = $normalizedQuery;
         
-        $this->debugInfo = [
-            'original_query' => $originalQuery,
-            'normalized_query' => $normalizedQuery,
-            'limit' => $limit,
-            'options' => $options,
-            'candidates' => [],
-            'typo_corrections' => [],
-            'raw_hits_before_tfidf' => [],
-            'security_boost_applied' => false,
-        ];
+        $version = Cache::rememberForever('articles_cache_version', fn() => time());
+        $cacheKey = "typesense_search:v{$version}:" . md5(json_encode([$query, $limit, $options]));
 
-        if (!$this->isConnected) {
-            return [
-                'success' => false,
-                'message' => 'Typesense is not connected',
-                'results' => [],
-                'debug' => $this->debugInfo,
-            ];
-        }
-
-        if (empty(trim($query))) {
-            return [
-                'success' => true,
-                'message' => 'Empty query',
-                'results' => [],
-                'debug' => $this->debugInfo,
-            ];
-        }
-
-        try {
-            $collectionName = config('typesense.collections.articles.name');
-            $searchConfig = config('typesense.search');
-
-            // Memeriksa apakah query terkait keamanan untuk boosting
-            $isSecurityQuery = $this->isSecurityQuery($query);
-            $this->debugInfo['is_security_query'] = $isSecurityQuery;
-
-            // Membangun parameter pencarian dengan ranking dan toleransi typo
-            $searchParams = [
-                'q' => $query,
-                'query_by' => 'title,keywords,category_name,content',
-                'query_by_weights' => '8,6,4,2',
-                
-                // Parameter pencarian untuk ranking yang lebih baik
-                'prioritize_exact_match' => true,
-                'text_match_type' => 'max_score',
-                'token_separators' => [' ', '-'],
-                'drop_tokens_threshold' => 0,
-                
-                // Toleransi typo dengan pencarian infix
-                'num_typos' => 4,
-                'min_len_1typo' => 2,
-                'min_len_2typo' => 4,
-                
-                // Pencarian prefix dan infix untuk kecocokan typo
-                'prefix' => 'always',
-                'infix' => 'always',
-                'infix_score' => 'max_score',
-                
-                'typo_tokens_threshold' => $searchConfig['typo_tokens_threshold'] ?? 3,
-                
-                'per_page' => $limit,
-                'page' => 1,
-                'exhaustive_search' => true,
-                'filter_by' => 'is_published:true',
+        return Cache::remember($cacheKey, 86400, function () use ($originalQuery, $query, $limit, $options) {
+            $this->debugInfo = [
+                'original_query' => $originalQuery,
+                'normalized_query' => $query,
+                'limit' => $limit,
+                'options' => $options,
+                'candidates' => [],
+                'typo_corrections' => [],
+                'raw_hits_before_tfidf' => [],
+                'security_boost_applied' => false,
             ];
 
-            // Menambahkan filter kategori jika specified
-            if (isset($options['category_id'])) {
-                $searchParams['filter_by'] .= ' && category_id:=' . $options['category_id'];
+            if (!$this->isConnected) {
+                return [
+                    'success' => false,
+                    'message' => 'Typesense is not connected',
+                    'results' => [],
+                    'debug' => $this->debugInfo,
+                ];
             }
 
-            // Menambahkan filter domain jika specified
-            if (isset($options['domain'])) {
-                $searchParams['filter_by'] .= ' && category_name:=' . $options['domain'];
+            if (empty(trim($query))) {
+                return [
+                    'success' => true,
+                    'message' => 'Empty query',
+                    'results' => [],
+                    'debug' => $this->debugInfo,
+                ];
             }
 
-            // Boost artikel keamanan untuk query terkait keamanan
-            if ($isSecurityQuery) {
-                $searchParams['optional_filter_by'] = 'category_name:=Keamanan Sistem';
-                $this->debugInfo['security_boost_applied'] = true;
-                $this->debugInfo['boost_category'] = 'Keamanan Sistem';
-                
-                Log::info('Security query detected - applying category boost', [
+            try {
+                $collectionName = config('typesense.collections.articles.name');
+                $searchConfig = config('typesense.search');
+
+                // Memeriksa apakah query terkait keamanan untuk boosting
+                $isSecurityQuery = $this->isSecurityQuery($query);
+                $this->debugInfo['is_security_query'] = $isSecurityQuery;
+
+                // Membangun parameter pencarian dengan ranking dan toleransi typo
+                $searchParams = [
+                    'q' => $query,
+                    'query_by' => 'title,keywords,category_name,content',
+                    'query_by_weights' => '8,6,4,2',
+                    
+                    // Parameter pencarian untuk ranking yang lebih baik
+                    'prioritize_exact_match' => true,
+                    'text_match_type' => 'max_score',
+                    'token_separators' => [' ', '-'],
+                    'drop_tokens_threshold' => 0,
+                    
+                    // Toleransi typo dengan pencarian infix
+                    'num_typos' => 4,
+                    'min_len_1typo' => 2,
+                    'min_len_2typo' => 4,
+                    
+                    // Pencarian prefix dan infix untuk kecocokan typo
+                    'prefix' => 'always',
+                    'infix' => 'always',
+                    'infix_score' => 'max_score',
+                    
+                    'typo_tokens_threshold' => $searchConfig['typo_tokens_threshold'] ?? 3,
+                    
+                    'per_page' => $limit,
+                    'page' => 1,
+                    'exhaustive_search' => true,
+                    'filter_by' => 'is_published:true',
+                ];
+
+                // Menambahkan filter kategori jika specified
+                if (isset($options['category_id'])) {
+                    $searchParams['filter_by'] .= ' && category_id:=' . $options['category_id'];
+                }
+
+                // Menambahkan filter domain jika specified
+                if (isset($options['domain'])) {
+                    $searchParams['filter_by'] .= ' && category_name:=' . $options['domain'];
+                }
+
+                // Boost artikel keamanan untuk query terkait keamanan
+                if ($isSecurityQuery) {
+                    $searchParams['optional_filter_by'] = 'category_name:=Keamanan Sistem';
+                    $this->debugInfo['security_boost_applied'] = true;
+                    $this->debugInfo['boost_category'] = 'Keamanan Sistem';
+                    
+                    Log::info('Security query detected - applying category boost', [
+                        'query' => $query,
+                        'boost_category' => 'Keamanan Sistem',
+                    ]);
+                }
+
+                // Menjalankan pencarian
+                $searchResults = $this->client->collections[$collectionName]->documents->search($searchParams);
+
+                // Log hasil Typesense untuk debugging
+                $rawHitsLog = [];
+                if (isset($searchResults['hits']) && !empty($searchResults['hits'])) {
+                    foreach ($searchResults['hits'] as $idx => $hit) {
+                        $document = $hit['document'];
+                        $rawHitsLog[] = [
+                            'rank' => $idx + 1,
+                            'title' => $document['title'],
+                            'typesense_score' => $hit['text_match'] ?? 0,
+                            'category_name' => $document['category_name'] ?? '',
+                        ];
+                        
+                        // Menyimpan di debug info untuk retrieval
+                        $this->debugInfo['raw_hits_before_tfidf'][] = [
+                            'rank' => $idx + 1,
+                            'id' => $document['id'],
+                            'title' => $document['title'],
+                            'typesense_score' => $hit['text_match'] ?? 0,
+                            'category_name' => $document['category_name'] ?? '',
+                        ];
+                    }
+                }
+
+                Log::info('RAW Typesense results (before TF-IDF reranking)', [
                     'query' => $query,
-                    'boost_category' => 'Keamanan Sistem',
+                    'hits' => $rawHitsLog,
+                    'security_boost_applied' => $this->debugInfo['security_boost_applied'],
                 ]);
-            }
 
-            // Menjalankan pencarian
-            $searchResults = $this->client->collections[$collectionName]->documents->search($searchParams);
+                // Memproses hasil pencarian
+                $results = [];
+                if (isset($searchResults['hits']) && !empty($searchResults['hits'])) {
+                    foreach ($searchResults['hits'] as $hit) {
+                        $document = $hit['document'];
+                        
+                        $results[] = [
+                            'id' => $document['id'],
+                            'title' => $document['title'],
+                            'content' => $document['content'],
+                            'excerpt' => $document['excerpt'] ?? '',
+                            'keywords' => $document['keywords'] ?? '',
+                            'category_name' => $document['category_name'] ?? '',
+                            'category_id' => $document['category_id'] ?? '',
+                            'slug' => $document['slug'],
+                            'is_published' => $document['is_published'],
+                            'views' => $document['views'] ?? 0,
+                            'typesense_score' => $hit['text_match'] ?? 0,
+                        ];
 
-            // Log hasil Typesense untuk debugging
-            $rawHitsLog = [];
-            if (isset($searchResults['hits']) && !empty($searchResults['hits'])) {
-                foreach ($searchResults['hits'] as $idx => $hit) {
-                    $document = $hit['document'];
-                    $rawHitsLog[] = [
-                        'rank' => $idx + 1,
-                        'title' => $document['title'],
-                        'typesense_score' => $hit['text_match'] ?? 0,
-                        'category_name' => $document['category_name'] ?? '',
-                    ];
-                    
-                    // Menyimpan di debug info untuk retrieval
-                    $this->debugInfo['raw_hits_before_tfidf'][] = [
-                        'rank' => $idx + 1,
-                        'id' => $document['id'],
-                        'title' => $document['title'],
-                        'typesense_score' => $hit['text_match'] ?? 0,
-                        'category_name' => $document['category_name'] ?? '',
-                    ];
+                        $this->debugInfo['candidates'][] = [
+                            'id' => $document['id'],
+                            'title' => $document['title'],
+                            'score' => $hit['text_match'] ?? 0,
+                            'category_name' => $document['category_name'] ?? '',
+                        ];
+                    }
                 }
-            }
 
-            Log::info('RAW Typesense results (before TF-IDF reranking)', [
-                'query' => $query,
-                'hits' => $rawHitsLog,
-                'security_boost_applied' => $this->debugInfo['security_boost_applied'],
-            ]);
-
-            // Memproses hasil pencarian
-            $results = [];
-            if (isset($searchResults['hits']) && !empty($searchResults['hits'])) {
-                foreach ($searchResults['hits'] as $hit) {
-                    $document = $hit['document'];
-                    
-                    $results[] = [
-                        'id' => $document['id'],
-                        'title' => $document['title'],
-                        'content' => $document['content'],
-                        'excerpt' => $document['excerpt'] ?? '',
-                        'keywords' => $document['keywords'] ?? '',
-                        'category_name' => $document['category_name'] ?? '',
-                        'category_id' => $document['category_id'] ?? '',
-                        'slug' => $document['slug'],
-                        'is_published' => $document['is_published'],
-                        'views' => $document['views'] ?? 0,
-                        'typesense_score' => $hit['text_match'] ?? 0,
-                    ];
-
-                    $this->debugInfo['candidates'][] = [
-                        'id' => $document['id'],
-                        'title' => $document['title'],
-                        'score' => $hit['text_match'] ?? 0,
-                        'category_name' => $document['category_name'] ?? '',
-                    ];
+                // Melacak koreksi typo dari hasil pencarian
+                if (isset($searchResults['request_params']['q'])) {
+                    $correctedQuery = $searchResults['request_params']['q'];
+                    if ($correctedQuery !== $query) {
+                        $this->debugInfo['typo_corrections'] = [
+                            'original' => $query,
+                            'corrected' => $correctedQuery,
+                        ];
+                    }
                 }
+
+                $this->debugInfo['total_found'] = $searchResults['found'] ?? 0;
+                $this->debugInfo['search_time_ms'] = $searchResults['search_time_ms'] ?? 0;
+
+                Log::info('Typesense search completed', [
+                    'query' => $query,
+                    'results_count' => count($results),
+                    'total_found' => $searchResults['found'] ?? 0,
+                    'search_time_ms' => $searchResults['search_time_ms'] ?? 0,
+                    'security_boost_applied' => $this->debugInfo['security_boost_applied'],
+                ]);
+
+                return [
+                    'success' => true,
+                    'message' => 'Search completed',
+                    'results' => $results,
+                    'total' => $searchResults['found'] ?? 0,
+                    'debug' => $this->debugInfo,
+                ];
+            } catch (Exception $e) {
+                Log::error("Typesense search failed for query '{$query}': " . $e->getMessage());
+                
+                return [
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'results' => [],
+                    'debug' => $this->debugInfo,
+                ];
             }
-
-            // Melacak koreksi typo dari hasil pencarian
-            if (isset($searchResults['request_params']['q'])) {
-                $correctedQuery = $searchResults['request_params']['q'];
-                if ($correctedQuery !== $query) {
-                    $this->debugInfo['typo_corrections'] = [
-                        'original' => $query,
-                        'corrected' => $correctedQuery,
-                    ];
-                }
-            }
-
-            $this->debugInfo['total_found'] = $searchResults['found'] ?? 0;
-            $this->debugInfo['search_time_ms'] = $searchResults['search_time_ms'] ?? 0;
-
-            Log::info('Typesense search completed', [
-                'query' => $query,
-                'results_count' => count($results),
-                'total_found' => $searchResults['found'] ?? 0,
-                'search_time_ms' => $searchResults['search_time_ms'] ?? 0,
-                'security_boost_applied' => $this->debugInfo['security_boost_applied'],
-            ]);
-
-            return [
-                'success' => true,
-                'message' => 'Search completed',
-                'results' => $results,
-                'total' => $searchResults['found'] ?? 0,
-                'debug' => $this->debugInfo,
-            ];
-        } catch (Exception $e) {
-            Log::error("Typesense search failed for query '{$query}': " . $e->getMessage());
-            
-            return [
-                'success' => false,
-                'message' => $e->getMessage(),
-                'results' => [],
-                'debug' => $this->debugInfo,
-            ];
-        }
+        });
     }
 
     /**

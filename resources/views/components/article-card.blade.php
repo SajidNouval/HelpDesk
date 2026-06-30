@@ -9,7 +9,7 @@
 ])
 
 @php
-    $defaultHref = route('articles.show', ['slug' => $article->slug] + ($selectedCategoryId ? ['category' => $selectedCategoryId] : []));
+    $defaultHref = route('articles.show', ['slug' => $article->slug, 'return_url' => request()->fullUrl()]);
     $link = $href ?? $defaultHref;
 @endphp
 

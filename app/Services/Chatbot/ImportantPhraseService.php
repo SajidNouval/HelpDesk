@@ -526,11 +526,35 @@ class ImportantPhraseService
         // Langkah 3: Hitung overlap n-gram
         $ngramResult = $this->calculateNgramOverlap($query, $document);
 
-        // Langkah 4: Gabungkan skor
+        // Langkah 4: Evaluasi kecocokan exact query phrase di judul secara independen
+        // Ini memastikan query seperti "setting printer" yang persis ada di judul
+        // mendapat boost meskipun query tidak mengandung kata masalah/error curasi.
+        $exactQueryPhraseBonus = 0.0;
+        $title = strtolower($document['title'] ?? '');
+        $queryLower = strtolower(trim($query));
+        $queryWords = explode(' ', $queryLower);
+        $importantQueryWords = array_filter($queryWords, fn($w) => mb_strlen($w) > 2);
+        
+        if (count($importantQueryWords) >= 2) {
+            $importantQueryPhrase = implode(' ', $importantQueryWords);
+            if (str_contains($title, $importantQueryPhrase)) {
+                $exactQueryPhraseBonus = self::EXACT_QUERY_PHRASE_BONUS;
+                $this->debugInfo['exact_query_phrase_match'] = $importantQueryPhrase;
+            }
+        }
+
+        // Langkah 5: Gabungkan skor
         $phraseBoost = $phraseScore['total_bonus'] ?? 0;
+        
+        // Jika detectedPhrases kosong, kita belum menjalankan calculatePhraseScore.
+        // Tambahkan bonus exact query phrase secara manual ke phraseBoost.
+        if (empty($detectedPhrases)) {
+            $phraseBoost += $exactQueryPhraseBonus;
+        }
+        
         $ngramBoost = $ngramResult['total_ngram_score'] ?? 0;
         
-        // Total boost (dengan diminishing mengembalikan)
+        // Total boost
         $totalBoost = $phraseBoost + $ngramBoost;
         $totalBoost = min($totalBoost, 1.0); // Batasi max 1.0
 
@@ -540,10 +564,13 @@ class ImportantPhraseService
             'total_boost' => $totalBoost,
             'detected_phrases' => $detectedPhrases,
             'phrase_matches' => $phraseScore['phrase_matches'] ?? [],
-            'title_phrase_matches' => $phraseScore['title_phrase_matches'] ?? [],
+            'title_phrase_matches' => array_unique(array_merge(
+                $phraseScore['title_phrase_matches'] ?? [],
+                $exactQueryPhraseBonus > 0 ? [$importantQueryPhrase] : []
+            )),
             'bigram_matches' => $ngramResult['bigram_matches'],
             'trigram_matches' => $ngramResult['trigram_matches'],
-            'has_important_phrase' => !empty($detectedPhrases),
+            'has_important_phrase' => !empty($detectedPhrases) || ($exactQueryPhraseBonus > 0),
             'debug_info' => $this->debugInfo,
         ];
     }

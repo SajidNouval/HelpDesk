@@ -494,7 +494,7 @@ class ChatbotController extends Controller
             'message'   => 'required|string',
         ]);
 
-        $ticket = Ticket::findOrFail($request->ticket_id);
+        $ticket = Ticket::select(['id', 'status'])->findOrFail($request->ticket_id);
 
         if ($ticket->status === 'closed') {
             return response()->json([
@@ -654,9 +654,10 @@ class ChatbotController extends Controller
             'article_id' => 'required|integer|exists:articles,id',
         ]);
 
-        $article = \App\Models\Article::where('is_published', true)
+        $article = \App\Models\Article::select(['id', 'category_id', 'title', 'excerpt', 'content', 'slug'])
+            ->where('is_published', true)
             ->where('publish_status', 'approved')
-            ->with('category')
+            ->with('category:id,name')
             ->find($request->article_id);
 
         if (!$article) {

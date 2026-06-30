@@ -135,7 +135,9 @@ export function initLiveChatForm() {
                 window.startLiveChatMode(
                     response.data.ticket_id,
                     response.data.ticket_status,
-                    emailVal
+                    emailVal,
+                    response.data.queue_position,
+                    response.data.estimated_waiting_minutes
                 );
             } else {
                 if (response.data?.tracking_url) {

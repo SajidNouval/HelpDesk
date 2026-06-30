@@ -66,7 +66,8 @@ class UserController extends Controller
         $search = $request->query('q');
         $sort = $request->query('sort', 'created_asc');
 
-        $usersQuery = User::withCount('articles')
+        $usersQuery = User::select(['id', 'name', 'email', 'role', 'status', 'created_at'])
+            ->withCount('articles')
             ->when($search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('name', 'like', "%{$search}%")
@@ -93,10 +94,17 @@ class UserController extends Controller
 
         $users = $usersQuery->paginate(10)->withQueryString();
 
-        $totalStaff = User::count();
-        $totalAdmin = User::where('role', 'admin')->count();
-        $totalStaffHelpdesk = User::where('role', 'staff')->count();
-        $activeStaff = User::where('role', 'staff')->where('status', 'active')->count();
+        $userStats = User::selectRaw("
+            count(*) as total,
+            count(case when role = 'admin' then 1 end) as admins,
+            count(case when role = 'staff' then 1 end) as staff,
+            count(case when role = 'staff' and status = 'active' then 1 end) as active_staff
+        ")->first();
+        $totalStaff = $userStats->total;
+        $totalAdmin = $userStats->admins;
+        $totalStaffHelpdesk = $userStats->staff;
+        $activeStaff = $userStats->active_staff;
+
         $topContributorCount = User::where('role', 'staff')
             ->withCount('articles')
             ->orderByDesc('articles_count')
@@ -126,7 +134,7 @@ class UserController extends Controller
      */
     public function create(): View
     {
-        $categories = Category::orderBy('name')->get();
+        $categories = Category::select(['id', 'name'])->orderBy('name')->get();
         return view('admin.users.create', compact('categories'));
     }
 
@@ -172,15 +180,24 @@ class UserController extends Controller
         ]);
 
         if ($validated['role'] === 'staff' && ! empty($validated['categories'])) {
+            $data = [];
+            $now = now();
             foreach ($validated['categories'] as $categoryId) {
-                StaffProfile::firstOrCreate([
+                $data[] = [
+                    'id' => (string) \Illuminate\Support\Str::ulid(),
                     'user_id' => $user->id,
                     'category_id' => $categoryId,
-                ]);
+                    'is_busy' => false,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+            if (!empty($data)) {
+                StaffProfile::insert($data);
             }
         }
 
-        return Redirect::route('admin.users.index')
+        return $this->safeRedirect('admin.users.index')
             ->with('success', 'Staf baru berhasil dibuat.');
     }
 
@@ -196,7 +213,7 @@ class UserController extends Controller
      */
     public function edit(User $user): View
     {
-        $categories = Category::orderBy('name')->get();
+        $categories = Category::select(['id', 'name'])->orderBy('name')->get();
         $assignedCategoryIds = $user->staffProfiles()->pluck('category_id')->toArray();
         return view('admin.users.edit', [
             'user' => $user->loadCount('articles'),
@@ -259,16 +276,25 @@ class UserController extends Controller
         if ($role === 'staff') {
             $user->staffProfiles()->delete();
             if (! empty($validated['categories'])) {
+                $data = [];
+                $now = now();
                 foreach ($validated['categories'] as $categoryId) {
-                    StaffProfile::create([
+                    $data[] = [
+                        'id' => (string) \Illuminate\Support\Str::ulid(),
                         'user_id' => $user->id,
                         'category_id' => $categoryId,
-                    ]);
+                        'is_busy' => false,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
+                if (!empty($data)) {
+                    StaffProfile::insert($data);
                 }
             }
         }
 
-        return Redirect::route('admin.users.index')
+        return $this->safeRedirect('admin.users.index')
             ->with('success', 'Data staf berhasil diperbarui.');
     }
 
@@ -299,7 +325,7 @@ class UserController extends Controller
 
         $user->delete();
 
-        return Redirect::route('admin.users.index')
+        return $this->safeRedirect('admin.users.index')
             ->with('success', 'Pengguna berhasil dihapus.');
     }
 }

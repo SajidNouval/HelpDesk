@@ -48,10 +48,10 @@ class ReindexChatbotArticles extends Command
      */
     public function handle(): int
     {
-        $this->info('🔍 Memulai re-indexing artikel untuk chatbot TF-IDF...');
+        $this->info('Memulai re-indexing artikel untuk chatbot TF-IDF...');
 
         if ($this->option('force')) {
-            $this->info('🗑️  Menghapus cache lama...');
+            $this->info('Menghapus cache lama...');
             $this->retrievalService->clearCache();
         }
 
@@ -60,13 +60,13 @@ class ReindexChatbotArticles extends Command
             $result = $this->retrievalService->rebuildCache();
 
             $this->newLine();
-            $this->info("✅ Re-indexing selesai!");
+            $this->info("Re-indexing selesai!");
             $this->line("   Dokumen: {$result['documents']}");
             $this->line("   Term/Token unik: {$result['terms']}");
 
             return 0;
         } catch (\Exception $e) {
-            $this->error("❌ Gagal re-index: {$e->getMessage()}");
+            $this->error("Gagal re-index: {$e->getMessage()}");
             return 1;
         }
     }

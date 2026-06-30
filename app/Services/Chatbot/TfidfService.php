@@ -340,10 +340,12 @@ class TfidfService
      * Output:
      * - array [term => skor_tfidf] sebagai vektor query
      */
-    public function calculateQueryTFIDF(string $query, array $idf): array
+    public function calculateQueryTFIDF(string $query, array $idf, bool $applyTypoCorrection = false): array
     {
-        // Preprocessing query dengan koreksi typo aktif
-        $tokens = $this->preprocessor->preprocess($query, true);
+        // OPTIMASI: Parameter $applyTypoCorrection default false agar tidak terjadi normalisasi
+        // typo ganda ketika pemanggil (AdvancedRetrievalService) sudah menormalisasi query di hulu.
+        // Set true hanya jika query belum melalui preprocessing typo sebelumnya.
+        $tokens = $this->preprocessor->preprocess($query, $applyTypoCorrection);
 
         // Hitung frekuensi kemunculan setiap term dalam query
         $frequency = [];

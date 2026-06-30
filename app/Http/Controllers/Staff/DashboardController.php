@@ -60,16 +60,24 @@ class DashboardController extends Controller
      */
     public function index(): View
     {
-        $todayTickets = Ticket::whereDate('created_at', today())
+        $todayTickets = Ticket::select(['id', 'name', 'email', 'subject', 'category_id', 'staff_id', 'status', 'priority', 'created_at'])
+            ->whereDate('created_at', today())
             ->where('status', '!=', 'closed')
             ->where('staff_id', auth()->id())
-            ->with(['category', 'user'])
+            ->with([
+                'category:id,name',
+                'user:id,name,email'
+            ])
             ->orderBy('created_at', 'asc')
             ->get();
 
-        $waitingTickets = Ticket::where('status', 'waiting')
+        $waitingTickets = Ticket::select(['id', 'name', 'email', 'subject', 'category_id', 'status', 'priority', 'created_at'])
+            ->where('status', 'waiting')
             ->whereNull('staff_id')
-            ->with(['category', 'user'])
+            ->with([
+                'category:id,name',
+                'user:id,name,email'
+            ])
             ->orderBy('created_at', 'asc')
             ->get();
 

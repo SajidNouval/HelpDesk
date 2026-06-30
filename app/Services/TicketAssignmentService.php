@@ -37,9 +37,22 @@ class TicketAssignmentService
     public function assignLiveChat(Ticket $ticket): ?StaffProfile
     {
         return DB::transaction(function () use ($ticket) {
-            $staffProfiles = StaffProfile::where('category_id', $ticket->category_id)
+            $staffProfiles = StaffProfile::select(['id', 'user_id', 'category_id', 'is_busy'])
+                ->where('category_id', $ticket->category_id)
                 ->where('is_busy', false)
-                ->with('user')
+                ->with([
+                    'user' => function ($q) {
+                        $q->select(['id', 'name'])
+                          ->withCount([
+                              'tickets as active_tickets' => function ($q2) {
+                                  $q2->whereIn('status', ['assigned', 'progress']);
+                              },
+                              'tickets as waiting_count' => function ($q2) {
+                                  $q2->where('status', 'waiting');
+                              }
+                          ]);
+                    }
+                ])
                 ->lockForUpdate()
                 ->get();
 
@@ -51,12 +64,8 @@ class TicketAssignmentService
                 ->map(function ($profile) {
                     return [
                         'profile'        => $profile,
-                        'active_tickets' => $profile->user->tickets()
-                            ->whereIn('status', ['assigned', 'progress'])
-                            ->count(),
-                        'waiting_count'  => $profile->user->tickets()
-                            ->where('status', 'waiting')
-                            ->count(),
+                        'active_tickets' => $profile->user->active_tickets ?? 0,
+                        'waiting_count'  => $profile->user->waiting_count ?? 0,
                     ];
                 })
                 ->sortBy(function ($item) {
@@ -98,8 +107,18 @@ class TicketAssignmentService
      */
     public function assignReport(Ticket $ticket): ?StaffProfile
     {
-        $staffProfiles = StaffProfile::where('category_id', $ticket->category_id)
-            ->with('user')
+        $staffProfiles = StaffProfile::select(['id', 'user_id', 'category_id', 'is_busy'])
+            ->where('category_id', $ticket->category_id)
+            ->with([
+                'user' => function ($q) {
+                    $q->select(['id', 'name'])
+                      ->withCount([
+                          'tickets as waiting_count' => function ($q2) {
+                              $q2->where('status', 'waiting');
+                          }
+                      ]);
+                }
+            ])
             ->get();
 
         if ($staffProfiles->isEmpty()) {
@@ -110,9 +129,7 @@ class TicketAssignmentService
             ->map(function ($profile) {
                 return [
                     'profile'       => $profile,
-                    'waiting_count' => $profile->user->tickets()
-                        ->where('status', 'waiting')
-                        ->count(),
+                    'waiting_count' => $profile->user->waiting_count ?? 0,
                 ];
             })
             ->sortBy(function ($item) {
@@ -161,14 +178,22 @@ class TicketAssignmentService
             return null;
         }
 
-        $availableStaff = StaffProfile::where('category_id', $completedStaffProfile->category_id)
+        $availableStaff = StaffProfile::select(['id', 'user_id', 'category_id', 'is_busy'])
+            ->where('category_id', $completedStaffProfile->category_id)
             ->where('is_busy', false)
-            ->with('user')
+            ->with([
+                'user' => function ($q) {
+                    $q->select(['id', 'name'])
+                      ->withCount([
+                          'tickets as tickets_count' => function ($q2) {
+                              $q2->whereIn('status', ['assigned', 'progress', 'waiting']);
+                          }
+                      ]);
+                }
+            ])
             ->get()
             ->sortBy(function ($profile) {
-                return $profile->user->tickets()
-                    ->whereIn('status', ['assigned', 'progress', 'waiting'])
-                    ->count();
+                return $profile->user->tickets_count ?? 0;
             })
             ->first();
 
@@ -190,6 +215,33 @@ class TicketAssignmentService
             'description' => 'Tiket di-assign ke staff: ' . $availableStaff->user->name . ' (antrian berikutnya)',
         ]);
 
+        // Broadcast queue update for other tickets in this category
+        self::broadcastQueueUpdateForCategory($completedStaffProfile->category_id);
+
         return $nextTicket;
+    }
+
+    /**
+     * Memperbarui posisi antrean dan menyiarkannya secara real-time untuk seluruh tiket
+     * live chat yang sedang menunggu (waiting) di kategori tertentu.
+     *
+     * @param  string  $categoryId  ID kategori
+     * @return void
+     */
+    public static function broadcastQueueUpdateForCategory(string $categoryId): void
+    {
+        $waitingTickets = Ticket::select(['id', 'category_id', 'created_at'])
+            ->where('type', 'livechat')
+            ->where('category_id', $categoryId)
+            ->where('status', 'waiting')
+            ->whereNull('staff_id')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        foreach ($waitingTickets as $index => $t) {
+            $position = $index + 1;
+            $estimatedMinutes = $position * 2;
+            broadcast(new \App\Events\QueuePositionUpdated($t, $position, $estimatedMinutes));
+        }
     }
 }

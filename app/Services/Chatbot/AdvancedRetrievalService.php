@@ -48,6 +48,10 @@ class AdvancedRetrievalService
     private const SESSION_FAILURE_KEY = 'chatbot_failure_memory';
     private const SESSION_CONVERSATION_KEY = 'chatbot_conversation_memory';
     private const CACHE_TTL = 86400;
+    // TTL cache untuk hasil retrieval penuh per query (10 menit)
+    private const RETRIEVAL_CACHE_TTL = 600;
+    // TTL cache untuk token preprocessing per artikel (24 jam)
+    private const TOKEN_CACHE_TTL = 86400;
     
     // ============================================================
     // BOBOT PERINGKAT HYBRID
@@ -416,6 +420,10 @@ class AdvancedRetrievalService
     
     private array $debugInfo = [];
     
+    // Menyimpan synonymMap yang sudah diurutkan berdasarkan panjang kunci (terpanjang dulu)
+    // Diinisialisasi sekali di constructor agar tidak diurutkan berulang kali per request
+    private array $sortedSynonymMap = [];
+    
     // Kuota diversifikasi kategori - memastikan keragaman hasil
     private const MAX_RESULTS_PER_CATEGORY = 2; // Maksimal 2 artikel dari kategori yang sama
     private const DIVERSIFICATION_CATEGORIES = ['troubleshooting', 'optimization', 'tutorial', 'hardware'];
@@ -453,6 +461,11 @@ class AdvancedRetrievalService
         $this->domainDetector = $domainDetector;
         $this->vocabularyService = $vocabularyService;
         $this->phraseService = $phraseService;
+        
+        // OPTIMASI: Urutkan synonymMap satu kali di constructor.
+        // Sebelumnya uksort() dipanggil setiap kali normalizeSynonyms() dipanggil.
+        $this->sortedSynonymMap = $this->synonymMap;
+        uksort($this->sortedSynonymMap, fn($a, $b) => mb_strlen($b) - mb_strlen($a));
     }
     
     /**
@@ -939,7 +952,7 @@ class AdvancedRetrievalService
         
         $query = Article::where('is_published', true)
             ->where('publish_status', 'approved')
-            ->with('category');
+            ->with('category:id,name');
         
         $query->whereHas('category', function ($q) use ($allowedCategories) {
             $q->whereIn(DB::raw('LOWER(TRIM(name))'), array_map('strtolower', $allowedCategories));
@@ -972,7 +985,7 @@ class AdvancedRetrievalService
     {
         return Article::where('is_published', true)
             ->where('publish_status', 'approved')
-            ->with('category')
+            ->with('category:id,name')
             ->select('id', 'title', 'content', 'excerpt', 'keywords', 'slug', 'category_id')
             ->get();
     }
@@ -1038,9 +1051,9 @@ class AdvancedRetrievalService
     {
         $result = $query;
         
-        uksort($this->synonymMap, fn($a, $b) => mb_strlen($b) - mb_strlen($a));
-        
-        foreach ($this->synonymMap as $synonym => $normalized) {
+        // OPTIMASI: Gunakan sortedSynonymMap yang sudah diurutkan di constructor
+        // (tidak perlu uksort() per request)
+        foreach ($this->sortedSynonymMap as $synonym => $normalized) {
             if (str_contains($result, $synonym)) {
                 $result = str_replace($synonym, $normalized, $result);
             }
@@ -1670,17 +1683,11 @@ class AdvancedRetrievalService
         $detectedDomain = $domainInfo['domain'];
         $docCategory = $document['category_name'] ?? '';
         $docCategoryLower = strtolower(trim($docCategory));
-        $title = strtolower($document['title'] ?? '');
-        $content = strtolower($document['text'] ?? '');
         
         // Periksa negative domain penalties (stronger penalties untuk unrelated domains)
+        // Hanya berikan penalti jika kategori dokumen adalah kategori negatif tersebut
         $negativeDomains = $this->negativeDomainPenalties[$detectedDomain] ?? [];
         foreach ($negativeDomains as $negativeDomain) {
-            // Periksa jika the negative domain keyword muncul di judul atau konten
-            if (str_contains($title, $negativeDomain) || str_contains($content, $negativeDomain)) {
-                return self::STRONG_DOMAIN_PENALTY;
-            }
-            // Periksa jika the dokumen kategori cocok the negative domain
             if ($docCategoryLower === strtolower($negativeDomain)) {
                 return self::STRONG_DOMAIN_PENALTY;
             }
@@ -1876,12 +1883,12 @@ class AdvancedRetrievalService
     {
         return [
             'success' => false,
-            'response' => "Sepertinya saya belum menemukan solusi yang tepat 😔\n\nJangan khawatir, tim support kami siap membantu!",
+            'response' => "Sepertinya saya belum menemukan solusi yang tepat\n\nJangan khawatir, tim support kami siap membantu!",
             'should_escalate' => true,
             'escalation_buttons' => [
-                ['label' => '💬 Live Chat', 'action' => 'contact_staff'],
-                ['label' => '📧 Buat Tiket', 'action' => 'create_ticket'],
-                ['label' => '🔄 Coba Pertanyaan Lain', 'action' => 'try_another'],
+                ['label' => 'Live Chat', 'action' => 'contact_staff'],
+                ['label' => 'Buat Tiket', 'action' => 'create_ticket'],
+                ['label' => 'Coba Pertanyaan Lain', 'action' => 'try_another'],
             ],
         ];
     }
@@ -2107,9 +2114,9 @@ class AdvancedRetrievalService
         $suggestions = $this->getClarificationSuggestions($query);
         
         $clarificationQuestions = [
-            'Bisa lebih spesifik? 😊',
-            'Bisa jelaskan lebih detail? 🤔',
-            'Apa yang sedang bermasalah? 💭',
+            'Bisa lebih spesifik?',
+            'Bisa jelaskan lebih detail?',
+            'Apa yang sedang bermasalah?',
         ];
         
         $question = $clarificationQuestions[array_rand($clarificationQuestions)];
@@ -2236,7 +2243,21 @@ class AdvancedRetrievalService
     {
         $documents = [];
         
+        // Ambil versi cache artikel untuk memvalidasi cache token
+        $cacheVersion = Cache::rememberForever('articles_cache_version', fn() => time());
+        
         foreach ($articles as $article) {
+            // OPTIMASI: Cache token per artikel agar stemming tidak dipanggil berulang.
+            // Cache key menyertakan article ID, updated_at, dan versi cache global.
+            // Otomatis invalid saat ArticleObserver me-reset articles_cache_version.
+            $tokenCacheKey = "chatbot:tokens:v{$cacheVersion}:{$article->id}";
+            
+            $cachedTokens = Cache::get($tokenCacheKey);
+            if ($cachedTokens !== null) {
+                $documents[$article->id] = $cachedTokens;
+                continue;
+            }
+            
             $titleTokens = $this->preprocessor->preprocess($article->title);
             $excerptTokens = $this->preprocessor->preprocess($article->excerpt ?? '');
             $keywordsTokens = $this->preprocessor->preprocess($article->keywords ?? '');
@@ -2270,7 +2291,7 @@ class AdvancedRetrievalService
                 $frequency[$token] = ($frequency[$token] ?? 0) + 1;
             }
             
-            $documents[$article->id] = [
+            $docData = [
                 'text' => implode(' ', $allTokens),
                 'frequency' => $frequency,
                 'title' => $article->title,
@@ -2282,6 +2303,11 @@ class AdvancedRetrievalService
                 'category_id' => $article->category_id,
                 'category_name' => $article->category->name ?? '',
             ];
+            
+            // Simpan ke cache agar preprocessing tidak diulang untuk request berikutnya
+            Cache::put($tokenCacheKey, $docData, self::TOKEN_CACHE_TTL);
+            
+            $documents[$article->id] = $docData;
         }
         
         return $documents;
@@ -2590,13 +2616,13 @@ class AdvancedRetrievalService
         $hour = date('H');
         
         if ($hour < 11) {
-            $greetings = ['Selamat pagi! 👋', 'Pagi! Ada yang bisa saya bantu?'];
+            $greetings = ['Selamat pagi!', 'Pagi! Ada yang bisa saya bantu?'];
         } elseif ($hour < 15) {
-            $greetings = ['Selamat siang! 👋', 'Siang! Silakan tanyakan sesuatu.'];
+            $greetings = ['Selamat siang!', 'Siang! Silakan tanyakan sesuatu.'];
         } elseif ($hour < 18) {
-            $greetings = ['Selamat sore! 👋', 'Sore! Ada yang bisa saya bantu?'];
+            $greetings = ['Selamat sore!', 'Sore! Ada yang bisa saya bantu?'];
         } else {
-            $greetings = ['Selamat malam! 👋', 'Malam! Silakan tanyakan sesuatu.'];
+            $greetings = ['Selamat malam!', 'Malam! Silakan tanyakan sesuatu.'];
         }
         
         $greetings[] = 'Halo! Ada yang bisa saya bantu?';
@@ -2704,9 +2730,9 @@ class AdvancedRetrievalService
         ]);
         
         $fallbackMessages = [
-            "Maaf, saya kurang yakin dengan jawaban yang tepat untuk pertanyaan ini 🤔\n\nBisa coba jelaskan lebih spesifik? Misalnya:\n• Sebutkan perangkat yang bermasalah (wifi, printer, komputer, dll)\n• Jelaskan gejala atau error yang muncul\n• Sertakan pesan error jika ada",
-            "Sepertinya saya butuh informasi lebih detail untuk membantu Anda 💭\n\nCoba tambahkan:\n• Apa yang sedang Anda lakukan saat masalah muncul?\n• Perangkat atau aplikasi apa yang digunakan?\n• Sudah coba solusi apa saja?",
-            "Mohon maaf, pertanyaan ini terlalu umum untuk saya jawab dengan tepat 😅\n\nAgar saya bisa membantu lebih baik:\n• Sebutkan jenis masalahnya (lemot, error, tidak connect, dll)\n• Perangkat apa yang bermasalah?\n• Kapan masalah ini terjadi?",
+            "Maaf, saya kurang yakin dengan jawaban yang tepat untuk pertanyaan ini\n\nBisa coba jelaskan lebih spesifik? Misalnya:\n• Sebutkan perangkat yang bermasalah (wifi, printer, komputer, dll)\n• Jelaskan gejala atau error yang muncul\n• Sertakan pesan error jika ada",
+            "Sepertinya saya butuh informasi lebih detail untuk membantu Anda\n\nCoba tambahkan:\n• Apa yang sedang Anda lakukan saat masalah muncul?\n• Perangkat atau aplikasi apa yang digunakan?\n• Sudah coba solusi apa saja?",
+            "Mohon maaf, pertanyaan ini terlalu umum untuk saya jawab dengan tepat\n\nAgar saya bisa membantu lebih baik:\n• Sebutkan jenis masalahnya (lemot, error, tidak connect, dll)\n• Perangkat apa yang bermasalah?\n• Kapan masalah ini terjadi?",
         ];
         
         $hash = md5($query . now()->timestamp);

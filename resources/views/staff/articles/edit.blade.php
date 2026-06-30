@@ -89,6 +89,7 @@
                         <form id="article-form" method="POST" action="{{ route('staff.articles.update', $article) }}" class="space-y-5">
                             @csrf
                             @method('PUT')
+                            <input type="hidden" name="return_url" value="{{ request('return_url', old('return_url', url()->previous())) }}">
 
                             <div class="space-y-4">
                                 <div>
@@ -138,7 +139,7 @@
                             </div>
 
                             <div class="pt-4 border-t border-gray-200 flex justify-end gap-3">
-                                <a href="{{ route('staff.articles.show', $article) }}">
+                                <a href="{{ request('return_url', route('staff.articles.show', $article)) }}">
                                     <button type="button" class="h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
                                         Batal
                                     </button>

@@ -160,7 +160,7 @@
                         <!-- Action Buttons -->
                         <div class="pt-4 border-t border-gray-200 flex flex-wrap items-center justify-end gap-3">
                             @if($article->staff_id === auth()->id())
-                                <a href="{{ route('staff.articles.edit', $article) }}"
+                                <a href="{{ route('staff.articles.edit', [$article, 'return_url' => request()->fullUrl()]) }}"
                                    class="inline-flex items-center h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -171,6 +171,7 @@
                                 <form id="delete-article-form-{{ $article->id }}" method="POST" action="{{ route('staff.articles.destroy', $article) }}" class="inline">
                                     @csrf
                                     @method('DELETE')
+                                    <input type="hidden" name="return_url" value="{{ request('return_url') }}">
                                     <button type="button" data-delete-article="delete-article-form-{{ $article->id }}"
                                             class="inline-flex items-center h-10 px-5 rounded-xl border border-red-600 text-red-600 hover:bg-red-50 text-sm font-medium transition gap-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,6 +183,7 @@
 
                                 <form method="POST" action="{{ route('staff.articles.reset-views', $article) }}" class="inline" data-confirm="Reset jumlah view artikel?">
                                     @csrf
+                                    <input type="hidden" name="return_url" value="{{ request()->fullUrl() }}">
                                     <button type="submit" class="inline-flex items-center h-10 px-5 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition gap-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -192,6 +194,7 @@
 
                                 <form method="POST" action="{{ route('staff.articles.reset-feedback', $article) }}" class="inline" data-confirm="Reset semua review artikel?">
                                     @csrf
+                                    <input type="hidden" name="return_url" value="{{ request()->fullUrl() }}">
                                     <button type="submit" class="inline-flex items-center h-10 px-5 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition gap-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -201,7 +204,7 @@
                                 </form>
                             @endif
 
-                            <a href="{{ route('staff.articles.index') }}"
+                            <a href="{{ request('return_url', route('staff.articles.index')) }}"
                                class="inline-flex items-center h-10 px-5 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>

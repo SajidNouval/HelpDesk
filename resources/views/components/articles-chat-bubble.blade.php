@@ -334,7 +334,11 @@ document.addEventListener('DOMContentLoaded', function() {
         unrespDiv.className = 'flex flex-col items-center justify-center h-full text-center p-6';
         unrespDiv.innerHTML = `
             <div class="bg-orange-50 border border-orange-200 rounded-lg p-6 max-w-sm">
-                <div class="text-orange-600 text-4xl mb-4">⚠️</div>
+                <div class="flex justify-center mb-4">
+                    <svg class="h-12 w-12 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Staff Tidak Responsif</h3>
                 <p class="text-sm text-gray-600 mb-4">
                     Maaf, staff kami tidak merespons dalam 20 menit setelah menerima tiket Anda. Tiket telah ditutup otomatis.
@@ -361,7 +365,7 @@ document.addEventListener('DOMContentLoaded', function() {
         msgDiv.className = 'flex items-start';
         msgDiv.innerHTML = `
             <div class="bg-red-100 text-red-900 rounded-lg p-3 max-w-xs">
-                <p class="text-sm font-semibold">Halo! 👋</p>
+                <p class="text-sm font-semibold">Halo!</p>
                 <p class="text-sm mt-2">Kami siap membantu Anda. Silakan jelaskan masalah atau pertanyaan Anda, dan kami akan mencari artikel yang relevan.</p>
             </div>
         `;
@@ -558,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     articlesDiv.className = 'flex justify-start';
                     articlesDiv.innerHTML = `
                         <div class="bg-gray-100 text-gray-900 rounded-lg p-3 max-w-xs">
-                            <p class="text-xs font-semibold mb-2">📚 Artikel Terkait:</p>
+                            <p class="text-xs font-semibold mb-2">Artikel Terkait:</p>
                             <ul class="space-y-1">
                                 ${data.articles.map(article => `
                                     <li>
@@ -720,7 +724,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 successDiv.className = 'flex justify-start';
                 successDiv.innerHTML = `
                     <div class="bg-green-100 text-green-900 rounded-lg p-3 max-w-xs">
-                        <p class="text-sm font-semibold">✓ Tiket berhasil dibuat!</p>
+                        <p class="text-sm font-semibold">Tiket berhasil dibuat!</p>
                         <p class="text-xs mt-1">Silakan tunggu staff menghubungi Anda.</p>
                     </div>
                 `;
@@ -813,7 +817,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 successDiv.className = 'flex justify-start';
                 successDiv.innerHTML = `
                     <div class="bg-green-100 text-green-900 rounded-lg p-3 max-w-xs">
-                        <p class="text-sm font-semibold">✓ Tiket berhasil dibuat!</p>
+                        <p class="text-sm font-semibold">Tiket berhasil dibuat!</p>
                         <p class="text-xs mt-1">Staff sedang menghubungi Anda...</p>
                     </div>
                 `;
@@ -833,7 +837,7 @@ document.addEventListener('DOMContentLoaded', function() {
             errorMsg.className = 'flex justify-start';
             errorMsg.innerHTML = `
                 <div class="bg-red-100 text-red-900 rounded-lg p-3 max-w-xs">
-                    <p class="text-sm font-semibold">❌ Gagal membuat tiket</p>
+                    <p class="text-sm font-semibold">Gagal membuat tiket</p>
                     <p class="text-xs mt-1">${error.message}</p>
                 </div>
             `;

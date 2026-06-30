@@ -73,8 +73,12 @@ class TicketController extends Controller
         $user = auth()->user();
 
         // Get tiket yang ditugaskan ke staff ini
-        $ticketsQuery = Ticket::where('staff_id', $user->id)
-            ->with(['category', 'user']);
+        $ticketsQuery = Ticket::select(['id', 'name', 'email', 'subject', 'category_id', 'staff_id', 'status', 'priority', 'created_at'])
+            ->where('staff_id', $user->id)
+            ->with([
+                'category:id,name',
+                'user:id,name,email'
+            ]);
 
         // Filter by priority if provided
         if ($request->has('priority') && $request->priority) {
@@ -84,14 +88,22 @@ class TicketController extends Controller
         $tickets = $ticketsQuery->latest()->get();
 
         // Pisahkan berdasarkan status
-        $activeTicket = Ticket::where('staff_id', $user->id)
+        $activeTicket = Ticket::select(['id', 'name', 'email', 'subject', 'category_id', 'staff_id', 'status', 'priority', 'created_at'])
+            ->where('staff_id', $user->id)
             ->whereIn('status', ['assigned', 'progress'])
-            ->with(['category', 'user'])
+            ->with([
+                'category:id,name',
+                'user:id,name,email'
+            ])
             ->first();
 
-        $completedTicketsQuery = Ticket::where('staff_id', $user->id)
+        $completedTicketsQuery = Ticket::select(['id', 'name', 'email', 'subject', 'category_id', 'staff_id', 'status', 'priority', 'created_at'])
+            ->where('staff_id', $user->id)
             ->where('status', 'closed')
-            ->with(['category', 'user']);
+            ->with([
+                'category:id,name',
+                'user:id,name,email'
+            ]);
 
         // Filter by priority if provided
         if ($request->has('priority') && $request->priority) {
@@ -100,9 +112,13 @@ class TicketController extends Controller
 
         $completedTickets = $completedTicketsQuery->latest()->get();
 
-        $waitingTicketsQuery = Ticket::where('staff_id', $user->id)
+        $waitingTicketsQuery = Ticket::select(['id', 'name', 'email', 'subject', 'category_id', 'staff_id', 'status', 'priority', 'created_at'])
+            ->where('staff_id', $user->id)
             ->where('status', 'waiting')
-            ->with(['category', 'user']);
+            ->with([
+                'category:id,name',
+                'user:id,name,email'
+            ]);
 
         // Filter by priority if provided
         if ($request->has('priority') && $request->priority) {
@@ -140,7 +156,17 @@ class TicketController extends Controller
             abort(403, 'Anda tidak memiliki akses ke tiket ini');
         }
 
-        $ticket->load(['category', 'user', 'messages.sender', 'logs']);
+        $ticket->load([
+            'category:id,name',
+            'user:id,name,email',
+            'messages' => function ($q) {
+                $q->select(['id', 'ticket_id', 'sender_type', 'sender_id', 'message', 'created_at']);
+            },
+            'messages.sender:id,name',
+            'logs' => function ($q) {
+                $q->select(['id', 'ticket_id', 'action', 'description', 'created_at']);
+            }
+        ]);
 
         return view('staff.tickets.show', compact('ticket'));
     }
@@ -327,7 +353,7 @@ class TicketController extends Controller
 
         broadcast(new \App\Events\TicketClosed($ticket));
 
-        return redirect()->route('staff.tickets.index')->with('success', 'Tiket berhasil ditolak. Guest telah menerima notifikasi.');
+        return $this->safeRedirect('staff.tickets.index')->with('success', 'Tiket berhasil ditolak. Guest telah menerima notifikasi.');
     }
 
     /**
@@ -396,14 +422,14 @@ class TicketController extends Controller
         ]);
 
         // ✨ Auto-assign tiket waiting berikutnya di kategori yang sama
-        $staffProfile = StaffProfile::where('user_id', $user->id)->first();
+        $staffProfile = StaffProfile::select(['id', 'user_id', 'category_id', 'is_busy'])->where('user_id', $user->id)->first();
         if ($staffProfile) {
             $this->assignmentService->assignNextWaiting($staffProfile);
         }
 
         broadcast(new \App\Events\TicketClosed($ticket));
 
-        return redirect()->route('staff.tickets.index')->with('success', 'Tiket berhasil ditandai selesai!');
+        return $this->safeRedirect('staff.tickets.index')->with('success', 'Tiket berhasil ditandai selesai!');
     }
 
     /**
@@ -460,7 +486,7 @@ class TicketController extends Controller
         ]);
 
         // ✨ Auto-assign tiket waiting berikutnya di kategori yang sama
-        $staffProfile = StaffProfile::where('user_id', $user->id)->first();
+        $staffProfile = StaffProfile::select(['id', 'user_id', 'category_id', 'is_busy'])->where('user_id', $user->id)->first();
         if ($staffProfile) {
             $this->assignmentService->assignNextWaiting($staffProfile);
         }
@@ -550,15 +576,21 @@ class TicketController extends Controller
         }
 
         // Pilih staff baru dengan beban kerja paling sedikit di kategori sama
-        $newStaffProfile = StaffProfile::where('category_id', $ticket->category_id)
+        $newStaffProfile = StaffProfile::select(['id', 'user_id', 'category_id', 'is_busy'])
+            ->where('category_id', $ticket->category_id)
             ->where('is_busy', false)
             ->where('user_id', '!=', $ticket->staff_id) // jangan assign ke diri sendiri
-            ->with('user')
+            ->with([
+                'user' => function ($q) {
+                    $q->select(['id', 'name'])
+                      ->withCount(['tickets as active_tickets_count' => function ($q2) {
+                          $q2->whereIn('status', ['assigned', 'progress']);
+                      }]);
+                }
+            ])
             ->get()
             ->sortBy(function ($profile) {
-                return $profile->user->tickets()
-                    ->whereIn('status', ['assigned', 'progress'])
-                    ->count();
+                return $profile->user->active_tickets_count ?? 0;
             })
             ->first();
 

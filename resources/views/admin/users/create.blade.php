@@ -93,6 +93,7 @@
 
                         <form id="staff-form" action="{{ route('admin.users.store') }}" method="POST" class="space-y-6">
                             @csrf
+                            <input type="hidden" name="return_url" value="{{ request('return_url', old('return_url', url()->previous())) }}">
                             <input type="hidden" name="role" value="staff">
                             <input type="hidden" name="status" value="active">
 
@@ -166,7 +167,7 @@
                             </div>
 
                             <div class="pt-4 border-t border-gray-200 flex justify-end gap-3">
-                                <a href="{{ route('admin.users.index') }}">
+                                <a href="{{ request('return_url', route('admin.users.index')) }}">
                                     <button type="button" class="h-10 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
                                         Batal
                                     </button>

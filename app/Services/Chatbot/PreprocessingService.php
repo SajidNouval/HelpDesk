@@ -4,6 +4,8 @@ namespace App\Services\Chatbot;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Sastrawi\Stemmer\StemmerFactory;
+use Sastrawi\Stemmer\StemmerInterface;
 
 /**
  * =========================================================================
@@ -21,6 +23,25 @@ use Illuminate\Support\Facades\Log;
 class PreprocessingService
 {
     /**
+     * Sastrawi stemmer — library resmi untuk stemming Bahasa Indonesia.
+     * Menggunakan algoritma Enhanced Confix Stripping (ECS) dengan kamus
+     * 30.000+ kata dasar, jauh lebih akurat dari prefix/suffix stripping manual.
+     */
+    private StemmerInterface $sastrawiStemmer;
+
+    /**
+     * Hash-set O(1) dari $protectedTechnicalTokens.
+     * Diinisialisasi sekali di constructor untuk menghindari in_array O(N) per token.
+     */
+    private array $protectedTokensLookup = [];
+
+    /**
+     * Prefix yang sudah diurutkan dari terpanjang ke terpendek.
+     * Diinisialisasi sekali di constructor; sebelumnya diurutkan ulang di setiap stem().
+     */
+    private array $sortedPrefixes = [];
+
+    /**
      * Kamus typo untuk normalisasi query
      * Format: 'typo' => 'correct'
      * 
@@ -28,200 +49,144 @@ class PreprocessingService
      */
     private array $typoDictionary = [
         // WiFi related
-        'wfi' => 'wifi',
+        'wfi'   => 'wifi',
         'wiifi' => 'wifi',
-        'wfii' => 'wifi',
+        'wfii'  => 'wifi',
         'wifii' => 'wifi',
         'wi-fi' => 'wifi',
-        'wifi' => 'wifi',
-        
+
         // Internet related
-        'intenet' => 'internet',
-        'internrt' => 'internet',
-        'intrnet' => 'internet',
-        'inet' => 'internet',
-        'intrnt' => 'internet',
-        
+        'intenet'   => 'internet',
+        'internrt'  => 'internet',
+        'intrnet'   => 'internet',
+        'inet'      => 'internet',
+        'intrnt'    => 'internet',
+        'internett' => 'internet',
+
         // Komputer related
-        'kompter' => 'komputer',
-        'komputr' => 'komputer',
-        'kompoter' => 'komputer',
+        'kompter'   => 'komputer',
+        'komputr'   => 'komputer',
+        'kompoter'  => 'komputer',
         'komputerr' => 'komputer',
-        
+        'komputwr'  => 'komputer',
+
         // Jaringan related
-        'jaringn' => 'jaringan',
-        'jaringa' => 'jaringan',
+        'jaringn'   => 'jaringan',
+        'jaringa'   => 'jaringan',
         'jaringann' => 'jaringan',
-        'jaringn' => 'jaringan',
-        
+
         // Printer related
-        'prnter' => 'printer',
+        'prnter'   => 'printer',
         'printter' => 'printer',
-        'printe' => 'printer',
-        'priner' => 'printer',
-        'pritner' => 'printer',
-        'priter' => 'printer',
-        'prinetr' => 'printer',
-        
+        'printe'   => 'printer',
+        'priner'   => 'printer',
+        'pritner'  => 'printer',
+        'priter'   => 'printer',
+        'prinetr'  => 'printer',
+        'pirnter'  => 'printer',
+        'printerr' => 'printer',
+
         // Email related
-        'emai' => 'email',
+        'emai'   => 'email',
         'emaill' => 'email',
-        'emil' => 'email',
-        'emial' => 'email',
-        'eamil' => 'email',
-        'emal' => 'email',
-        
+        'emil'   => 'email',
+        'emial'  => 'email',
+        'eamil'  => 'email',
+        'emal'   => 'email',
+        'e-mail' => 'email',
+
         // Login related
-        'logn' => 'login',
-        'login' => 'login',
-        'logi' => 'login',
+        'logn'  => 'login',
+        'logi'  => 'login',
         'lojin' => 'login',
-        
+
         // Password related
-        'pasword' => 'password',
-        'passwod' => 'password',
+        'pasword'  => 'password',
+        'passwod'  => 'password',
         'passwrod' => 'password',
-        'paswrod' => 'password',
-        
+        'paswrod'  => 'password',
+
         // Koneksi related
-        'koneksi' => 'koneksi',
         'koneksii' => 'koneksi',
-        'koneks' => 'koneksi',
+        'koneks'   => 'koneksi',
         'koneksia' => 'koneksi',
-        
-        // Lemot (slow) related
-        'lemot' => 'lemot',
+
+        // Lemot related
         'lemott' => 'lemot',
-        'lemot' => 'lemot',
-        
+
         // Error related
-        'eror' => 'error',
+        'eror'   => 'error',
         'errror' => 'error',
-        'eroor' => 'error',
-        
+        'eroor'  => 'error',
+        'errorr' => 'error',
+
         // Tidak related
-        'tidk' => 'tidak',
-        'tida' => 'tidak',
+        'tidk'   => 'tidak',
+        'tida'   => 'tidak',
         'tiadak' => 'tidak',
-        
+
         // Bisa related
-        'bsa' => 'bisa',
-        'bisa' => 'bisa',
+        'bsa'   => 'bisa',
         'biisa' => 'bisa',
-        
-        // Mau related
-        'mau' => 'mau',
-        'mau' => 'mau',
-        
-        // Sudah related
-        'sudah' => 'sudah',
-        'sudah' => 'sudah',
-        'sdah' => 'sudah',
-        
-        // Belum related
-        'belum' => 'belum',
+
+        // Sudah/Belum related
+        'sdah'   => 'sudah',
         'belumm' => 'belum',
-        'blm' => 'belum',
-        
-        // Cara related
-        'cara' => 'cara',
-        'caara' => 'cara',
-        'caraa' => 'cara',
-        
-        // Bagaimana related
-        'bagaimana' => 'bagaimana',
+        'blm'    => 'belum',
+
+        // Cara/Bagaimana related
+        'caara'  => 'cara',
+        'caraa'  => 'cara',
         'gimana' => 'bagaimana',
-        'gmna' => 'bagaimana',
-        
-        // Kenapa related
-        'kenapa' => 'kenapa',
-        'knpa' => 'kenapa',
+        'gmna'   => 'bagaimana',
+
+        // Kenapa/Mengapa related
+        'knpa'  => 'kenapa',
         'knapa' => 'kenapa',
-        
-        // Apa related
-        'apa' => 'apa',
-        'apaa' => 'apa',
-        
-        // Kenapa related
-        'mengapa' => 'mengapa',
         'mengap' => 'mengapa',
-        
+
+        // Apa related
+        'apaa' => 'apa',
+
         // Setting related
         'seting' => 'setting',
-        'setting' => 'setting',
-        'seting' => 'setting',
-        'setelan' => 'setelan',
-        
-        // Instal related
-        'instal' => 'instal',
-        'install' => 'instal',
+
+        // Install related
+        'install'  => 'instalasi',
         'instalsi' => 'instalasi',
-        'instalasi' => 'instalasi',
-        
-        // Perbarui related
-        'update' => 'update',
+
+        // Update related
         'upadate' => 'update',
-        'updt' => 'update',
-        
+        'updt'    => 'update',
+
         // Driver related
-        'driver' => 'driver',
         'driverr' => 'driver',
-        'diver' => 'driver',
-        
-        // Software related
-        'software' => 'software',
+        'diver'   => 'driver',
+
+        // Software/Hardware related
         'softwere' => 'software',
-        'softwre' => 'software',
-        
-        // Hardware related
-        'hardware' => 'hardware',
+        'softwre'  => 'software',
         'hardwere' => 'hardware',
-        'hardwre' => 'hardware',
-        
-        // File related
-        'file' => 'file',
-        'fie' => 'file',
+        'hardwre'  => 'hardware',
+
+        // File/Data related
+        'fie'   => 'file',
         'filee' => 'file',
-        
-        // Data related
-        'data' => 'data',
-        'dat' => 'data',
-        'daa' => 'data',
-        
-        // Download related
-        'download' => 'download',
-        'donlod' => 'download',
+        'dat'   => 'data',
+        'daa'   => 'data',
+
+        // Download/Upload related
+        'donlod'  => 'download',
         'downlod' => 'download',
-        
-        // Upload related
-        'upload' => 'upload',
-        'uplod' => 'upload',
-        'uplaod' => 'upload',
-        
-        // Docker related
-        'docker' => 'docker',
+        'uplod'   => 'upload',
+        'uplaod'  => 'upload',
+
+        // Docker/Virus related
         'dockerr' => 'docker',
-        
-        // Error related (dengan double r dari compression)
-        'error' => 'error',
-        'errorr' => 'error',
-        
-        // Virus related (dengan double s dari compression)
-        'virus' => 'virus',
-        'viruss' => 'virus',
-        
-        // Printer related (dengan double r dari compression)
-        'printer' => 'printer',
-        'printerr' => 'printer',
-        
-        // Internet related (dengan double t dari compression)
-        'internet' => 'internet',
-        'internett' => 'internet',
-        
-        // Komputer related (dengan double r dari compression)
-        'komputer' => 'komputer',
-        'komputerr' => 'komputer',
+        'viruss'  => 'virus',
     ];
+
+
 
     /**
      * Token konteks untuk boosting - kata-kata yang menunjukkan domain spesifik
@@ -551,6 +516,25 @@ class PreprocessingService
     ];
 
     /**
+     * Constructor — inisialisasi Sastrawi stemmer dan O(1) lookup sekali,
+     * agar tidak diinisialisasi berulang kali saat stemming dipanggil.
+     */
+    public function __construct()
+    {
+        // UPGRADE: Sastrawi menggunakan algoritma Enhanced Confix Stripping (ECS)
+        // dengan kamus 30.000+ kata dasar Bahasa Indonesia yang akurat.
+        $factory = new StemmerFactory();
+        $this->sastrawiStemmer = $factory->createStemmer();
+
+        // OPTIMASI: Bangun hash-set O(1) dari protected tokens
+        $this->protectedTokensLookup = array_flip($this->protectedTechnicalTokens);
+
+        // OPTIMASI: Prefix diurutkan satu kali di constructor
+        $this->sortedPrefixes = $this->prefixes;
+        usort($this->sortedPrefixes, fn($a, $b) => mb_strlen($b) - mb_strlen($a));
+    }
+
+    /**
      * Preprocess teks untuk query user atau dokumen
      * Menggunakan langkah yang sama untuk konsistensi
      *
@@ -723,48 +707,27 @@ class PreprocessingService
     }
 
     /**
-     * Stemming sederhana untuk Bahasa Indonesia
-     * Menggunakan pendekatan kombinasi prefix dan suffix removal
-     * 
+     * Stemming Bahasa Indonesia menggunakan Sastrawi (Enhanced Confix Stripping).
+     *
+     * Sastrawi menggunakan kamus 30.000+ kata dasar dengan algoritma ECS yang
+     * jauh lebih akurat daripada pendekatan manual prefix/suffix stripping.
+     *
      * PENTING: Protected technical token TIDAK akan di-stem!
-     * Ini memastikan istilah seperti "ransomware", "malware", "virus" 
-     * tetap utuh dan tidak berubah menjadi "ransomwar", "malwar", dll.
+     * Ini memastikan istilah seperti "ransomware", "malware", "virus"
+     * tetap utuh dan tidak berubah.
      */
     private function stem(string $word): string
     {
-        // CRITICAL: Periksa jika this is a protected technical token
-        // Jika yes, DO NOT STEM - kembalikan as-is
+        // CRITICAL: Jangan stem protected technical tokens
         if ($this->isProtectedTechnicalToken($word)) {
             return $word;
         }
 
-        // Urutkan prefix dari yang terpanjang
-        $sortedPrefixes = $this->prefixes;
-        usort($sortedPrefixes, fn($a, $b) => mb_strlen($b) - mb_strlen($a));
+        // UPGRADE: Gunakan Sastrawi untuk stemming Bahasa Indonesia
+        $stemmed = $this->sastrawiStemmer->stem($word);
 
-        // Coba hapus prefix
-        foreach ($sortedPrefixes as $prefix) {
-            if (str_starts_with($word, $prefix)) {
-                $stemmed = mb_substr($word, mb_strlen($prefix));
-                if (mb_strlen($stemmed) >= 2) {
-                    $word = $stemmed;
-                    break;
-                }
-            }
-        }
-
-        // Coba hapus suffix
-        foreach ($this->suffixes as $suffix) {
-            if (str_ends_with($word, $suffix)) {
-                $stemmed = mb_substr($word, 0, mb_strlen($word) - mb_strlen($suffix));
-                if (mb_strlen($stemmed) >= 2) {
-                    $word = $stemmed;
-                    break;
-                }
-            }
-        }
-
-        return $word;
+        // Fallback: Jika hasil stem terlalu pendek, kembalikan kata asli
+        return (mb_strlen($stemmed) >= 2) ? $stemmed : $word;
     }
 
     /**
@@ -785,7 +748,8 @@ class PreprocessingService
      */
     public function isProtectedTechnicalToken(string $token): bool
     {
-        return in_array(mb_strtolower($token), $this->protectedTechnicalTokens);
+        // OPTIMASI: isset pada hash-set O(1) vs in_array O(N)
+        return isset($this->protectedTokensLookup[mb_strtolower($token)]);
     }
 
     /**

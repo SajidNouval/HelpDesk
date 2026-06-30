@@ -10,6 +10,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * =============================================================================
@@ -75,79 +76,110 @@ class DashboardController extends Controller
      */
     public function index(): View
     {
-        $staffCount = User::where('role', 'staff')->count();
-        $articleCount = Article::count();
-        $helpfulFeedbackCount = ArticleFeedback::where('is_helpful', true)->count();
-        $notHelpfulFeedbackCount = ArticleFeedback::where('is_helpful', false)->count();
+        $version = Cache::rememberForever('admin_dashboard_version', fn() => time());
+        $queryString = request()->getQueryString() ?? '';
+        $cacheKey = "admin_dashboard_data:v{$version}:" . md5($queryString);
 
-        $pendingArticles = Article::with('category', 'staff')
-            ->where('publish_status', 'pending')
-            ->oldest()
-            ->paginate(10);
+        $data = Cache::remember($cacheKey, 3600, function() {
+            $staffCount = User::where('role', 'staff')->count();
+            $articleCount = Article::count();
+            
+            $feedbackStats = ArticleFeedback::selectRaw("
+                count(case when is_helpful = 1 then 1 end) as helpful,
+                count(case when is_helpful = 0 then 1 end) as not_helpful
+            ")->first();
+            $helpfulFeedbackCount = $feedbackStats->helpful ?? 0;
+            $notHelpfulFeedbackCount = $feedbackStats->not_helpful ?? 0;
 
-        $articles = Article::with('category', 'staff')
-            ->withCount([
-                'feedback as helpful_count' => function ($query) {
-                    $query->where('is_helpful', true);
-                },
-                'feedback as not_helpful_count' => function ($query) {
-                    $query->where('is_helpful', false);
-                },
-            ])
-            ->orderBy('views', 'desc')
-            ->paginate(10);
+            $pendingArticles = Article::select(['id', 'category_id', 'staff_id', 'title', 'slug', 'created_at'])
+                ->with([
+                    'category:id,name',
+                    'staff:id,name'
+                ])
+                ->where('publish_status', 'pending')
+                ->oldest()
+                ->paginate(10)
+                ->withQueryString();
 
-        $liveServiceEnabled = Setting::bool('live_service_enabled', true);
+            $articles = Article::select(['id', 'category_id', 'staff_id', 'title', 'slug', 'views', 'created_at'])
+                ->with([
+                    'category:id,name',
+                    'staff:id,name'
+                ])
+                ->withCount([
+                    'feedback as helpful_count' => function ($query) {
+                        $query->where('is_helpful', true);
+                    },
+                    'feedback as not_helpful_count' => function ($query) {
+                        $query->where('is_helpful', false);
+                    },
+                ])
+                ->orderBy('views', 'desc')
+                ->paginate(10)
+                ->withQueryString();
 
-        $totalTickets = Ticket::count();
-        $ticketsWaiting = Ticket::where('status', 'waiting')->count();
-        $ticketsProcessing = Ticket::whereIn('status', ['assigned', 'progress'])->count();
-        $ticketsDone = Ticket::where('status', 'closed')->count();
+            $liveServiceEnabled = Setting::bool('live_service_enabled', true);
 
-        $staffStats = User::where('role', 'staff')
-            ->withCount([
-                'tickets as total_tickets',
-                'tickets as tickets_done' => function ($q) { $q->where('status', 'closed'); },
-                'tickets as tickets_waiting' => function ($q) { $q->where('status', 'waiting'); },
-                'tickets as tickets_rejected' => function ($q) { $q->whereHas('logs', function ($q2) { $q2->where('action', 'rejected'); }); },
-                'articles as articles_approved' => function ($q) { $q->where('publish_status', 'approved'); },
-                'articles as articles_rejected' => function ($q) { $q->where('publish_status', 'rejected'); },
-            ])
-            ->orderByDesc('tickets_done')
-            ->paginate(10);
+            $ticketStats = Ticket::selectRaw("
+                count(*) as total,
+                count(case when status = 'waiting' then 1 end) as waiting,
+                count(case when status in ('assigned', 'progress') then 1 end) as processing,
+                count(case when status = 'closed' then 1 end) as done
+            ")->first();
+            $totalTickets = $ticketStats->total;
+            $ticketsWaiting = $ticketStats->waiting;
+            $ticketsProcessing = $ticketStats->processing;
+            $ticketsDone = $ticketStats->done;
 
-        $topArticles = Article::orderByDesc('views')->take(5)->get(['id', 'title', 'views']);
+            $staffStats = User::select(['id', 'name', 'email'])
+                ->where('role', 'staff')
+                ->withCount([
+                    'tickets as total_tickets',
+                    'tickets as tickets_done' => function ($q) { $q->where('status', 'closed'); },
+                    'tickets as tickets_waiting' => function ($q) { $q->where('status', 'waiting'); },
+                    'tickets as tickets_rejected' => function ($q) { $q->whereHas('logs', function ($q2) { $q2->where('action', 'rejected'); }); },
+                    'articles as articles_approved' => function ($q) { $q->where('publish_status', 'approved'); },
+                    'articles as articles_rejected' => function ($q) { $q->where('publish_status', 'rejected'); },
+                ])
+                ->orderByDesc('tickets_done')
+                ->paginate(10)
+                ->withQueryString();
 
-        $topStaff = User::where('role', 'staff')
-            ->withCount(['tickets as completed_count' => function ($q) { $q->where('status', 'closed'); }])
-            ->orderByDesc('completed_count')
-            ->take(3)
-            ->get(['id', 'name']);
+            $topArticles = Article::orderByDesc('views')->take(5)->get(['id', 'title', 'views']);
 
-        $chatbotStats = [
-            'total_questions' => 0,
-            'today' => 0,
-            'answered' => 0,
-            'unanswered' => 0,
-        ];
+            $topStaff = User::where('role', 'staff')
+                ->withCount(['tickets as completed_count' => function ($q) { $q->where('status', 'closed'); }])
+                ->orderByDesc('completed_count')
+                ->take(3)
+                ->get(['id', 'name']);
 
-        return view('admin.dashboard', compact(
-            'staffCount',
-            'articleCount',
-            'helpfulFeedbackCount',
-            'notHelpfulFeedbackCount',
-            'pendingArticles',
-            'articles',
-            'liveServiceEnabled',
-            'totalTickets',
-            'ticketsWaiting',
-            'ticketsProcessing',
-            'ticketsDone',
-            'staffStats',
-            'topArticles',
-            'topStaff',
-            'chatbotStats'
-        ));
+            $chatbotStats = [
+                'total_questions' => 0,
+                'today' => 0,
+                'answered' => 0,
+                'unanswered' => 0,
+            ];
+
+            return compact(
+                'staffCount',
+                'articleCount',
+                'helpfulFeedbackCount',
+                'notHelpfulFeedbackCount',
+                'pendingArticles',
+                'articles',
+                'liveServiceEnabled',
+                'totalTickets',
+                'ticketsWaiting',
+                'ticketsProcessing',
+                'ticketsDone',
+                'staffStats',
+                'topArticles',
+                'topStaff',
+                'chatbotStats'
+            );
+        });
+
+        return view('admin.dashboard', $data);
     }
 
     /**
@@ -177,7 +209,7 @@ class DashboardController extends Controller
         $enabled = $request->status === 'on';
         Setting::setValue('live_service_enabled', $enabled ? '1' : '0');
 
-        return redirect()->route('admin.dashboard')
+        return $this->safeRedirect('admin.dashboard')
             ->with('success', 'Live service telah ' . ($enabled ? 'diaktifkan' : 'dimatikan') . '.');
     }
 }

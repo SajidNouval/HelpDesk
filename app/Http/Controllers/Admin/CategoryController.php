@@ -59,7 +59,8 @@ class CategoryController extends Controller
      */
     public function index(): View
     {
-        $query = Category::withCount('articles');
+        $query = Category::select(['id', 'name', 'description', 'updated_at'])
+            ->withCount('articles');
 
         if (request('q')) {
             $query->where('name', 'like', '%' . request('q') . '%')
@@ -84,7 +85,7 @@ class CategoryController extends Controller
                 break;
         }
 
-        $categories = $query->paginate(10);
+        $categories = $query->paginate(10)->withQueryString();
 
         return view('admin.categories.index', compact('categories'));
     }
@@ -131,7 +132,7 @@ class CategoryController extends Controller
 
         Category::create($validated);
 
-        return Redirect::route('admin.categories.index')
+        return $this->safeRedirect('admin.categories.index')
             ->with('success', 'Kategori berhasil ditambahkan.');
     }
 
@@ -170,15 +171,24 @@ class CategoryController extends Controller
 
         $staff->staffProfiles()->delete();
 
+        $data = [];
+        $now = now();
         foreach ($validated['category_ids'] as $categoryId) {
-            StaffProfile::create([
+            $data[] = [
+                'id' => (string) \Illuminate\Support\Str::ulid(),
                 'user_id' => $staff->id,
                 'category_id' => $categoryId,
                 'is_busy' => false,
-            ]);
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
 
-        return Redirect::route('admin.categories.index')
+        if (!empty($data)) {
+            StaffProfile::insert($data);
+        }
+
+        return $this->safeRedirect('admin.categories.index')
             ->with('success', 'Kategori staf berhasil diperbarui.');
     }
 
@@ -224,7 +234,7 @@ class CategoryController extends Controller
 
         $category->update($validated);
 
-        return Redirect::route('admin.categories.index')
+        return $this->safeRedirect('admin.categories.index')
             ->with('success', 'Kategori berhasil diperbarui.');
     }
 
@@ -251,13 +261,13 @@ class CategoryController extends Controller
     public function destroy(Category $category): RedirectResponse
     {
         if ($category->staffProfiles()->exists()) {
-            return Redirect::route('admin.categories.index')
+            return $this->safeRedirect('admin.categories.index')
                 ->with('error', 'Kategori tidak dapat dihapus karena masih digunakan oleh staf.');
         }
 
         $category->delete();
 
-        return Redirect::route('admin.categories.index')
+        return $this->safeRedirect('admin.categories.index')
             ->with('success', 'Kategori berhasil dihapus.');
     }
 }

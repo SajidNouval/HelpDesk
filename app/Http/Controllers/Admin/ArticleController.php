@@ -65,7 +65,11 @@ class ArticleController extends Controller
         $sort = request('sort', 'created_desc');
         $status = request('status');
 
-        $articlesQuery = Article::with('category', 'staff')
+        $articlesQuery = Article::select(['id', 'category_id', 'staff_id', 'title', 'slug', 'views', 'publish_status', 'is_hidden', 'created_at'])
+            ->with([
+                'category:id,name',
+                'staff:id,name'
+            ])
             ->withCount([
                 'feedback as helpful_count' => function ($query) {
                     $query->where('is_helpful', true);
@@ -106,10 +110,17 @@ class ArticleController extends Controller
 
         $articles = $articlesQuery->paginate(20)->withQueryString();
 
-        $totalArticles = Article::count();
-        $pendingArticles = Article::where('publish_status', 'pending')->count();
-        $approvedArticles = Article::where('publish_status', 'approved')->count();
-        $rejectedArticles = Article::where('publish_status', 'rejected')->count();
+        $stats = Article::selectRaw("
+            count(*) as total,
+            count(case when publish_status = 'pending' then 1 end) as pending,
+            count(case when publish_status = 'approved' then 1 end) as approved,
+            count(case when publish_status = 'rejected' then 1 end) as rejected
+        ")->first();
+
+        $totalArticles = $stats->total;
+        $pendingArticles = $stats->pending;
+        $approvedArticles = $stats->approved;
+        $rejectedArticles = $stats->rejected;
 
         return view('admin.articles.index', compact(
             'articles',
@@ -144,7 +155,7 @@ class ArticleController extends Controller
      */
     public function show(Article $article): View
     {
-        $article->load(['category', 'staff']);
+        $article->load(['category:id,name', 'staff:id,name']);
         $article->loadCount([
             'feedback as helpful_count' => function ($query) {
                 $query->where('is_helpful', true);
@@ -169,6 +180,13 @@ class ArticleController extends Controller
      */
     private function buildJsonArticleResponse(Article $article, string $message): JsonResponse
     {
+        $feedbackStats = $article->feedback()
+            ->selectRaw("
+                count(case when is_helpful = 1 then 1 end) as helpful,
+                count(case when is_helpful = 0 then 1 end) as not_helpful
+            ")
+            ->first();
+
         return response()->json([
             'success' => true,
             'message' => $message,
@@ -177,8 +195,8 @@ class ArticleController extends Controller
                 'views' => $article->views,
                 'is_hidden' => $article->is_hidden,
                 'publish_status' => $article->publish_status,
-                'helpful_count' => $article->feedback()->where('is_helpful', true)->count(),
-                'not_helpful_count' => $article->feedback()->where('is_helpful', false)->count(),
+                'helpful_count' => $feedbackStats->helpful ?? 0,
+                'not_helpful_count' => $feedbackStats->not_helpful ?? 0,
                 'rejection_note' => $article->rejection_note,
             ],
         ]);
@@ -205,7 +223,7 @@ class ArticleController extends Controller
             return $this->buildJsonArticleResponse($article, 'View artikel berhasil di-reset.');
         }
 
-        return redirect()->route('admin.articles.index')->with('success', 'View artikel berhasil di-reset.');
+        return $this->safeRedirect('admin.articles.index')->with('success', 'View artikel berhasil di-reset.');
     }
 
     /**
@@ -229,7 +247,7 @@ class ArticleController extends Controller
             return $this->buildJsonArticleResponse($article, 'Feedback artikel berhasil di-reset.');
         }
 
-        return redirect()->route('admin.articles.index')->with('success', 'Feedback artikel berhasil di-reset.');
+        return $this->safeRedirect('admin.articles.index')->with('success', 'Feedback artikel berhasil di-reset.');
     }
 
     /**
@@ -262,7 +280,7 @@ class ArticleController extends Controller
             return $this->buildJsonArticleResponse($article, $message);
         }
         
-        return redirect()->route('admin.articles.index')->with('success', $message);
+        return $this->safeRedirect('admin.articles.index')->with('success', $message);
     }
 
     /**
@@ -296,7 +314,7 @@ class ArticleController extends Controller
             return $this->buildJsonArticleResponse($article, 'Artikel berhasil disetujui dan dipublikasikan.');
         }
 
-        return redirect()->route('admin.articles.index')->with('success', 'Artikel berhasil disetujui dan dipublikasikan.');
+        return $this->safeRedirect('admin.articles.index')->with('success', 'Artikel berhasil disetujui dan dipublikasikan.');
     }
 
     /**
@@ -336,7 +354,7 @@ class ArticleController extends Controller
             return $this->buildJsonArticleResponse($article, 'Artikel ditolak. Catatan penolakan telah disimpan.');
         }
 
-        return redirect()->route('admin.articles.index')->with('success', 'Artikel ditolak. Catatan penolakan telah disimpan.');
+        return $this->safeRedirect('admin.articles.index')->with('success', 'Artikel ditolak. Catatan penolakan telah disimpan.');
     }
 
     /**
@@ -371,6 +389,6 @@ class ArticleController extends Controller
             return $this->buildJsonArticleResponse($article, 'Catatan penolakan berhasil disimpan.');
         }
 
-        return redirect()->route('admin.articles.index')->with('success', 'Catatan penolakan berhasil disimpan.');
+        return $this->safeRedirect('admin.articles.index')->with('success', 'Catatan penolakan berhasil disimpan.');
     }
 }

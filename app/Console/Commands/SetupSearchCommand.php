@@ -43,7 +43,7 @@ class SetupSearchCommand extends Command
      */
     public function handle(): int
     {
-        $this->info('🚀 Setting up search untuk Chatbot...');
+        $this->info('Setting up search untuk Chatbot...');
 
         $meiliClient = new MeiliSearchClient(
             config('scout.meilisearch.host'),
@@ -54,27 +54,27 @@ class SetupSearchCommand extends Command
 
         try {
             // Cek koneksi Meilisearch
-            $this->info('🔍 Mengecek koneksi Meilisearch...');
+            $this->info('Mengecek koneksi Meilisearch...');
             $health = $meiliClient->health();
-            $this->info('✅ Meilisearch tersedia: ' . $health['status']);
+            $this->info('Meilisearch tersedia: ' . $health['status']);
 
             // Hapus index jika --fresh
             if ($this->option('fresh')) {
-                $this->warn('🗑️  Menghapus index lama...');
+                $this->warn('Menghapus index lama...');
                 $meiliClient->deleteIndex($indexName);
-                $this->info('✅ Index dihapus');
+                $this->info('Index dihapus');
             }
 
             // Buat index jika belum ada
-            $this->info('📝 Membuat index articles...');
+            $this->info('Membuat index articles...');
             $index = $meiliClient->createIndex($indexName, ['primaryKey' => 'id']);
 
             // Tunggu index ready
-            $this->info('⏳ Menunggu index ready...');
+            $this->info('Menunggu index ready...');
             sleep(2);
 
             // Set searchable attributes
-            $this->info('🔧 Mengatur searchable attributes...');
+            $this->info('Mengatur searchable attributes...');
             $index->updateSearchableAttributes([
                 'title',
                 'content',
@@ -82,21 +82,21 @@ class SetupSearchCommand extends Command
             ]);
 
             // Set filterable attributes
-            $this->info('🔧 Mengatur filterable attributes...');
+            $this->info('Mengatur filterable attributes...');
             $index->updateFilterableAttributes([
                 'is_published',
                 'category_name',
             ]);
 
             // Set sortable attributes
-            $this->info('🔧 Mengatur sortable attributes...');
+            $this->info('Mengatur sortable attributes...');
             $index->updateSortableAttributes([
                 'views',
                 'created_at',
             ]);
 
             // Set ranking rules
-            $this->info('🔧 Mengatur ranking rules...');
+            $this->info('Mengatur ranking rules...');
             $index->updateRankingRules([
                 'words',
                 'typo',
@@ -107,7 +107,7 @@ class SetupSearchCommand extends Command
             ]);
 
             // Set synonyms (Bahasa Indonesia)
-            $this->info('🔧 Mengatur synonyms...');
+            $this->info('Mengatur synonyms...');
             $index->updateSynonyms([
                 'login' => ['masuk', 'log in', 'signin'],
                 'password' => ['kata sandi', 'sandi', 'pass'],
@@ -121,7 +121,7 @@ class SetupSearchCommand extends Command
             ]);
 
             // Set typo tolerance
-            $this->info('🔧 Mengatur typo tolerance...');
+            $this->info('Mengatur typo tolerance...');
             $index->updateTypoTolerance([
                 'enabled' => true,
                 'minWordSizeForTypos' => [
@@ -133,20 +133,20 @@ class SetupSearchCommand extends Command
             ]);
 
             // Import semua artikel
-            $this->info('📥 Mengimport artikel...');
+            $this->info('Mengimport artikel...');
             $this->call('scout:import', [
                 'model' => Article::class,
             ]);
 
             // Cek jumlah dokumen
             $stats = $index->stats();
-            $this->info('✅ Setup selesai! ' . $stats['numberOfDocuments'] . ' artikel diindex');
+            $this->info('Setup selesai! ' . $stats['numberOfDocuments'] . ' artikel diindex');
 
             return self::SUCCESS;
 
         } catch (Exception $e) {
-            $this->error('❌ Setup gagal: ' . $e->getMessage());
-            $this->warn('💡 Pastikan Meilisearch berjalan dan konfigurasi benar');
+            $this->error('Setup gagal: ' . $e->getMessage());
+            $this->warn('Pastikan Meilisearch berjalan dan konfigurasi benar');
             return self::FAILURE;
         }
     }

@@ -58,5 +58,60 @@
                 @endif
             });
         </script>
+
+        <!-- Navigation State Preservation (Scroll & Tab Position) -->
+        <script>
+            (function() {
+                // --- SCROLL POSITION PRESERVATION ---
+                const scrollKey = 'scroll_pos_' + window.location.href;
+                
+                // Save scroll position before unloading
+                window.addEventListener('beforeunload', () => {
+                    sessionStorage.setItem(scrollKey, window.scrollY);
+                });
+
+                // Debounced scroll listener to ensure position is saved during active usage
+                let scrollTimeout;
+                window.addEventListener('scroll', () => {
+                    clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(() => {
+                        sessionStorage.setItem(scrollKey, window.scrollY);
+                    }, 200);
+                });
+
+                // Restore scroll position
+                function restoreScroll() {
+                    const savedScroll = sessionStorage.getItem(scrollKey);
+                    if (savedScroll !== null) {
+                        window.scrollTo(0, parseInt(savedScroll, 10));
+                    }
+                }
+
+                if (document.readyState === 'complete') {
+                    restoreScroll();
+                } else {
+                    window.addEventListener('load', restoreScroll);
+                    document.addEventListener('DOMContentLoaded', restoreScroll);
+                }
+
+                // --- TAB STATE PRESERVATION ---
+                // Automatically append current active tab to all forms if present in the URL
+                document.addEventListener('DOMContentLoaded', () => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const tabParam = urlParams.get('tab');
+                    if (tabParam) {
+                        document.querySelectorAll('form').forEach(form => {
+                            if (!form.querySelector('input[name="tab"]') && form.method.toLowerCase() === 'post') {
+                                const tabInput = document.createElement('input');
+                                tabInput.type = 'hidden';
+                                tabInput.name = 'tab';
+                                tabInput.value = tabParam;
+                                form.appendChild(tabInput);
+                            }
+                        });
+                    }
+                });
+            })();
+        </script>
     </body>
 </html>

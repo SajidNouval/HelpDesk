@@ -82,6 +82,8 @@ class ChatbotRetrievalService
     private DomainDetectionService  $domainDetector;
     private TypesenseService        $typesenseService;
 
+    private VocabularyService     $vocabularyService;
+
     // Penyimpanan informasi debug saat mode debug aktif
     private array $debugInfo = [];
     private bool  $debugMode;
@@ -110,13 +112,15 @@ class ChatbotRetrievalService
         TfidfService $tfidfService,
         CosineSimilarityService $similarityService,
         DomainDetectionService $domainDetector,
-        TypesenseService $typesenseService
+        TypesenseService $typesenseService,
+        VocabularyService $vocabularyService
     ) {
         $this->preprocessor      = $preprocessor;
         $this->tfidfService      = $tfidfService;
         $this->similarityService = $similarityService;
         $this->domainDetector    = $domainDetector;
         $this->typesenseService  = $typesenseService;
+        $this->vocabularyService = $vocabularyService;
         $this->debugMode         = config('app.debug', false);
     }
 
@@ -318,24 +322,25 @@ class ChatbotRetrievalService
             // Query ini mengambil artikel berdasarkan ID kandidat dari Typesense
             // hanya untuk artikel yang sudah dipublikasi dan disetujui
             $candidateIds = array_column($typesenseCandidates, 'id');
-            return Article::whereIn('id', $candidateIds)
+            return Article::select(['id', 'category_id', 'title', 'content', 'excerpt', 'keywords', 'slug', 'updated_at'])
+                ->whereIn('id', $candidateIds)
                 ->where('is_published', true)
                 ->where('publish_status', 'approved')
-                ->with('category')
+                ->with('category:id,name')
                 ->get();
         }
 
         // Fallback: ambil dari database jika Typesense tidak tersedia
         $query = Article::where('is_published', true)
             ->where('publish_status', 'approved')
-            ->with('category');
+            ->with('category:id,name');
 
         // Terapkan filter domain jika terdeteksi
         if (!empty($domainInfo['category_ids'])) {
             $query->whereIn('category_id', $domainInfo['category_ids']);
         }
 
-        return $query->select('id', 'title', 'content', 'excerpt', 'keywords', 'slug', 'category_id')
+        return $query->select('id', 'title', 'content', 'excerpt', 'keywords', 'slug', 'category_id', 'updated_at')
             ->get();
     }
 
@@ -742,6 +747,7 @@ class ChatbotRetrievalService
                 'keywords'     => $article->keywords,
                 'slug'         => $article->slug,
                 'category_id'  => $article->category_id,
+                'updated_at'   => $article->updated_at?->timestamp ?? 0,
             ];
         }
 
@@ -772,8 +778,15 @@ class ChatbotRetrievalService
     private function buildOrRetrieveVectors(array $documents): array
     {
         $docCount = count($documents);
-        $docIds   = implode(',', array_keys($documents));
-        $cacheKey = self::VECTOR_CACHE_KEY . ':' . md5($docIds);
+        
+        // Buat hash unik berdasarkan ID dokumen dan waktu update-nya
+        $docState = [];
+        foreach ($documents as $docId => $doc) {
+            $docState[] = $docId . '_' . ($doc['updated_at'] ?? '0');
+        }
+        $stateHash = md5(implode(',', $docState));
+        
+        $cacheKey = self::VECTOR_CACHE_KEY . ':' . $stateHash;
 
         // Cek cache terlebih dahulu agar tidak perlu hitung ulang jika data sama
         $cached = Cache::get($cacheKey);
@@ -835,6 +848,7 @@ class ChatbotRetrievalService
         Cache::forget(self::IDF_CACHE_KEY);
         Cache::forget(self::TOPIC_CACHE_KEY);
         $this->tfidfService->clearCache();
+        $this->vocabularyService->clearCache();
 
         Log::info('Chatbot retrieval cache cleared');
     }
@@ -866,7 +880,8 @@ class ChatbotRetrievalService
         $this->clearCache();
 
         // Query ini mengambil semua artikel aktif untuk membangun ulang statistik IDF
-        $articles  = Article::where('is_published', true)
+        $articles  = Article::select(['id', 'category_id', 'title', 'content', 'excerpt', 'keywords', 'updated_at'])
+            ->where('is_published', true)
             ->where('publish_status', 'approved')
             ->get();
 
@@ -1248,13 +1263,13 @@ class ChatbotRetrievalService
         $hour = date('H');
 
         if ($hour < 11) {
-            $greetings = ['Selamat pagi! 👋', 'Pagi! Ada yang bisa saya bantu?'];
+            $greetings = ['Selamat pagi!', 'Pagi! Ada yang bisa saya bantu?'];
         } elseif ($hour < 15) {
-            $greetings = ['Selamat siang! 👋', 'Siang! Silakan tanyakan sesuatu.'];
+            $greetings = ['Selamat siang!', 'Siang! Silakan tanyakan sesuatu.'];
         } elseif ($hour < 18) {
-            $greetings = ['Selamat sore! 👋', 'Sore! Ada yang bisa saya bantu?'];
+            $greetings = ['Selamat sore!', 'Sore! Ada yang bisa saya bantu?'];
         } else {
-            $greetings = ['Selamat malam! 👋', 'Malam! Silakan tanyakan sesuatu.'];
+            $greetings = ['Selamat malam!', 'Malam! Silakan tanyakan sesuatu.'];
         }
 
         // Tambahkan pilihan sapaan generik sebagai cadangan

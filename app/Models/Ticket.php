@@ -37,6 +37,7 @@ class Ticket extends Model
         'subject',
         'message',
         'category_id',
+        'type',
         'user_id',
         'staff_id',
         'status',

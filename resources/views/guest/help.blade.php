@@ -152,6 +152,12 @@
                             Mohon tidak menutup halaman ini. Kami sedang mencari staf yang tersedia untuk melayani Anda.
                         </p>
 
+                        <!-- Queue position block -->
+                        <div id="queuePositionBlock" class="mb-6 text-sm text-blue-800 bg-blue-50 border border-blue-100 rounded-2xl py-3 px-5 inline-block hidden">
+                            Anda berada di antrean nomor: <span id="helpQueuePosition" class="text-red-600 font-bold">#--</span><br>
+                            Estimasi waktu tunggu: <span id="helpQueueEst" class="text-blue-600 font-bold">--</span> menit.
+                        </div>
+
                         <!-- An alert block for auto-close error, initially hidden -->
                         <div id="waitingErrorAlert" class="hidden mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-900 text-left">
                         </div>
@@ -246,7 +252,57 @@
                 }, 1000);
             }
 
-            function showLivechatWaiting(ticketId, trackingUrl) {
+            let echoChannel = null;
+
+            function updateHelpQueueUI(position, estimatedMinutes) {
+                const block = document.getElementById('queuePositionBlock');
+                const posEl = document.getElementById('helpQueuePosition');
+                const estEl = document.getElementById('helpQueueEst');
+                if (position && block && posEl && estEl) {
+                    posEl.textContent = `#${position}`;
+                    estEl.textContent = estimatedMinutes;
+                    block.classList.remove('hidden');
+                } else if (block) {
+                    block.classList.add('hidden');
+                }
+            }
+
+            function showWaitingWarning(message) {
+                const waitingErrorAlert = document.getElementById('waitingErrorAlert');
+                if (waitingErrorAlert) {
+                    waitingErrorAlert.textContent = message;
+                    waitingErrorAlert.classList.remove('hidden');
+                    waitingErrorAlert.classList.remove('border-red-200', 'bg-red-50', 'text-red-900');
+                    waitingErrorAlert.classList.add('border-yellow-200', 'bg-yellow-50', 'text-yellow-900');
+                }
+            }
+
+            function setupHelpWebSocket(ticketId, trackingUrl) {
+                if (typeof window.Echo !== 'undefined' && ticketId) {
+                    if (echoChannel) window.Echo.leave(`ticket.${ticketId}`);
+                    
+                    console.log('Setting up WebSocket listener on help page for ticket:', ticketId);
+                    echoChannel = window.Echo.channel(`ticket.${ticketId}`);
+                    
+                    echoChannel.listen('.QueuePositionUpdated', (e) => {
+                        console.log('Received QueuePositionUpdated on help page:', e);
+                        updateHelpQueueUI(e.position, e.estimated_waiting_minutes);
+                    }).listen('.StaffConnected', (e) => {
+                        console.log('Received StaffConnected on help page:', e);
+                        if (pollingInterval) clearInterval(pollingInterval);
+                        if (echoChannel) window.Echo.leave(`ticket.${ticketId}`);
+                        document.getElementById('livechatWaitingSection').classList.add('hidden');
+                        showLivechatAssigned(trackingUrl);
+                    }).listen('.TicketClosed', (e) => {
+                        console.log('Received TicketClosed on help page:', e);
+                        if (pollingInterval) clearInterval(pollingInterval);
+                        if (echoChannel) window.Echo.leave(`ticket.${ticketId}`);
+                        showWaitingError('Sesi live chat ditutup otomatis oleh sistem.');
+                    });
+                }
+            }
+
+            function showLivechatWaiting(ticketId, trackingUrl, initialPosition, initialEst) {
                 document.getElementById('livechatWaitingSection').classList.remove('hidden');
                 
                 const waitingErrorAlert = document.getElementById('waitingErrorAlert');
@@ -255,7 +311,15 @@
                     waitingErrorAlert.textContent = '';
                 }
 
+                // Set initial queue positions
+                updateHelpQueueUI(initialPosition, initialEst);
+
+                // Setup WebSockets
+                setupHelpWebSocket(ticketId, trackingUrl);
+
                 if (pollingInterval) clearInterval(pollingInterval);
+
+                window.guestHelpWarningDisplayed = false;
 
                 pollingInterval = setInterval(async () => {
                     try {
@@ -274,11 +338,28 @@
 
                         if (statusData.status === 'assigned') {
                             clearInterval(pollingInterval);
+                            if (echoChannel) window.Echo.leave(`ticket.${ticketId}`);
                             document.getElementById('livechatWaitingSection').classList.add('hidden');
                             showLivechatAssigned(trackingUrl);
                         } else if (statusData.status === 'closed' || statusData.auto_closed) {
                             clearInterval(pollingInterval);
+                            if (echoChannel) window.Echo.leave(`ticket.${ticketId}`);
                             showWaitingError(statusData.reason || 'Sesi live chat ditutup otomatis karena tidak aktif.');
+                        } else if (statusData.status === 'waiting') {
+                            updateHelpQueueUI(statusData.queue_position, statusData.estimated_waiting_minutes);
+                            
+                            // Check for warnings
+                            if (statusData.warning) {
+                                if (!window.guestHelpWarningDisplayed) {
+                                    showWaitingWarning(statusData.warning_message);
+                                    window.guestHelpWarningDisplayed = true;
+                                }
+                            } else {
+                                window.guestHelpWarningDisplayed = false;
+                                if (waitingErrorAlert && waitingErrorAlert.textContent.includes('Apakah Anda masih di sana?')) {
+                                    waitingErrorAlert.classList.add('hidden');
+                                }
+                            }
                         }
                     } catch (error) {
                         console.error('Polling error:', error);
@@ -421,7 +502,7 @@
                         if (status === 'assigned') {
                             showLivechatAssigned(data.tracking_url);
                         } else {
-                            showLivechatWaiting(data.ticket_id, data.tracking_url);
+                            showLivechatWaiting(data.ticket_id, data.tracking_url, data.queue_position, data.estimated_waiting_minutes);
                         }
                     }
 

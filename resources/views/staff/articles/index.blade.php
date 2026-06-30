@@ -158,7 +158,7 @@
                                 </div>
 
                                 <!-- Create Button -->
-                                <a href="{{ route('staff.articles.create') }}" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
+                                <a href="{{ route('staff.articles.create', ['return_url' => request()->fullUrl()]) }}" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                     </svg>
@@ -166,7 +166,7 @@
                                 </a>
                             </div>
                         </div>
-
+ 
                         <div class="flex flex-wrap items-center gap-6 pt-4 border-t border-gray-100">
                             <div class="flex items-center gap-2">
                                 <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -215,7 +215,7 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 <div class="bg-white border border-gray-100 rounded-lg shadow-sm">
                     <div class="p-4">
                         @if($articles->count())
@@ -240,7 +240,7 @@
                                     @foreach($articles as $article)
                                         <tr class="hover:bg-gray-50 transition">
                                             <td class="px-4 py-3 overflow-hidden">
-                                                <a href="{{ route('staff.articles.show', $article) }}" class="truncate text-gray-900 font-medium hover:text-red-600 transition block">
+                                                <a href="{{ route('staff.articles.show', [$article, 'return_url' => request()->fullUrl()]) }}" class="truncate text-gray-900 font-medium hover:text-red-600 transition block">
                                                     {{ $article->title }}
                                                 </a>
                                             </td>
@@ -262,7 +262,7 @@
                                                 </div>
                                             </td>
                                             <td class="px-4 py-3 text-right whitespace-nowrap">
-                                                <a href="{{ route('staff.articles.show', $article) }}" class="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:border-red-500 hover:text-red-600 text-sm" title="Lihat">
+                                                <a href="{{ route('staff.articles.show', [$article, 'return_url' => request()->fullUrl()]) }}" class="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:border-red-500 hover:text-red-600 text-sm" title="Lihat">
                                                     Lihat
                                                 </a>
                                             </td>
@@ -276,7 +276,7 @@
                                 title="Belum Ada Artikel"
                                 subtitle="Mulai buat artikel bantuan pertama Anda untuk membantu pelanggan."
                                 actionText="Buat Artikel Baru"
-                                actionUrl="{{ route('staff.articles.create') }}"
+                                actionUrl="{{ route('staff.articles.create', ['return_url' => request()->fullUrl()]) }}"
                                 actionIcon="plus"
                                 size="md"
                             />
